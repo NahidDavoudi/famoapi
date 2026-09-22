@@ -63,4 +63,68 @@ class PlanController
         ], JSON_UNESCAPED_UNICODE));
         return $response;
     }
+
+    public function getTemplates(Request $request, Response $response): Response
+    {
+        $result = $this->service->getTemplates();
+        $response->getBody()->write(json_encode([
+            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response;
+    }
+
+    public function getTemplate(Request $request, Response $response, array $args): Response
+    {
+        $result = $this->service->getTemplate((int) $args['id']);
+        $response->getBody()->write(json_encode([
+            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response;
+    }
+
+    public function saveTemplate(Request $request, Response $response): Response
+    {
+        $body = $request->getParsedBody() ?? [];
+        try {
+            $result = $this->service->saveTemplate($body);
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false, 'data' => null, 'pagination' => null,
+                'error' => ['code' => 'ERROR', 'message' => $e->getMessage()],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus($e->getCode() ?: 400);
+        }
+        $response->getBody()->write(json_encode([
+            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response;
+    }
+
+    public function deleteTemplate(Request $request, Response $response, array $args): Response
+    {
+        $this->service->deleteTemplate((int) $args['id']);
+        $response->getBody()->write(json_encode([
+            'success' => true, 'data' => null, 'pagination' => null, 'error' => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response;
+    }
+
+    public function applyTemplate(Request $request, Response $response, array $args): Response
+    {
+        $body = $request->getParsedBody() ?? [];
+        $studentId = (int) ($body['student_id'] ?? 0);
+        try {
+            $result = $this->service->applyTemplate((int) $args['id'], $studentId);
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false, 'data' => null, 'pagination' => null,
+                'error' => ['code' => 'ERROR', 'message' => $e->getMessage()],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus($e->getCode() ?: 400);
+        }
+        $response->getBody()->write(json_encode([
+            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response;
+    }
 }

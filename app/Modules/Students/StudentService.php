@@ -142,4 +142,175 @@ class StudentService
     {
         return Student::getList();
     }
+
+    public function toggleStatus(int $id): array
+    {
+        $student = Student::findById($id);
+        if (!$student) {
+            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+        }
+
+        Student::toggleStatus($id);
+
+        return $this->get($id);
+    }
+
+    public function getAnalyticsSummary(int $studentId): array
+    {
+        $student = Student::findById($studentId);
+        if (!$student) {
+            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+        }
+
+        $db = Database::getConnection();
+
+        $stmt = $db->prepare('SELECT COUNT(*) FROM events WHERE student_id = ?');
+        $stmt->execute([$studentId]);
+        $planCount = (int) $stmt->fetchColumn();
+
+        $stmt = $db->prepare('SELECT COUNT(*) FROM exam_results WHERE student_id = ?');
+        $stmt->execute([$studentId]);
+        $examCount = (int) $stmt->fetchColumn();
+
+        $stmt = $db->prepare('SELECT ROUND(AVG(percentage), 1) FROM exam_results WHERE student_id = ?');
+        $stmt->execute([$studentId]);
+        $avgPercentage = (float) ($stmt->fetchColumn() ?: 0);
+
+        $stmt = $db->prepare(
+            'SELECT er.*, s.name AS student_name
+             FROM exam_results er
+             JOIN students s ON er.student_id = s.id
+             WHERE er.student_id = ?
+             ORDER BY er.exam_date DESC
+             LIMIT 5'
+        );
+        $stmt->execute([$studentId]);
+        $recentExams = $stmt->fetchAll();
+
+        $stmt = $db->prepare(
+            'SELECT subject, ROUND(AVG(percentage), 1) AS avg_percentage, COUNT(*) AS total_exams
+             FROM exam_results
+             WHERE student_id = ?
+             GROUP BY subject
+             ORDER BY avg_percentage ASC
+             LIMIT 1'
+        );
+        $stmt->execute([$studentId]);
+        $weakest = $stmt->fetch();
+
+        $stmt = $db->prepare(
+            'SELECT subject, ROUND(AVG(percentage), 1) AS avg_percentage, COUNT(*) AS total_exams
+             FROM exam_results
+             WHERE student_id = ?
+             GROUP BY subject
+             ORDER BY avg_percentage DESC
+             LIMIT 1'
+        );
+        $stmt->execute([$studentId]);
+        $strongest = $stmt->fetch();
+
+        return [
+            'student'          => [
+                'id'    => $student['id'],
+                'name'  => $student['name'],
+                'grade' => $student['grade'],
+                'field' => $student['field'],
+            ],
+            'plan_count'       => $planCount,
+            'exam_count'       => $examCount,
+            'avg_percentage'   => $avgPercentage,
+            'recent_exams'     => $recentExams,
+            'weakest_subject'  => $weakest ?: null,
+            'strongest_subject' => $strongest ?: null,
+        ];
+    }
+
+    public function getAnalyticsWeekDetail(int $studentId): array
+    {
+        $student = Student::findById($studentId);
+        if (!$student) {
+            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+        }
+
+        $db = Database::getConnection();
+        $stmt = $db->prepare(
+            'SELECT * FROM events WHERE student_id = ? ORDER BY day_index ASC, time_index ASC'
+        );
+        $stmt->execute([$studentId]);
+        $events = $stmt->fetchAll();
+
+        $DAY_NAMES = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+        $schedule = [];
+        foreach ($DAY_NAMES as $day) {
+            $schedule[$day] = [];
+        }
+        foreach ($events as $ev) {
+            $dayName = $ev['day_name'];
+            if (!isset($schedule[$dayName])) {
+                continue;
+            }
+            $schedule[$dayName][] = [
+                'time'     => $ev['time_label'],
+                'subject'  => $ev['subject_name'],
+                'topic'    => $ev['topic_label'],
+                'activity' => $ev['title'],
+                'notes'    => $ev['notes'],
+                'color'    => $ev['color'],
+            ];
+        }
+
+        return [
+            'student'  => ['id' => $student['id'], 'name' => $student['name']],
+            'schedule' => $schedule,
+            'total'    => count($events),
+        ];
+    }
+
+    public function getAnalyticsSubjectStats(int $studentId): array
+    {
+        $student = Student::findById($studentId);
+        if (!$student) {
+            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+        }
+
+        $db = Database::getConnection();
+        $stmt = $db->prepare(
+            'SELECT subject, ROUND(AVG(percentage), 1) AS avg_percentage, COUNT(*) AS total_exams
+             FROM exam_results
+             WHERE student_id = ?
+             GROUP BY subject
+             ORDER BY avg_percentage DESC'
+        );
+        $stmt->execute([$studentId]);
+        $subjects = $stmt->fetchAll();
+
+        return [
+            'student'  => ['id' => $student['id'], 'name' => $student['name']],
+            'subjects' => $subjects,
+        ];
+    }
+
+    public function getAnalyticsExamTrend(int $studentId): array
+    {
+        $student = Student::findById($studentId);
+        if (!$student) {
+            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+        }
+
+        $db = Database::getConnection();
+        $stmt = $db->prepare(
+            'SELECT exam_date, ROUND(AVG(percentage), 1) AS avg_percentage
+             FROM exam_results
+             WHERE student_id = ?
+             GROUP BY exam_date
+             ORDER BY exam_date ASC'
+        );
+        $stmt->execute([$studentId]);
+        $trend = $stmt->fetchAll();
+
+        return [
+            'student' => ['id' => $student['id'], 'name' => $student['name']],
+            'trend'   => $trend,
+        ];
+    }
 }

@@ -137,4 +137,15 @@ class AuthController
         ], JSON_UNESCAPED_UNICODE));
         return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
+
+    public function logout(Request $request, Response $response): Response
+    {
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => null,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
 }

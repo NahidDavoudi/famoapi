@@ -22,4 +22,32 @@ class PlanService
         if (!$studentId) throw new \RuntimeException('شناسه دانش‌آموز الزامی است', 400);
         WeeklyPlan::clear($studentId);
     }
+
+    public function getTemplates(): array
+    {
+        return PlanTemplate::findAll();
+    }
+
+    public function getTemplate(int $id): ?array
+    {
+        return PlanTemplate::findById($id);
+    }
+
+    public function saveTemplate(array $data): array
+    {
+        if (empty($data['name'])) throw new \RuntimeException('نام قالب الزامی است', 400);
+        $id = PlanTemplate::create($data);
+        $template = PlanTemplate::findById($id);
+        return $template ?? ['id' => $id];
+    }
+
+    public function deleteTemplate(int $id): void
+    {
+        PlanTemplate::delete($id);
+    }
+
+    public function applyTemplate(int $templateId, int $studentId): array
+    {
+        return PlanTemplate::applyToStudent($templateId, $studentId);
+    }
 }

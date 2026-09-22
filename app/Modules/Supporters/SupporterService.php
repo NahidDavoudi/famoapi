@@ -33,7 +33,7 @@ class SupporterService
                  VALUES (:username, :password_hash, :role, :linked_id)'
             );
             $stmt->execute([
-                'username'      => $data['name'],
+                'username'      => $data['phone'] ?? $data['name'],
                 'password_hash' => password_hash('1234', PASSWORD_DEFAULT),
                 'role'          => 'supporter',
                 'linked_id'     => $supporterId,

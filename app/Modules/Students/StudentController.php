@@ -249,4 +249,134 @@ class StudentController
         ], JSON_UNESCAPED_UNICODE));
         return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
+
+    public function toggleStatus(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $result = $this->service->toggleStatus((int) $args['id']);
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success'    => false,
+                'data'       => null,
+                'pagination' => null,
+                'error'      => [
+                    'code'    => 'TOGGLE_ERROR',
+                    'message' => $e->getMessage(),
+                ],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        }
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
+    public function analyticsSummary(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $result = $this->service->getAnalyticsSummary((int) $args['id']);
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success'    => false,
+                'data'       => null,
+                'pagination' => null,
+                'error'      => [
+                    'code'    => 'NOT_FOUND',
+                    'message' => $e->getMessage(),
+                ],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        }
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
+    public function analyticsWeekDetail(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $result = $this->service->getAnalyticsWeekDetail((int) $args['id']);
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success'    => false,
+                'data'       => null,
+                'pagination' => null,
+                'error'      => [
+                    'code'    => 'NOT_FOUND',
+                    'message' => $e->getMessage(),
+                ],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        }
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
+    public function analyticsSubjectStats(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $result = $this->service->getAnalyticsSubjectStats((int) $args['id']);
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success'    => false,
+                'data'       => null,
+                'pagination' => null,
+                'error'      => [
+                    'code'    => 'NOT_FOUND',
+                    'message' => $e->getMessage(),
+                ],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        }
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
+    public function analyticsExamTrend(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $result = $this->service->getAnalyticsExamTrend((int) $args['id']);
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success'    => false,
+                'data'       => null,
+                'pagination' => null,
+                'error'      => [
+                    'code'    => 'NOT_FOUND',
+                    'message' => $e->getMessage(),
+                ],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        }
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
 }

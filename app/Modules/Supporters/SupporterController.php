@@ -64,6 +64,7 @@ class SupporterController
                 'name'    => $body['name'],
                 'grade'   => $body['grade'],
                 'field'   => $body['field'],
+                'phone'   => $body['phone'],
                 'chat_id' => $body['chat_id'] ?? null,
             ]);
         } catch (\RuntimeException $e) {

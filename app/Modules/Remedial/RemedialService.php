@@ -60,4 +60,16 @@ class RemedialService
     {
         Remedial::deleteClass($id);
     }
+
+    public function addStudentToSession(int $sessionId, int $studentId): array
+    {
+        $success = Remedial::addStudent($sessionId, $studentId);
+        return ['success' => $success, 'session_id' => $sessionId, 'student_id' => $studentId];
+    }
+
+    public function removeStudentFromSession(int $sessionId, int $studentId): array
+    {
+        $success = Remedial::removeStudent($sessionId, $studentId);
+        return ['success' => $success, 'session_id' => $sessionId, 'student_id' => $studentId];
+    }
 }

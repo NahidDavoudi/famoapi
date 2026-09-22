@@ -166,4 +166,38 @@ class RemedialController
         ], JSON_UNESCAPED_UNICODE));
         return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
+
+    public function addStudent(Request $request, Response $response): Response
+    {
+        $body = $request->getParsedBody() ?? [];
+        $result = $this->service->addStudentToSession(
+            (int) ($body['session_id'] ?? 0),
+            (int) ($body['student_id'] ?? 0)
+        );
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
+    public function removeStudent(Request $request, Response $response): Response
+    {
+        $body = $request->getParsedBody() ?? [];
+        $result = $this->service->removeStudentFromSession(
+            (int) ($body['session_id'] ?? 0),
+            (int) ($body['student_id'] ?? 0)
+        );
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
 }

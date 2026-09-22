@@ -11,6 +11,16 @@ class Student
         $conditions = [];
         $params = [];
 
+        if (isset($filters['status'])) {
+            if ($filters['status'] === 0) {
+                $conditions[] = 's.is_active = 0';
+            } elseif ($filters['status'] === 1) {
+                $conditions[] = 's.is_active = 1';
+            }
+        } else {
+            $conditions[] = 's.is_active = 1';
+        }
+
         if (!empty($filters['search'])) {
             $conditions[] = '(s.name LIKE :search OR s.phone LIKE :search)';
             $params['search'] = '%' . $filters['search'] . '%';
@@ -43,6 +53,16 @@ class Student
     {
         $conditions = [];
         $params = [];
+
+        if (isset($filters['status'])) {
+            if ($filters['status'] === 0) {
+                $conditions[] = 's.is_active = 0';
+            } elseif ($filters['status'] === 1) {
+                $conditions[] = 's.is_active = 1';
+            }
+        } else {
+            $conditions[] = 's.is_active = 1';
+        }
 
         if (!empty($filters['search'])) {
             $conditions[] = '(s.name LIKE :search OR s.phone LIKE :search)';
@@ -90,8 +110,8 @@ class Student
     {
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO students (name, grade, field, phone, national_id, created_at, updated_at)
-             VALUES (:name, :grade, :field, :phone, :national_id, NOW(), NOW())'
+            'INSERT INTO students (name, grade, field, phone, national_id, is_active, created_at)
+             VALUES (:name, :grade, :field, :phone, :national_id, 1, NOW())'
         );
         $stmt->execute([
             'name'        => $data['name'],
@@ -107,7 +127,7 @@ class Student
     {
         $sets = [];
         $params = ['id' => $id];
-        $allowed = ['name', 'grade', 'field', 'phone', 'national_id'];
+        $allowed = ['name', 'grade', 'field', 'phone', 'national_id', 'is_active'];
 
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {
@@ -117,8 +137,6 @@ class Student
         }
 
         if (empty($sets)) return 0;
-
-        $sets[] = 'updated_at = NOW()';
 
         $stmt = Database::getConnection()->prepare(
             'UPDATE students SET ' . implode(', ', $sets) . ' WHERE id = :id'
@@ -140,9 +158,17 @@ class Student
     public static function getList(): array
     {
         $stmt = Database::getConnection()->prepare(
-            'SELECT id, name FROM students ORDER BY name ASC'
+            'SELECT id, name FROM students WHERE is_active = 1 ORDER BY name ASC'
         );
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    public static function toggleStatus(int $id): bool
+    {
+        $stmt = Database::getConnection()->prepare(
+            'UPDATE students SET is_active = NOT is_active WHERE id = :id'
+        );
+        return $stmt->execute(['id' => $id]);
     }
 }

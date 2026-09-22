@@ -3,9 +3,14 @@
 namespace App\Modules\Appointments;
 
 use App\Core\Pagination;
+use App\Core\SmsService;
 
 class AppointmentService
 {
+    public function __construct(private ?SmsService $sms = null)
+    {
+        $this->sms ??= new SmsService();
+    }
     public function list(int $page, int $perPage): array
     {
         $total = Appointment::countAll();
@@ -28,6 +33,15 @@ class AppointmentService
         } else {
             $id = Appointment::create($data);
             $appointment = Appointment::findById($id);
+
+            if (!empty($appointment['phone'])) {
+                $this->sms->sendAppointmentReminder(
+                    $appointment['phone'],
+                    $appointment['student_name'],
+                    $appointment['appointment_date'],
+                    $appointment['start_time'] ?? ''
+                );
+            }
         }
 
         return $appointment;

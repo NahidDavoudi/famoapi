@@ -13,7 +13,7 @@ class TopicController
 
     public function getChildren(Request $request, Response $response, array $args): Response
     {
-        $parentId = (int) ($args['parent_id'] ?? 0);
+        $parentId = (int) ($args['parent_id'] ?? $request->getQueryParams()['parent_id'] ?? 0);
         $result = $this->service->getChildren($parentId);
 
         $response->getBody()->write(json_encode([

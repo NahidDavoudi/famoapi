@@ -178,4 +178,30 @@ class Remedial
         } catch (\Exception $e) {
         }
     }
+
+    public static function addStudent(int $sessionId, int $studentId): bool
+    {
+        try {
+            $stmt = Database::getConnection()->prepare(
+                "INSERT INTO session_students (session_id, student_id) VALUES (?, ?)"
+            );
+            $stmt->execute([$sessionId, $studentId]);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    public static function removeStudent(int $sessionId, int $studentId): bool
+    {
+        try {
+            $stmt = Database::getConnection()->prepare(
+                "DELETE FROM session_students WHERE session_id = ? AND student_id = ?"
+            );
+            $stmt->execute([$sessionId, $studentId]);
+            return $stmt->rowCount() > 0;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }
