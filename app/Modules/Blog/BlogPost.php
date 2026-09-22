@@ -59,7 +59,7 @@ class BlogPost
         $db = Database::getConnection();
         $offset = Pagination::offset($page, $perPage);
         $stmt = $db->prepare(
-            'SELECT * FROM blog_posts ORDER BY created_at DESC LIMIT ? OFFSET ?'
+            'SELECT * FROM blog_posts ORDER BY published_at DESC LIMIT ? OFFSET ?'
         );
         $stmt->execute([$perPage, $offset]);
         return $stmt->fetchAll();

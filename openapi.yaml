@@ -1,0 +1,3221 @@
+openapi: "3.1.0"
+info:
+  title: Famo Unified API
+  description: |
+    REST API for Famo Academy — unified backend serving admin panel, public site,
+    dashboard, nobat booking, and planner applications.
+  version: "1.0.0"
+  contact:
+    name: Famo Academy
+    url: https://famoacademy.ir
+
+servers:
+  - url: https://api.famoacademy.ir
+    description: Production server
+
+paths:
+  # ───────────────────── Health ─────────────────────
+  /api/v1/health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: healthy
+                      version:
+                        type: string
+                        example: 1.0.0
+                      time:
+                        type: string
+                        format: date-time
+                        example: "2026-09-23 12:00:00"
+                required: [success, data, pagination, error]
+
+  # ───────────────────── Auth ─────────────────────
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      operationId: authLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: نام کاربری
+                password:
+                  type: string
+                  description: رمز عبور
+              required: [username, password]
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                          user:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              username:
+                                type: string
+                              role:
+                                type: string
+                                enum: [admin, supporter, student]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Student self-registration
+      operationId: authRegister
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+                  description: شماره تلفن
+                nationalId:
+                  type: string
+                  description: کد ملی
+                grade:
+                  type: integer
+                  description: پایه تحصیلی
+                  enum: [7, 8, 9, 10, 11, 12]
+                field:
+                  type: string
+                  description: رشته تحصیلی
+                  enum: [ریاضی, تجربی, انسانی, زبان, هنر, عمومی, راهنمایی]
+                name:
+                  type: string
+                  description: نام و نام خانوادگی
+              required: [phone, nationalId, grade, field, name]
+      responses:
+        "201":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user from JWT
+      operationId: authMe
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          username:
+                            type: string
+                          role:
+                            type: string
+                          student_id:
+                            type: integer
+                            nullable: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (invalidate session)
+      operationId: authLogout
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ───────────────────── Public ─────────────────────
+  /api/v1/public/courses:
+    get:
+      tags: [Public]
+      summary: Get published courses with features
+      operationId: publicGetCourses
+      responses:
+        "200":
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Course"
+
+  /api/v1/public/instructors:
+    get:
+      tags: [Public]
+      summary: Get published instructors with social links
+      operationId: publicGetInstructors
+      responses:
+        "200":
+          description: List of instructors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Instructor"
+
+  /api/v1/public/supporters:
+    get:
+      tags: [Public]
+      summary: Get supporters list
+      operationId: publicGetSupporters
+      responses:
+        "200":
+          description: List of supporters
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Supporter"
+
+  /api/v1/public/blog/posts:
+    get:
+      tags: [Public, Blog]
+      summary: Get published blog posts (paginated)
+      operationId: publicGetBlogPosts
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated published posts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          posts:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/BlogPost"
+                  - $ref: "#/components/schemas/WithPagination"
+
+  /api/v1/public/blog/posts/{slug}:
+    get:
+      tags: [Public, Blog]
+      summary: Get single published post by slug
+      operationId: publicGetBlogPostBySlug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Post found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          post:
+                            $ref: "#/components/schemas/BlogPost"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/public/blog/categories:
+    get:
+      tags: [Public, Blog]
+      summary: Get active blog categories
+      operationId: publicGetBlogCategories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            slug:
+                              type: string
+
+  /api/v1/public/blog/categories/{category}/posts:
+    get:
+      tags: [Public, Blog]
+      summary: Get published posts by category slug
+      operationId: publicGetBlogPostsByCategory
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated posts in category
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          posts:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/BlogPost"
+                  - $ref: "#/components/schemas/WithPagination"
+
+  # ───────────────────── Blog (protected) ─────────────────────
+  /api/v1/blog/posts:
+    get:
+      tags: [Blog]
+      summary: Get all blog posts (including drafts)
+      operationId: blogGetAllPosts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated posts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          posts:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/BlogPost"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Blog]
+      summary: Create blog post (admin only)
+      operationId: blogCreatePost
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                slug:
+                  type: string
+                excerpt:
+                  type: string
+                content:
+                  type: string
+                cover_image:
+                  type: string
+                category_id:
+                  type: integer
+                published:
+                  type: boolean
+              required: [title, content]
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/BlogPost"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/blog/posts/{id}:
+    get:
+      tags: [Blog]
+      summary: Get blog post by ID
+      operationId: blogGetPostById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Post found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          post:
+                            $ref: "#/components/schemas/BlogPost"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Blog]
+      summary: Update blog post (admin only)
+      operationId: blogUpdatePost
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                slug:
+                  type: string
+                excerpt:
+                  type: string
+                content:
+                  type: string
+                cover_image:
+                  type: string
+                category_id:
+                  type: integer
+                published:
+                  type: boolean
+      responses:
+        "200":
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/BlogPost"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Blog]
+      summary: Delete blog post (admin only)
+      operationId: blogDeletePost
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Post deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ───────────────────── Students ─────────────────────
+  /api/v1/students/list:
+    get:
+      tags: [Students]
+      summary: Get simple list of all students
+      operationId: studentGetList
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Students list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Student"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/students:
+    get:
+      tags: [Students]
+      summary: List students (paginated, filterable)
+      operationId: studentList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name or phone
+        - name: field
+          in: query
+          schema:
+            type: string
+            enum: [ریاضی, تجربی, انسانی, زبان, هنر, عمومی, راهنمایی]
+        - name: grade
+          in: query
+          schema:
+            type: integer
+            enum: [7, 8, 9, 10, 11, 12]
+        - name: status
+          in: query
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        "200":
+          description: Paginated students
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Student"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Students]
+      summary: Create student (admin only)
+      operationId: studentCreate
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: نام و نام خانوادگی
+                phone:
+                  type: string
+                  description: شماره تلفن
+                grade:
+                  type: integer
+                  description: پایه تحصیلی
+                  enum: [7, 8, 9, 10, 11, 12]
+                field:
+                  type: string
+                  description: رشته تحصیلی
+                  enum: [ریاضی, تجربی, انسانی, زبان, هنر, عمومی, راهنمایی]
+                nationalId:
+                  type: string
+                  description: کد ملی
+              required: [name, phone, grade, field, nationalId]
+      responses:
+        "201":
+          description: Student created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Student"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/students/{id}:
+    get:
+      tags: [Students]
+      summary: Get single student
+      operationId: studentGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Student"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Students]
+      summary: Update student (admin only)
+      operationId: studentUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+                grade:
+                  type: integer
+                  enum: [7, 8, 9, 10, 11, 12]
+                field:
+                  type: string
+                  enum: [ریاضی, تجربی, انسانی, زبان, هنر, عمومی, راهنمایی]
+                nationalId:
+                  type: string
+      responses:
+        "200":
+          description: Student updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Student"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Students]
+      summary: Delete student (admin only)
+      operationId: studentDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/students/{id}/create-account:
+    post:
+      tags: [Students]
+      summary: Create user account for student (admin only)
+      operationId: studentCreateAccount
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          username:
+                            type: string
+                          password:
+                            type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/students/{id}/reset-password:
+    post:
+      tags: [Students]
+      summary: Reset student user account password (admin only)
+      operationId: studentResetPassword
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          new_password:
+                            type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/students/{id}/toggle-status:
+    post:
+      tags: [Students]
+      summary: Toggle student active status
+      operationId: studentToggleStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Status toggled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          status:
+                            type: integer
+                            enum: [0, 1]
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ──── Student Analytics ────
+  /api/v1/students/{id}/analytics/summary:
+    get:
+      tags: [Students, Analytics]
+      summary: Get student analytics summary
+      operationId: studentAnalyticsSummary
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/students/{id}/analytics/week-detail:
+    get:
+      tags: [Students, Analytics]
+      summary: Get student weekly detail
+      operationId: studentAnalyticsWeekDetail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Week detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/students/{id}/analytics/subject-stats:
+    get:
+      tags: [Students, Analytics]
+      summary: Get student subject statistics
+      operationId: studentAnalyticsSubjectStats
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subject stats
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/students/{id}/analytics/exam-trend:
+    get:
+      tags: [Students, Analytics]
+      summary: Get student exam trend data
+      operationId: studentAnalyticsExamTrend
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Exam trend
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ───────────────────── Courses ─────────────────────
+  /api/v1/courses:
+    get:
+      tags: [Courses]
+      summary: List courses (paginated)
+      operationId: courseList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated courses
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Course"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Courses]
+      summary: Create course (admin only)
+      operationId: courseCreate
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: نام دوره
+                icon:
+                  type: string
+                gradient_color_from:
+                  type: string
+                gradient_color_to:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: integer
+                display_order:
+                  type: integer
+                background_image:
+                  type: string
+                  format: binary
+              required: [name]
+      responses:
+        "201":
+          description: Course created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Course"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/courses/{id}:
+    get:
+      tags: [Courses]
+      summary: Get single course
+      operationId: courseGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Course found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Course"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Courses]
+      summary: Update course (admin only)
+      operationId: courseUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                icon:
+                  type: string
+                gradient_color_from:
+                  type: string
+                gradient_color_to:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: integer
+                display_order:
+                  type: integer
+                background_image_url:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Course updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Course"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Courses]
+      summary: Delete course (admin only)
+      operationId: courseDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Course deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ───────────────────── Instructors ─────────────────────
+  /api/v1/instructors:
+    get:
+      tags: [Instructors]
+      summary: List instructors (paginated)
+      operationId: instructorList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated instructors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Instructor"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Instructors]
+      summary: Create instructor (admin only)
+      operationId: instructorCreate
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: نام استاد
+                title:
+                  type: string
+                description:
+                  type: string
+                display_order:
+                  type: integer
+                image:
+                  type: string
+                  format: binary
+              required: [name]
+      responses:
+        "201":
+          description: Instructor created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Instructor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/instructors/{id}:
+    get:
+      tags: [Instructors]
+      summary: Get single instructor
+      operationId: instructorGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Instructor found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Instructor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Instructors]
+      summary: Update instructor (admin only)
+      operationId: instructorUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                display_order:
+                  type: integer
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Instructor updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Instructor"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Instructors]
+      summary: Delete instructor (admin only)
+      operationId: instructorDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Instructor deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ───────────────────── Supporters ─────────────────────
+  /api/v1/supporters:
+    get:
+      tags: [Supporters]
+      summary: List supporters (paginated)
+      operationId: supporterList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated supporters
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Supporter"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Supporters]
+      summary: Create supporter (admin only)
+      operationId: supporterCreate
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: نام و نام خانوادگی
+                grade:
+                  type: integer
+                  enum: [7, 8, 9, 10, 11, 12]
+                field:
+                  type: string
+                  enum: [ریاضی, تجربی, انسانی, زبان, هنر, عمومی, راهنمایی]
+                phone:
+                  type: string
+                  description: شماره تلفن
+                chat_id:
+                  type: string
+                  description: شناسه پیام‌رسان
+              required: [name, grade, field, phone]
+      responses:
+        "201":
+          description: Supporter created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Supporter"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/supporters/{id}:
+    get:
+      tags: [Supporters]
+      summary: Get single supporter
+      operationId: supporterGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Supporter found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Supporter"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Supporters]
+      summary: Update supporter (admin only)
+      operationId: supporterUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                grade:
+                  type: integer
+                  enum: [7, 8, 9, 10, 11, 12]
+                field:
+                  type: string
+                chat_id:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Supporter updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Supporter"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Supporters]
+      summary: Delete supporter (admin only)
+      operationId: supporterDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Supporter deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ───────────────────── Exams ─────────────────────
+  /api/v1/exams:
+    get:
+      tags: [Exams]
+      summary: List exam results (filterable, paginated)
+      operationId: examGetAll
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: query
+          schema:
+            type: integer
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: "#/components/parameters/Page"
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 200
+      responses:
+        "200":
+          description: Paginated exam results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          exams:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/ExamResult"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Exams]
+      summary: Bulk save exam results (admin only)
+      operationId: examSave
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                exam_date:
+                  type: string
+                  format: date
+                subjects:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      subject:
+                        type: string
+                      score:
+                        type: number
+                      total:
+                        type: number
+              required: [student_id, exam_date, subjects]
+      responses:
+        "200":
+          description: Exam results saved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/exams/dates:
+    get:
+      tags: [Exams]
+      summary: Get distinct exam dates with stats
+      operationId: examGetDates
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Exam dates
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          dates:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                exam_date:
+                                  type: string
+                                  format: date
+                                student_count:
+                                  type: integer
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/exams/students:
+    get:
+      tags: [Exams]
+      summary: Get students for a specific exam date
+      operationId: examGetStudents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: exam_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Students for exam date
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          students:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/Student"
+                  - $ref: "#/components/schemas/WithPagination"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/exams/details:
+    get:
+      tags: [Exams]
+      summary: Get per-subject breakdown for a student on a date
+      operationId: examGetDetails
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: exam_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Exam subject breakdown
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ───────────────────── Weekly Plans ─────────────────────
+  /api/v1/plans:
+    get:
+      tags: [WeeklyPlans]
+      summary: Get weekly plan for a student
+      operationId: planGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Weekly plan data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [WeeklyPlans]
+      summary: Save weekly plan items
+      operationId: planSave
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      day:
+                        type: integer
+                        description: Day of week (0-6)
+                      subject:
+                        type: string
+                      start_time:
+                        type: string
+                      end_time:
+                        type: string
+                      description:
+                        type: string
+              required: [student_id, items]
+      responses:
+        "200":
+          description: Plan saved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [WeeklyPlans]
+      summary: Clear weekly plan for a student
+      operationId: planClear
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+              required: [student_id]
+      responses:
+        "200":
+          description: Plan cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/plans/templates:
+    get:
+      tags: [WeeklyPlans]
+      summary: List plan templates
+      operationId: planGetTemplates
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/PlanTemplate"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [WeeklyPlans]
+      summary: Save a weekly plan as template
+      operationId: planSaveTemplate
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+              required: [name, items]
+      responses:
+        "200":
+          description: Template saved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/PlanTemplate"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/plans/templates/{id}:
+    get:
+      tags: [WeeklyPlans]
+      summary: Get single plan template
+      operationId: planGetTemplate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Template found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/PlanTemplate"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [WeeklyPlans]
+      summary: Delete plan template
+      operationId: planDeleteTemplate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Template deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/plans/templates/{id}/apply:
+    post:
+      tags: [WeeklyPlans]
+      summary: Apply template to a student's plan
+      operationId: planApplyTemplate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+              required: [student_id]
+      responses:
+        "200":
+          description: Template applied
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ───────────────────── Reports ─────────────────────
+  /api/v1/reports:
+    get:
+      tags: [Reports]
+      summary: List reports with date filter (supporter+)
+      operationId: reportList
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated reports
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          reports:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/Report"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/reports/stats:
+    get:
+      tags: [Reports]
+      summary: Get report statistics (supporter+)
+      operationId: reportStats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Report statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ───────────────────── Files ─────────────────────
+  /api/v1/files:
+    get:
+      tags: [Files]
+      summary: List files (filterable by student)
+      operationId: fileList
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: query
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated files
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/File"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/files/upload:
+    post:
+      tags: [Files]
+      summary: Upload a file
+      operationId: fileUpload
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: فایل برای آپلود
+                student_id:
+                  type: integer
+                  description: شناسه دانش‌آموز
+                description:
+                  type: string
+              required: [file, student_id]
+      responses:
+        "201":
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/File"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/files/{id}:
+    delete:
+      tags: [Files]
+      summary: Delete a file
+      operationId: fileDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: File deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ───────────────────── Topics ─────────────────────
+  /api/v1/topics:
+    get:
+      tags: [Topics]
+      summary: Get root topic tree
+      operationId: topicGetRoot
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Topic tree
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Topic"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/topics/search:
+    get:
+      tags: [Topics]
+      summary: Search topics
+      operationId: topicSearch
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Topic"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/topics/{parent_id}:
+    get:
+      tags: [Topics]
+      summary: Get child topics by parent ID
+      operationId: topicGetChildren
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: parent_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Child topics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Topic"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/topics/{id}/path:
+    get:
+      tags: [Topics]
+      summary: Get topic path to root
+      operationId: topicGetPath
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Topic path
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Topic"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/subjects/{grade}:
+    get:
+      tags: [Topics]
+      summary: Get subjects for a grade
+      operationId: topicGetSubjectsForGrade
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: grade
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: field
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Subjects for grade
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Topic"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ───────────────────── Appointments ─────────────────────
+  /api/v1/appointments:
+    get:
+      tags: [Appointments]
+      summary: List appointments (supporter+)
+      operationId: appointmentList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Paginated appointments
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Appointment"
+                  - $ref: "#/components/schemas/WithPagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [Appointments]
+      summary: Create appointment (supporter+)
+      operationId: appointmentCreate
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                appointment_date:
+                  type: string
+                  format: date
+                start_time:
+                  type: string
+                  description: e.g. 14:00
+                end_time:
+                  type: string
+                  description: e.g. 14:30
+                type:
+                  type: string
+                description:
+                  type: string
+              required: [student_id, appointment_date, start_time, end_time]
+      responses:
+        "201":
+          description: Appointment created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Appointment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/appointments/{id}/status:
+    put:
+      tags: [Appointments]
+      summary: Update appointment status (supporter+)
+      operationId: appointmentUpdateStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, confirmed, completed, cancelled]
+              required: [status]
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Appointment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/appointments/{id}:
+    delete:
+      tags: [Appointments]
+      summary: Delete appointment (supporter+)
+      operationId: appointmentDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Appointment deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ───────────────────── Remedial ─────────────────────
+  /api/v1/remedial/sessions:
+    get:
+      tags: [Remedial]
+      summary: List remedial sessions
+      operationId: remedialGetSessions
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/RemedialSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Remedial]
+      summary: Create remedial session
+      operationId: remedialCreateSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+              required: [title, start_date, end_date]
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/RemedialSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/remedial/sessions/{id}:
+    get:
+      tags: [Remedial]
+      summary: Get remedial session data (tabs by field)
+      operationId: remedialGetSessionData
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Session data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/remedial/attendance:
+    post:
+      tags: [Remedial]
+      summary: Toggle attendance for a student in a class
+      operationId: remedialToggleAttendance
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: integer
+                class_id:
+                  type: integer
+                student_id:
+                  type: integer
+              required: [session_id, class_id, student_id]
+      responses:
+        "200":
+          description: Attendance toggled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/remedial/classes:
+    post:
+      tags: [Remedial]
+      summary: Create a remedial class
+      operationId: remedialCreateClass
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: integer
+                field:
+                  type: string
+                class_name:
+                  type: string
+                description:
+                  type: string
+              required: [session_id, field, class_name]
+      responses:
+        "201":
+          description: Class created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/RemedialClass"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/remedial/classes/{id}:
+    delete:
+      tags: [Remedial]
+      summary: Delete a remedial class
+      operationId: remedialDeleteClass
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Class deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/remedial/students:
+    post:
+      tags: [Remedial]
+      summary: Add student to remedial session
+      operationId: remedialAddStudent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: integer
+                student_id:
+                  type: integer
+              required: [session_id, student_id]
+      responses:
+        "200":
+          description: Student added
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [Remedial]
+      summary: Remove student from remedial session
+      operationId: remedialRemoveStudent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: integer
+                student_id:
+                  type: integer
+              required: [session_id, student_id]
+      responses:
+        "200":
+          description: Student removed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/remedial/students/time:
+    put:
+      tags: [Remedial]
+      summary: Update student time for a field in a session
+      operationId: remedialUpdateStudentTime
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: integer
+                student_id:
+                  type: integer
+                field:
+                  type: string
+                value:
+                  type: string
+              required: [session_id, student_id, field, value]
+      responses:
+        "200":
+          description: Time updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from POST /api/v1/auth/login
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+      description: Page number
+    PerPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+      description: Items per page
+    PerPageAlt:
+      name: perPage
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+      description: Items per page (alternate casing)
+
+  schemas:
+    # ──── Envelope ────
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          nullable: true
+        pagination:
+          anyOf:
+            - $ref: "#/components/schemas/Pagination"
+            - type: "null"
+        error:
+          type: "null"
+      required: [success, data, pagination, error]
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        data:
+          type: "null"
+        pagination:
+          type: "null"
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Error code (machine-readable)
+            message:
+              type: string
+              description: Human-readable error message in Persian
+          required: [code, message]
+      required: [success, data, pagination, error]
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+      required: [page, per_page, total, total_pages]
+
+    WithPagination:
+      properties:
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    # ──── Domain Models ────
+    Student:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        grade:
+          type: integer
+        field:
+          type: string
+        national_id:
+          type: string
+        status:
+          type: integer
+          enum: [0, 1]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        icon:
+          type: string
+          nullable: true
+        gradient_color_from:
+          type: string
+          nullable: true
+        gradient_color_to:
+          type: string
+          nullable: true
+        background_image_url:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        price:
+          type: integer
+        display_order:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    Instructor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        title:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        display_order:
+          type: integer
+        social_links:
+          type: array
+          items:
+            type: object
+            properties:
+              platform:
+                type: string
+              url:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Supporter:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grade:
+          type: integer
+        field:
+          type: string
+        phone:
+          type: string
+        chat_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    BlogPost:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        slug:
+          type: string
+        excerpt:
+          type: string
+          nullable: true
+        content:
+          type: string
+        cover_image:
+          type: string
+          nullable: true
+        category_id:
+          type: integer
+          nullable: true
+        published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ExamResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        exam_date:
+          type: string
+          format: date
+        subject:
+          type: string
+        score:
+          type: number
+        total:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    PlanTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+        created_at:
+          type: string
+          format: date-time
+
+    Report:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        status:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    File:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        original_name:
+          type: string
+        stored_name:
+          type: string
+        path:
+          type: string
+        mime_type:
+          type: string
+        size:
+          type: integer
+        description:
+          type: string
+          nullable: true
+        uploaded_at:
+          type: string
+          format: date-time
+
+    Topic:
+      type: object
+      properties:
+        id:
+          type: integer
+        parent_id:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        type:
+          type: string
+          enum: [grade, field, subject, chapter, topic]
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/Topic"
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        appointment_date:
+          type: string
+          format: date
+        start_time:
+          type: string
+        end_time:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+        type:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    RemedialSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    RemedialClass:
+      type: object
+      properties:
+        id:
+          type: integer
+        session_id:
+          type: integer
+        field:
+          type: string
+        class_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: VALIDATION_ERROR
+              message: پارامترها ناقص است
+    Unauthorized:
+      description: Authentication required or token invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: AUTH_ERROR
+              message: توکن نامعتبر است
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: FORBIDDEN
+              message: دسترسی غیرمجاز
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: NOT_FOUND
+              message: مورد نظر یافت نشد
+    Conflict:
+      description: Resource conflict (e.g. duplicate)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: REGISTRATION_ERROR
+              message: کاربر قبلاً ثبت‌نام کرده است
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: VALIDATION_ERROR
+              message: نام دانش‌آموز الزامی است
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: INTERNAL_ERROR
+              message: خطای داخلی سرور
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Auth
+    description: Authentication & authorization
+  - name: Public
+    description: Public (no auth required) endpoints
+  - name: Blog
+    description: Blog post management
+  - name: Students
+    description: Student management
+  - name: Analytics
+    description: Student analytics
+  - name: Courses
+    description: Course management
+  - name: Instructors
+    description: Instructor management
+  - name: Supporters
+    description: Supporter management
+  - name: Exams
+    description: Exam results
+  - name: WeeklyPlans
+    description: Weekly study plans & templates
+  - name: Reports
+    description: Reports (supporter role)
+  - name: Files
+    description: File uploads for students
+  - name: Topics
+    description: Topic tree (subjects, chapters, topics)
+  - name: Appointments
+    description: Appointment scheduling (supporter role)
+  - name: Remedial
+    description: Remedial education sessions & classes
