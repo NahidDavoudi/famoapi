@@ -50,6 +50,56 @@ class AuthController
             return $response->withStatus($e->getCode() ?: 401)->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
+        $status = !empty($result['requires_2fa']) ? 202 : 200;
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result,
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withStatus($status)->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
+    public function verify2fa(Request $request, Response $response): Response
+    {
+        $body = $request->getParsedBody() ?? [];
+
+        $validator = new Validator();
+        $validator
+            ->required('user_id', 'شناسه کاربر', $body['user_id'] ?? null)
+            ->required('code', 'کد تأیید', $body['code'] ?? null);
+
+        if (!$validator->passes()) {
+            $response->getBody()->write(json_encode([
+                'success'    => false,
+                'data'       => null,
+                'pagination' => null,
+                'error'      => [
+                    'code'    => 'VALIDATION_ERROR',
+                    'message' => $validator->firstError(),
+                ],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus(422)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        }
+
+        try {
+            $result = $this->service->verify2fa(
+                (int) $body['user_id'],
+                $body['code']
+            );
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success'    => false,
+                'data'       => null,
+                'pagination' => null,
+                'error'      => [
+                    'code'    => '2FA_ERROR',
+                    'message' => $e->getMessage(),
+                ],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus($e->getCode() ?: 401)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        }
+
         $response->getBody()->write(json_encode([
             'success'    => true,
             'data'       => $result,
@@ -67,11 +117,17 @@ class AuthController
         $validator
             ->required('phone', 'شماره تلفن', $body['phone'] ?? null)
             ->phone('phone', 'شماره تلفن', $body['phone'] ?? null)
+            ->required('password', 'رمز عبور', $body['password'] ?? null)
+            ->minLength('password', 'رمز عبور', $body['password'] ?? null, 4)
             ->required('nationalId', 'کد ملی', $body['nationalId'] ?? null)
             ->nationalId('nationalId', 'کد ملی', $body['nationalId'] ?? null)
             ->required('grade', 'پایه تحصیلی', $body['grade'] ?? null)
             ->required('field', 'رشته تحصیلی', $body['field'] ?? null)
             ->required('name', 'نام و نام خانوادگی', $body['name'] ?? null);
+
+        if (isset($body['grade'])) {
+            $validator->inArray('grade', 'پایه تحصیلی', (int) $body['grade'], [7, 8, 9, 10, 11, 12]);
+        }
 
         if (!$validator->passes()) {
             $response->getBody()->write(json_encode([

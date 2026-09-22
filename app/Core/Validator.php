@@ -46,6 +46,14 @@ class Validator
         return $this;
     }
 
+    public function minLength(string $field, string $label, mixed $value, int $min): self
+    {
+        if ($value !== null && $value !== '' && mb_strlen($value) < $min) {
+            $this->errors[] = "{$label} باید حداقل {$min} کاراکتر باشد";
+        }
+        return $this;
+    }
+
     public function inArray(string $field, string $label, mixed $value, array $allowed): self
     {
         if ($value !== null && $value !== '' && !in_array($value, $allowed)) {

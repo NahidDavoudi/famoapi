@@ -26,6 +26,16 @@ class User
         return $result ?: null;
     }
 
+    public static function findByEmail(string $email): ?array
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT * FROM users WHERE email = :email LIMIT 1'
+        );
+        $stmt->execute(['email' => $email]);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
     public static function findByLinkedId(int $linkedId, string $role): ?array
     {
         $stmt = Database::getConnection()->prepare(

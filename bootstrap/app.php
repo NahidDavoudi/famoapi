@@ -9,6 +9,8 @@ use Slim\Psr7\Response;
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
+date_default_timezone_set('UTC');
+
 $app = AppFactory::create();
 
 $app->addBodyParsingMiddleware();

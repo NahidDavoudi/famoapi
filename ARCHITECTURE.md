@@ -249,7 +249,7 @@ Use a `ResponseHelper` class or Slim middleware to enforce this envelope.
 
 ```
 POST   /api/v1/auth/login                   # Login → returns JWT
-POST   /api/v1/auth/register                # Student registration
+POST   /api/v1/auth/register                # Student registration (phone + password)
 GET    /api/v1/auth/me                       # Current user from JWT
 POST   /api/v1/auth/logout                  # Token invalidation (optional)
 

@@ -65,7 +65,82 @@ paths:
               required: [username, password]
       responses:
         "200":
-          description: Login successful
+          description: Login successful (student)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                          user_id:
+                            type: integer
+                            description: شناسه کاربر
+                          email_mask:
+                            type: string
+                            nullable: true
+                            description: ایمیل ماسک شده (در صورت فعال بودن 2FA)
+                          user:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              username:
+                                type: string
+                              role:
+                                type: string
+                                enum: [admin, supporter, student]
+        "202":
+          description: 2FA required (admin/supporter)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          requires_2fa:
+                            type: boolean
+                            enum: [true]
+                          user_id:
+                            type: integer
+                            description: شناسه کاربر برای مرحله دوم ورود
+                          email_mask:
+                            type: string
+                            description: ایمیل ماسک شده کاربر
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/auth/verify-2fa:
+    post:
+      tags: [Auth]
+      summary: Verify 2FA code and complete login
+      operationId: authVerify2fa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: شناسه کاربر برگشتی از مرحله اول ورود
+                code:
+                  type: string
+                  description: کد ۶ رقمی ارسال شده به ایمیل
+              required: [user_id, code]
+      responses:
+        "200":
+          description: 2FA verified, login successful
           content:
             application/json:
               schema:
@@ -107,6 +182,11 @@ paths:
                 phone:
                   type: string
                   description: شماره تلفن
+                password:
+                  type: string
+                  format: password
+                  minLength: 4
+                  description: رمز عبور حساب
                 nationalId:
                   type: string
                   description: کد ملی
@@ -121,7 +201,7 @@ paths:
                 name:
                   type: string
                   description: نام و نام خانوادگی
-              required: [phone, nationalId, grade, field, name]
+              required: [phone, password, nationalId, grade, field, name]
       responses:
         "201":
           description: Registration successful

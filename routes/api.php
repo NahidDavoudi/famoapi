@@ -65,6 +65,7 @@ return function (App $app) {
     // Auth
     $app->post('/api/v1/auth/login', [$authController, 'login']);
     $app->post('/api/v1/auth/register', [$authController, 'register']);
+    $app->post('/api/v1/auth/verify-2fa', [$authController, 'verify2fa']);
     $app->get('/api/v1/auth/me', [$authController, 'me'])->add($authMiddleware);
     $app->post('/api/v1/auth/logout', [$authController, 'logout'])->add($authMiddleware);
 
