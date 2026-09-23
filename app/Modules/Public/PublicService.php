@@ -8,7 +8,12 @@ class PublicService
     {
         $courses = Course::findAllPublished();
         foreach ($courses as &$course) {
-            $course['features'] = Course::getFeatures((int) $course['id']);
+            $features = Course::getFeatures((int) $course['id']);
+            $course['features'] = array_map(fn($f) => $f['feature_text'], $features);
+            $course['badge_label'] = $course['badge_label'] ?? null;
+            $course['target_grades'] = $course['target_grades'] ?? null;
+            $course['format'] = $course['format'] ?? null;
+            $course['full_description'] = $course['full_description'] ?? null;
         }
         return ['courses' => $courses];
     }

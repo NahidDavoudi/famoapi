@@ -19,7 +19,7 @@ class PublicController
         $data = $this->service->getCourses();
         $response->getBody()->write(json_encode([
             'success' => true,
-            'data' => $data,
+            'data' => $data['courses'],
             'pagination' => null,
             'error' => null,
         ], JSON_UNESCAPED_UNICODE));
@@ -31,7 +31,7 @@ class PublicController
         $data = $this->service->getInstructors();
         $response->getBody()->write(json_encode([
             'success' => true,
-            'data' => $data,
+            'data' => $data['instructors'],
             'pagination' => null,
             'error' => null,
         ], JSON_UNESCAPED_UNICODE));
@@ -43,7 +43,7 @@ class PublicController
         $data = $this->service->getSupporters();
         $response->getBody()->write(json_encode([
             'success' => true,
-            'data' => $data,
+            'data' => $data['supporters'],
             'pagination' => null,
             'error' => null,
         ], JSON_UNESCAPED_UNICODE));

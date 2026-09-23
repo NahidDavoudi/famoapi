@@ -397,14 +397,7 @@ paths:
                       data:
                         type: array
                         items:
-                          type: object
-                          properties:
-                            id:
-                              type: integer
-                            name:
-                              type: string
-                            slug:
-                              type: string
+                          $ref: "#/components/schemas/BlogCategory"
 
   /api/v1/public/blog/categories/{category}/posts:
     get:
@@ -2928,10 +2921,27 @@ components:
         description:
           type: string
           nullable: true
+        full_description:
+          type: string
+          nullable: true
+        target_grades:
+          type: string
+          nullable: true
+        format:
+          type: string
+          nullable: true
+        badge_label:
+          type: string
+          nullable: true
         price:
           type: integer
         display_order:
           type: integer
+        features:
+          type: array
+          items:
+            type: string
+          description: Array of feature text strings
         created_at:
           type: string
           format: date-time
@@ -2949,7 +2959,13 @@ components:
         description:
           type: string
           nullable: true
+        full_bio:
+          type: string
+          nullable: true
         image_url:
+          type: string
+          nullable: true
+        initial_letter:
           type: string
           nullable: true
         display_order:
@@ -2987,6 +3003,29 @@ components:
           type: string
           format: date-time
 
+    BlogCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        icon:
+          type: string
+          nullable: true
+        color:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+        post_count:
+          type: integer
+
     BlogPost:
       type: object
       properties:
@@ -3004,11 +3043,23 @@ components:
         cover_image:
           type: string
           nullable: true
+        category:
+          type: string
+          nullable: true
         category_id:
           type: integer
           nullable: true
         published:
           type: boolean
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        views:
+          type: integer
+        meta_description:
+          type: string
+          nullable: true
         created_at:
           type: string
           format: date-time

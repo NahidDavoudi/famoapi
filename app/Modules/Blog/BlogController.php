@@ -79,7 +79,7 @@ class BlogController
 
         $response->getBody()->write(json_encode([
             'success' => true,
-            'data' => $result,
+            'data' => $result['categories'],
             'pagination' => null,
             'error' => null,
         ], JSON_UNESCAPED_UNICODE));

@@ -30,7 +30,12 @@ class BlogService
 
     public function getPost(string $slug): ?array
     {
-        return BlogPost::findBySlug($slug);
+        $post = BlogPost::findBySlug($slug);
+        if ($post) {
+            BlogPost::incrementViews((int) $post['id']);
+            $post['views'] = ($post['views'] ?? 0) + 1;
+        }
+        return $post;
     }
 
     public function getCategories(): array

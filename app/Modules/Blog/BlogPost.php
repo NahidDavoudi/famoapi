@@ -111,7 +111,7 @@ class BlogPost
         $fields = [];
         $values = [];
 
-        foreach (['title', 'slug', 'excerpt', 'content', 'cover_image', 'category', 'category_id', 'author_id', 'is_published', 'published_at'] as $field) {
+        foreach (['title', 'slug', 'excerpt', 'content', 'cover_image', 'category', 'category_id', 'author_id', 'is_published', 'published_at', 'meta_description'] as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "{$field} = ?";
                 $values[] = $data[$field];
@@ -141,15 +141,28 @@ class BlogPost
     public static function getCategories(): array
     {
         $db = Database::getConnection();
-        $stmt = $db->prepare(
-            'SELECT category AS name, category AS slug, COUNT(*) AS post_count
-             FROM blog_posts
-             WHERE is_published = 1 AND category IS NOT NULL AND category != \'\'
-             GROUP BY category
-             ORDER BY category ASC'
-        );
-        $stmt->execute();
-        return $stmt->fetchAll();
+        try {
+            $stmt = $db->prepare(
+                'SELECT bc.id, bc.name, bc.slug, bc.icon, bc.color, bc.description, bc.sort_order,
+                        COALESCE(COUNT(bp.id), 0) AS post_count
+                 FROM blog_categories bc
+                 LEFT JOIN blog_posts bp ON bp.category_id = bc.id AND bp.is_published = 1
+                 WHERE bc.is_active = 1
+                 GROUP BY bc.id, bc.name, bc.slug, bc.icon, bc.color, bc.description, bc.sort_order
+                 ORDER BY bc.sort_order ASC, bc.name ASC'
+            );
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    public static function incrementViews(int $id): void
+    {
+        $db = Database::getConnection();
+        $stmt = $db->prepare('UPDATE blog_posts SET views = views + 1 WHERE id = ?');
+        $stmt->execute([$id]);
     }
 
     private static function makeUniqueSlug(?string $slug, string $title): string
