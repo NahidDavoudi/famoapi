@@ -26,6 +26,26 @@ class EmailService
         return $this->sendSMTP($to, $subject, $body);
     }
 
+    private function smtpCommand($fp, string $command, int $expectedCode, string $context): bool
+    {
+        if ($command !== '') {
+            fwrite($fp, $command . "\r\n");
+        }
+        $response = '';
+        while (($line = fgets($fp, 515)) !== false) {
+            $response .= $line;
+            if (isset($line[3]) && $line[3] === ' ') {
+                break;
+            }
+        }
+        $code = (int) substr((string) $line, 0, 3);
+        if ($code !== $expectedCode) {
+            error_log("[EmailService] {$context} failed ({$code}): " . trim($response));
+            return false;
+        }
+        return true;
+    }
+
     public function sendVerificationCode(string $to, string $name, string $code): bool
     {
         $subject = 'کد تأیید ورود به پنل مدیریت - فامو';
@@ -43,26 +63,69 @@ class EmailService
 
     private function sendSMTP(string $to, string $subject, string $body): bool
     {
-        if (empty($this->smtpHost)) {
-            error_log("[EmailService] SMTP not configured. Would send to: $to, subject: $subject");
+        if (empty($this->smtpHost) || empty($this->smtpUser) || empty($this->smtpPass)) {
+            error_log("[EmailService] SMTP not fully configured. Would send to: $to, subject: $subject");
             return false;
         }
 
-        $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-        $headers .= "From: {$this->fromName} <{$this->fromEmail}>\r\n";
-        $headers .= "X-Mailer: PHP/" . PHP_VERSION . "\r\n";
-
-        if ($this->smtpPort === 25 || $this->smtpPort === 587 || $this->smtpPort === 465) {
-            ini_set('SMTP', $this->smtpHost);
-            ini_set('smtp_port', $this->smtpPort);
+        $remote = ($this->smtpPort === 465 ? 'ssl://' : 'tcp://') . $this->smtpHost . ':' . $this->smtpPort;
+        $errno = 0;
+        $errstr = '';
+        $fp = @stream_socket_client($remote, $errno, $errstr, 15, STREAM_CLIENT_CONNECT);
+        if (!$fp) {
+            error_log("[EmailService] Connection failed: $errstr ($errno)");
+            return false;
         }
+
+        stream_set_timeout($fp, 15);
+
+        // Read banner
+        if (!$this->smtpCommand($fp, '', 220, 'banner')) { fclose($fp); return false; }
+
+        // EHLO
+        $domain = parse_url($this->fromEmail, PHP_URL_HOST) ?: 'localhost';
+        if (!$this->smtpCommand($fp, "EHLO {$domain}", 250, 'EHLO')) { fclose($fp); return false; }
+
+        // STARTTLS (ports 587/25)
+        if ($this->smtpPort !== 465) {
+            if (!$this->smtpCommand($fp, 'STARTTLS', 220, 'STARTTLS')) { fclose($fp); return false; }
+            if (!@stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                error_log("[EmailService] TLS negotiation failed"); fclose($fp); return false;
+            }
+            // Re-EHLO after TLS
+            if (!$this->smtpCommand($fp, "EHLO {$domain}", 250, 'EHLO-TLS')) { fclose($fp); return false; }
+        }
+
+        // AUTH LOGIN
+        $b64User = base64_encode($this->smtpUser);
+        $b64Pass = base64_encode($this->smtpPass);
+        if (!$this->smtpCommand($fp, 'AUTH LOGIN', 334, 'AUTH')) { fclose($fp); return false; }
+        if (!$this->smtpCommand($fp, $b64User, 334, 'username')) { fclose($fp); return false; }
+        if (!$this->smtpCommand($fp, $b64Pass, 235, 'password')) { fclose($fp); return false; }
+
+        // MAIL FROM
+        if (!$this->smtpCommand($fp, "MAIL FROM:<{$this->fromEmail}>", 250, 'MAIL FROM')) { fclose($fp); return false; }
+
+        // RCPT TO
+        if (!$this->smtpCommand($fp, "RCPT TO:<{$to}>", 250, 'RCPT TO')) { fclose($fp); return false; }
+
+        // DATA
+        if (!$this->smtpCommand($fp, 'DATA', 354, 'DATA')) { fclose($fp); return false; }
 
         $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-        $success = @mail($to, $encodedSubject, $body, $headers);
-        if (!$success) {
-            error_log("[EmailService] Failed to send email to: $to, subject: $subject");
-        }
-        return $success;
+        $headers = "MIME-Version: 1.0\r\n"
+                 . "Content-Type: text/html; charset=UTF-8\r\n"
+                 . "From: {$this->fromName} <{$this->fromEmail}>\r\n"
+                 . "To: <{$to}>\r\n"
+                 . "Subject: {$encodedSubject}\r\n"
+                 . "X-Mailer: PHP/" . PHP_VERSION . "\r\n";
+
+        fwrite($fp, $headers . "\r\n" . $body . "\r\n.");
+        if (!$this->smtpCommand($fp, '', 250, 'body')) { fclose($fp); return false; }
+
+        // QUIT
+        fwrite($fp, "QUIT\r\n");
+        fclose($fp);
+        return true;
     }
 }

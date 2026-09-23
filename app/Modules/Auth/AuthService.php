@@ -4,15 +4,15 @@ namespace App\Modules\Auth;
 
 use App\Core\Auth;
 use App\Core\Database;
-use App\Core\EmailService;
+use App\Core\SmsService;
 
 class AuthService
 {
-    private EmailService $mailer;
+    private SmsService $sms;
 
-    public function __construct(?EmailService $mailer = null)
+    public function __construct(?SmsService $sms = null)
     {
-        $this->mailer = $mailer ?? new EmailService();
+        $this->sms = $sms ?? new SmsService();
     }
 
     public function login(string $username, string $password): array
@@ -26,6 +26,7 @@ class AuthService
         $role = $user['role'];
 
         if ($role === 'admin' || $role === 'supporter') {
+            // TODO: برای فعال‌سازی روی سایر نقش‌ها (مثلاً student)، این شرط را گسترش دهید
             $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
             $expiresAt = gmdate('Y-m-d H:i:s', time() + 300); // 5 minutes
 
@@ -35,15 +36,20 @@ class AuthService
             );
             $stmt->execute([$user['id'], $code, $expiresAt]);
 
-            $email = $user['email'] ?? $user['username'] . '@famoacademy.ir';
-            $this->mailer->sendVerificationCode($email, $user['username'], $code);
+            $mobile = $user['username'];
+            $sent = $this->sms->sendVerificationCode($mobile, $code);
+
+            if (!$sent) {
+                error_log('[' . date('Y-m-d H:i:s') . '] AuthService: Failed to send 2FA code to user ' . $user['id'] . PHP_EOL, 3, __DIR__ . '/../../../storage/logs/app.log');
+                throw new \RuntimeException('ارسال کد تأیید با مشکل مواجه شد. لطفاً دقایقی بعد تلاش کنید.', 500);
+            }
 
             return [
                 'requires_2fa' => true,
                 'user_id'      => (int) $user['id'],
                 'username'     => $user['username'],
                 'role'         => $role,
-                'email_mask'   => $this->maskEmail($email),
+                'phone_mask'   => substr($mobile, 0, 4) . '***' . substr($mobile, -2),
             ];
         }
 
@@ -171,14 +177,5 @@ class AuthService
             'username' => $user['username'],
             'role'     => $user['role'],
         ];
-    }
-
-    private function maskEmail(string $email): string
-    {
-        $parts = explode('@', $email);
-        $name = $parts[0] ?? '';
-        $domain = $parts[1] ?? '';
-        $masked = substr($name, 0, 2) . str_repeat('*', max(0, strlen($name) - 2));
-        return $masked . '@' . $domain;
     }
 }
