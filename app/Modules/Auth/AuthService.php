@@ -107,29 +107,43 @@ class AuthService
             throw new \RuntimeException('این شماره تلفن قبلاً ثبت‌نام کرده است', 409);
         }
 
-        $userId = User::create([
-            'username' => $data['phone'],
-            'password' => $data['password'],
-            'role'     => 'student',
-        ]);
-
         $db = Database::getConnection();
-        $stmt = $db->prepare(
-            'INSERT INTO students (user_id, name, national_id, grade, field, phone)
-             VALUES (:user_id, :name, :national_id, :grade, :field, :phone)'
-        );
-        $stmt->execute([
-            'user_id'     => $userId,
-            'name'        => $data['name'],
-            'national_id' => $data['nationalId'],
-            'grade'       => $data['grade'],
-            'field'       => $data['field'],
-            'phone'       => $data['phone'],
-        ]);
-        $studentId = (int) $db->lastInsertId();
+        $db->beginTransaction();
+        try {
+            // Some legacy imports have no AUTO_INCREMENT on these tables.
+            // Allocate IDs explicitly until the schema migration is applied.
+            $userId = (int) $db->query('SELECT COALESCE(MAX(id), 0) + 1 FROM users')->fetchColumn();
+            User::create([
+                'id'        => $userId,
+                'full_name' => $data['name'],
+                'username'  => $data['phone'],
+                'password'  => $data['password'],
+                'role'      => 'student',
+            ]);
 
-        $db->prepare('UPDATE users SET linked_id = :linked_id WHERE id = :id')
-           ->execute(['linked_id' => $studentId, 'id' => $userId]);
+            // The legacy students table links back through users.linked_id.
+            $stmt = $db->prepare(
+                'INSERT INTO students (id, name, national_id, grade, field, phone)
+                 VALUES (:id, :name, :national_id, :grade, :field, :phone)'
+            );
+            $studentId = (int) $db->query('SELECT COALESCE(MAX(id), 0) + 1 FROM students')->fetchColumn();
+            $stmt->execute([
+                'id'          => $studentId,
+                'name'        => $data['name'],
+                'national_id' => $data['nationalId'],
+                'grade'       => $data['grade'],
+                'field'       => $data['field'],
+                'phone'       => $data['phone'],
+            ]);
+            $db->prepare('UPDATE users SET linked_id = :linked_id WHERE id = :id')
+               ->execute(['linked_id' => $studentId, 'id' => $userId]);
+            $db->commit();
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
 
         $token = Auth::encode([
             'id'   => $userId,
