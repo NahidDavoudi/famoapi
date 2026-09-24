@@ -38,7 +38,10 @@ class Student
         $offset = ($page - 1) * $perPage;
 
         $stmt = Database::getConnection()->prepare(
-            "SELECT s.* FROM students s {$where} ORDER BY s.created_at DESC LIMIT :limit OFFSET :offset"
+            "SELECT s.*, u.id AS user_id
+             FROM students s
+             LEFT JOIN users u ON u.linked_id = s.id AND u.role = 'student'
+             {$where} ORDER BY s.created_at DESC LIMIT :limit OFFSET :offset"
         );
         foreach ($params as $key => $value) {
             $stmt->bindValue(':' . $key, $value);
@@ -158,7 +161,7 @@ class Student
     public static function getList(): array
     {
         $stmt = Database::getConnection()->prepare(
-            'SELECT id, name FROM students WHERE is_active = 1 ORDER BY name ASC'
+            'SELECT id, name, grade, field FROM students WHERE is_active = 1 ORDER BY name ASC'
         );
         $stmt->execute();
         return $stmt->fetchAll();

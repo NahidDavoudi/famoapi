@@ -5,6 +5,7 @@ use App\Modules\Auth\AuthController;
 use App\Modules\Auth\AuthMiddleware;
 use App\Modules\Auth\AuthService;
 use App\Modules\Blog\BlogController;
+use App\Modules\Dashboard\DashboardController;
 use App\Modules\Courses\CourseController;
 use App\Modules\Courses\CourseService;
 use App\Modules\Instructors\InstructorController;
@@ -39,6 +40,7 @@ return function (App $app) {
     $requireSupporter = new Authorization('supporter');
 
     $authController = new AuthController(new AuthService());
+    $dashboardController = new DashboardController();
     $publicController = new PublicController();
     $blogController = new BlogController();
     $studentController = new StudentController(new StudentService());
@@ -77,6 +79,9 @@ return function (App $app) {
     $app->get('/api/v1/public/blog/posts/{slug}', [$blogController, 'getPost']);
     $app->get('/api/v1/public/blog/categories', [$blogController, 'getCategories']);
     $app->get('/api/v1/public/blog/categories/{category}/posts', [$blogController, 'getPostsByCategory']);
+
+    // Dashboard (protected)
+    $app->get('/api/v1/dashboard/stats', [$dashboardController, 'stats'])->add($requireSupporter)->add($authMiddleware);
 
     // Blog (protected)
     $app->get('/api/v1/blog/posts', [$blogController, 'getAllPosts'])->add($authMiddleware);

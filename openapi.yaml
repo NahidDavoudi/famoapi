@@ -430,6 +430,55 @@ paths:
                               $ref: "#/components/schemas/BlogPost"
                   - $ref: "#/components/schemas/WithPagination"
 
+  # ───────────────────── Dashboard ─────────────────────
+  /api/v1/dashboard/stats:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard statistics (supporter+)
+      operationId: dashboardStats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          students_count:
+                            type: integer
+                            description: کل دانش‌آموزان
+                          exams_this_week:
+                            type: integer
+                            description: تعداد آزمون‌های این هفته
+                          students_no_exam:
+                            type: integer
+                            description: دانش‌آموزان بدون آزمون
+                          pending_reports:
+                            type: integer
+                            description: گزارش‌های در انتظار
+                          avg_by_field:
+                            type: array
+                            description: میانگین درصد به تفکیک رشته
+                            items:
+                              type: object
+                              properties:
+                                field:
+                                  type: string
+                                avg_percentage:
+                                  type: number
+                                student_count:
+                                  type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   # ───────────────────── Blog (protected) ─────────────────────
   /api/v1/blog/posts:
     get:
@@ -3322,6 +3371,8 @@ tags:
     description: Health check endpoints
   - name: Auth
     description: Authentication & authorization
+  - name: Dashboard
+    description: Dashboard statistics (supporter+)
   - name: Public
     description: Public (no auth required) endpoints
   - name: Blog

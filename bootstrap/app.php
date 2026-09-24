@@ -13,6 +13,15 @@ date_default_timezone_set('UTC');
 
 $app = AppFactory::create();
 
+// Ensure multipart/form-data fields are available via getParsedBody().
+// Slim's BodyParsingMiddleware does not parse multipart, so merge $_POST.
+$app->add(function (ServerRequestInterface $request, $handler) {
+    if ($request->getParsedBody() === null && !empty($_POST)) {
+        $request = $request->withParsedBody($_POST);
+    }
+    return $handler->handle($request);
+});
+
 $app->addBodyParsingMiddleware();
 
 $errorMiddleware = $app->addErrorMiddleware(
