@@ -94,6 +94,10 @@ paths:
                               role:
                                 type: string
                                 enum: [admin, supporter, student]
+                              student_id:
+                                type: integer
+                                nullable: true
+                                description: شناسه دانش‌آموز متصل (فقط برای نقش student)
         "202":
           description: 2FA required (admin/supporter)
           content:
@@ -162,6 +166,10 @@ paths:
                               role:
                                 type: string
                                 enum: [admin, supporter, student]
+                              student_id:
+                                type: integer
+                                nullable: true
+                                description: شناسه دانش‌آموز متصل (فقط برای نقش student)
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
@@ -204,7 +212,7 @@ paths:
               required: [phone, password, nationalId, grade, field, name]
       responses:
         "201":
-          description: Registration successful
+          description: Registration successful (returns a JWT — auto login)
           content:
             application/json:
               schema:
@@ -213,6 +221,22 @@ paths:
                   - properties:
                       data:
                         type: object
+                        properties:
+                          token:
+                            type: string
+                          user:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              username:
+                                type: string
+                              role:
+                                type: string
+                                enum: [admin, supporter, student]
+                              student_id:
+                                type: integer
+                                nullable: true
         "409":
           $ref: "#/components/responses/Conflict"
         "422":
@@ -241,11 +265,15 @@ paths:
                             type: integer
                           username:
                             type: string
+                          full_name:
+                            type: string
+                            nullable: true
                           role:
                             type: string
                           student_id:
                             type: integer
                             nullable: true
+                            description: شناسه دانش‌آموز متصل (null برای admin/supporter)
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -1682,7 +1710,7 @@ paths:
                           exams:
                             type: array
                             items:
-                              $ref: "#/components/schemas/ExamResult"
+                              $ref: "#/components/schemas/ExamResultListItem"
                   - $ref: "#/components/schemas/WithPagination"
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -1711,10 +1739,18 @@ paths:
                     properties:
                       subject:
                         type: string
-                      score:
-                        type: number
-                      total:
-                        type: number
+                      chapter:
+                        type: string
+                      total_q:
+                        type: integer
+                        description: تعداد کل سوالات
+                      correct:
+                        type: integer
+                      wrong:
+                        type: integer
+                      skipped:
+                        type: integer
+                    required: [subject, total_q]
               required: [student_id, exam_date, subjects]
       responses:
         "200":
@@ -1727,6 +1763,10 @@ paths:
                   - properties:
                       data:
                         type: object
+                        properties:
+                          inserted:
+                            type: integer
+                            description: تعداد نتایج ذخیره‌شده
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -1739,9 +1779,19 @@ paths:
       tags: [Exams]
       summary: Get distinct exam dates with stats
       operationId: examGetDates
+      description: |
+        Distinct exam dates with aggregate stats. Students are automatically
+        scoped to their own results (a `student_id` different from the token's
+        linked student returns 403).
       security:
         - bearerAuth: []
       parameters:
+        - name: student_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: محدود کردن به تاریخ‌های یک دانش‌آموز (برای شاگرد خودکار تحمیل می‌شود)
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/PerPage"
       responses:
@@ -1766,6 +1816,10 @@ paths:
                                   format: date
                                 student_count:
                                   type: integer
+                                subject_count:
+                                  type: integer
+                                avg_percentage:
+                                  type: number
                   - $ref: "#/components/schemas/WithPagination"
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -1773,8 +1827,9 @@ paths:
   /api/v1/exams/students:
     get:
       tags: [Exams]
-      summary: Get students for a specific exam date
+      summary: Get students for a specific exam date (supporter+)
       operationId: examGetStudents
+      description: Staff-only listing of all students who took an exam on a date.
       security:
         - bearerAuth: []
       parameters:
@@ -1801,18 +1856,36 @@ paths:
                           students:
                             type: array
                             items:
-                              $ref: "#/components/schemas/Student"
+                              type: object
+                              properties:
+                                student_id:
+                                  type: integer
+                                name:
+                                  type: string
+                                grade:
+                                  type: integer
+                                field:
+                                  type: string
+                                subject_count:
+                                  type: integer
+                                avg_percentage:
+                                  type: number
                   - $ref: "#/components/schemas/WithPagination"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /api/v1/exams/details:
     get:
       tags: [Exams]
       summary: Get per-subject breakdown for a student on a date
       operationId: examGetDetails
+      description: |
+        Per-subject breakdown for one student on one exam date. Students may
+        only query their own `student_id` (otherwise 403); staff can query any.
       security:
         - bearerAuth: []
       parameters:
@@ -1838,6 +1911,40 @@ paths:
                   - properties:
                       data:
                         type: object
+                        properties:
+                          student:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              name:
+                                type: string
+                              grade:
+                                type: integer
+                              field:
+                                type: string
+                          subjects:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                subject:
+                                  type: string
+                                chapter:
+                                  type: string
+                                  nullable: true
+                                total_q:
+                                  type: integer
+                                correct:
+                                  type: integer
+                                wrong:
+                                  type: integer
+                                skipped:
+                                  type: integer
+                                percentage:
+                                  type: number
+                          avg_percentage:
+                            type: number
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -3128,13 +3235,44 @@ components:
           format: date
         subject:
           type: string
-        score:
+        chapter:
+          type: string
+          nullable: true
+        total_q:
+          type: integer
+          description: تعداد کل سوالات
+        correct:
+          type: integer
+        wrong:
+          type: integer
+        skipped:
+          type: integer
+        percentage:
           type: number
-        total:
-          type: number
+          description: نسبت پاسخ‌های درست به کل سوالات (correct / total_q × 100)
+        file_id:
+          type: integer
+          nullable: true
         created_at:
           type: string
           format: date-time
+
+    ExamResultListItem:
+      allOf:
+        - $ref: "#/components/schemas/ExamResult"
+        - type: object
+          properties:
+            student_name:
+              type: string
+            field:
+              type: string
+              nullable: true
+            grade:
+              type: integer
+              nullable: true
+            file_path:
+              type: string
+              nullable: true
 
     PlanTemplate:
       type: object

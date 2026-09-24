@@ -2,6 +2,7 @@
 
 namespace App\Modules\Students;
 
+use App\Core\StudentScope;
 use App\Core\Validator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -13,6 +14,14 @@ class StudentController
 
     public function __construct(private StudentService $service)
     {
+    }
+
+    /**
+     * Students may only act on their own id (403 otherwise); staff use the path id.
+     */
+    private function resolveStudentId(Request $request, array $args): int
+    {
+        return (int) StudentScope::studentId($request, (int) $args['id'], true);
     }
 
     public function list(Request $request, Response $response): Response
@@ -101,14 +110,14 @@ class StudentController
     public function get(Request $request, Response $response, array $args): Response
     {
         try {
-            $result = $this->service->get((int) $args['id']);
+            $result = $this->service->get($this->resolveStudentId($request, $args));
         } catch (\RuntimeException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'NOT_FOUND',
+                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
@@ -279,14 +288,14 @@ class StudentController
     public function analyticsSummary(Request $request, Response $response, array $args): Response
     {
         try {
-            $result = $this->service->getAnalyticsSummary((int) $args['id']);
+            $result = $this->service->getAnalyticsSummary($this->resolveStudentId($request, $args));
         } catch (\RuntimeException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'NOT_FOUND',
+                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
@@ -305,14 +314,14 @@ class StudentController
     public function analyticsWeekDetail(Request $request, Response $response, array $args): Response
     {
         try {
-            $result = $this->service->getAnalyticsWeekDetail((int) $args['id']);
+            $result = $this->service->getAnalyticsWeekDetail($this->resolveStudentId($request, $args));
         } catch (\RuntimeException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'NOT_FOUND',
+                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
@@ -331,14 +340,14 @@ class StudentController
     public function analyticsSubjectStats(Request $request, Response $response, array $args): Response
     {
         try {
-            $result = $this->service->getAnalyticsSubjectStats((int) $args['id']);
+            $result = $this->service->getAnalyticsSubjectStats($this->resolveStudentId($request, $args));
         } catch (\RuntimeException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'NOT_FOUND',
+                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
@@ -357,14 +366,14 @@ class StudentController
     public function analyticsExamTrend(Request $request, Response $response, array $args): Response
     {
         try {
-            $result = $this->service->getAnalyticsExamTrend((int) $args['id']);
+            $result = $this->service->getAnalyticsExamTrend($this->resolveStudentId($request, $args));
         } catch (\RuntimeException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'NOT_FOUND',
+                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));

@@ -15,6 +15,18 @@ class AuthService
         $this->sms = $sms ?? new SmsService();
     }
 
+    /**
+     * Linked student id, only meaningful for the student role.
+     */
+    private function studentIdFor(array $user): ?int
+    {
+        if (($user['role'] ?? '') !== 'student') {
+            return null;
+        }
+        $id = (int) ($user['linked_id'] ?? 0);
+        return $id > 0 ? $id : null;
+    }
+
     public function login(string $username, string $password): array
     {
         $user = User::findByUsername($username);
@@ -53,17 +65,21 @@ class AuthService
             ];
         }
 
+        $studentId = $this->studentIdFor($user);
+
         $token = Auth::encode([
-            'id'   => $user['id'],
-            'role' => $role,
+            'id'         => $user['id'],
+            'role'       => $role,
+            'student_id' => $studentId,
         ]);
 
         return [
             'token' => $token,
             'user'  => [
-                'id'       => (int) $user['id'],
-                'username' => $user['username'],
-                'role'     => $role,
+                'id'         => (int) $user['id'],
+                'username'   => $user['username'],
+                'role'       => $role,
+                'student_id' => $studentId,
             ],
         ];
     }
@@ -92,17 +108,21 @@ class AuthService
             throw new \RuntimeException('کاربر یافت نشد', 404);
         }
 
+        $studentId = $this->studentIdFor($user);
+
         $token = Auth::encode([
-            'id'   => $user['id'],
-            'role' => $user['role'],
+            'id'         => $user['id'],
+            'role'       => $user['role'],
+            'student_id' => $studentId,
         ]);
 
         return [
             'token' => $token,
             'user'  => [
-                'id'       => (int) $user['id'],
-                'username' => $user['username'],
-                'role'     => $user['role'],
+                'id'         => (int) $user['id'],
+                'username'   => $user['username'],
+                'role'       => $user['role'],
+                'student_id' => $studentId,
             ],
         ];
     }
@@ -152,16 +172,18 @@ class AuthService
         }
 
         $token = Auth::encode([
-            'id'   => $userId,
-            'role' => 'student',
+            'id'         => $userId,
+            'role'       => 'student',
+            'student_id' => $studentId,
         ]);
 
         return [
             'token' => $token,
             'user'  => [
-                'id'       => $userId,
-                'username' => $data['phone'],
-                'role'     => 'student',
+                'id'         => $userId,
+                'username'   => $data['phone'],
+                'role'       => 'student',
+                'student_id' => $studentId,
             ],
         ];
     }
@@ -173,9 +195,11 @@ class AuthService
             throw new \RuntimeException('کاربر یافت نشد', 404);
         }
         return [
-            'id'       => (int) $user['id'],
-            'username' => $user['username'],
-            'role'     => $user['role'],
+            'id'         => (int) $user['id'],
+            'username'   => $user['username'],
+            'role'       => $user['role'],
+            'full_name'  => $user['full_name'] ?? null,
+            'student_id' => $this->studentIdFor($user),
         ];
     }
 }

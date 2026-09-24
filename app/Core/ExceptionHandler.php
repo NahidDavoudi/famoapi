@@ -30,13 +30,23 @@ class ExceptionHandler
             error_log($logMessage . PHP_EOL, 3, __DIR__ . '/../../storage/logs/app.log');
         }
 
+        $errorCode = match ($statusCode) {
+            400     => 'VALIDATION_ERROR',
+            401     => 'UNAUTHORIZED',
+            403     => 'FORBIDDEN',
+            404     => 'NOT_FOUND',
+            409     => 'CONFLICT',
+            500     => 'INTERNAL_ERROR',
+            default => 'REQUEST_ERROR',
+        };
+
         $response = new \Slim\Psr7\Response();
         $response->getBody()->write(json_encode([
             'success'    => false,
             'data'       => null,
             'pagination' => null,
             'error'      => [
-                'code'    => $statusCode === 500 ? 'INTERNAL_ERROR' : 'REQUEST_ERROR',
+                'code'    => $errorCode,
                 'message' => $message,
             ],
         ], JSON_UNESCAPED_UNICODE));

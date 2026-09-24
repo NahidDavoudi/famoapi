@@ -42,11 +42,15 @@ class FileService
         return $file;
     }
 
-    public function deleteFile(int $id): void
+    public function deleteFile(int $id, ?int $enforceStudentId = null): void
     {
         $file = File::findById($id);
         if (!$file) {
             throw new \RuntimeException('فایل یافت نشد', 404);
+        }
+
+        if ($enforceStudentId !== null && (int) $file['owner_id'] !== $enforceStudentId) {
+            throw new \RuntimeException('دسترسی غیرمجاز', 403);
         }
 
         Storage::delete($file['file_path']);

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Files;
 
+use App\Core\StudentScope;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -14,7 +15,10 @@ class FileController
     public function list(Request $request, Response $response): Response
     {
         $params = $request->getQueryParams();
-        $studentId = isset($params['student_id']) ? (int) $params['student_id'] : null;
+        $studentId = StudentScope::studentId(
+            $request,
+            isset($params['student_id']) ? (int) $params['student_id'] : null
+        );
         $page = (int) ($params['page'] ?? 1);
         $perPage = (int) ($params['perPage'] ?? 20);
 
@@ -48,7 +52,11 @@ class FileController
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
-        $studentId = (int) ($body['student_id'] ?? 0);
+        $studentId = (int) StudentScope::studentId(
+            $request,
+            (int) ($body['student_id'] ?? 0),
+            true
+        );
         if ($studentId <= 0) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
@@ -91,14 +99,15 @@ class FileController
     public function delete(Request $request, Response $response, array $args): Response
     {
         try {
-            $this->service->deleteFile((int) $args['id']);
+            $enforceStudentId = StudentScope::isStudent($request) ? StudentScope::selfId($request) : null;
+            $this->service->deleteFile((int) $args['id'], $enforceStudentId);
         } catch (\RuntimeException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'DELETE_ERROR',
+                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'DELETE_ERROR',
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));

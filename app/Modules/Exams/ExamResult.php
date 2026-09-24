@@ -6,25 +6,35 @@ use App\Core\Database;
 
 class ExamResult
 {
-    public static function findDates(int $page, int $perPage): array
+    public static function findDates(?int $studentId, int $page, int $perPage): array
     {
         $offset = ($page - 1) * $perPage;
+        $where = $studentId ? 'WHERE student_id = ?' : '';
+        $params = $studentId ? [$studentId, $perPage, $offset] : [$perPage, $offset];
+
         $stmt = Database::getConnection()->prepare(
-            'SELECT exam_date, COUNT(DISTINCT student_id) as student_count,
+            "SELECT exam_date, COUNT(DISTINCT student_id) as student_count,
                     COUNT(DISTINCT subject) as subject_count,
                     ROUND(AVG(percentage), 1) as avg_percentage
              FROM exam_results
+             {$where}
              GROUP BY exam_date
              ORDER BY exam_date DESC
-             LIMIT ? OFFSET ?'
+             LIMIT ? OFFSET ?"
         );
-        $stmt->execute([$perPage, $offset]);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
-    public static function countDates(): int
+    public static function countDates(?int $studentId): int
     {
-        $stmt = Database::getConnection()->query('SELECT COUNT(DISTINCT exam_date) FROM exam_results');
+        $db = Database::getConnection();
+        if ($studentId) {
+            $stmt = $db->prepare('SELECT COUNT(DISTINCT exam_date) FROM exam_results WHERE student_id = ?');
+            $stmt->execute([$studentId]);
+        } else {
+            $stmt = $db->query('SELECT COUNT(DISTINCT exam_date) FROM exam_results');
+        }
         return (int) $stmt->fetchColumn();
     }
 

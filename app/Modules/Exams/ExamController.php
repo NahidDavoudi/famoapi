@@ -2,6 +2,7 @@
 
 namespace App\Modules\Exams;
 
+use App\Core\StudentScope;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -14,7 +15,11 @@ class ExamController
         $params = $request->getQueryParams();
         $page = (int) ($params['page'] ?? 1);
         $perPage = (int) ($params['per_page'] ?? 20);
-        $result = $this->service->getDates($page, $perPage);
+        $studentId = StudentScope::studentId(
+            $request,
+            isset($params['student_id']) ? (int) $params['student_id'] : null
+        );
+        $result = $this->service->getDates($page, $perPage, $studentId);
 
         $response->getBody()->write(json_encode([
             'success' => true, 'data' => ['dates' => $result['dates']],
@@ -49,7 +54,10 @@ class ExamController
     {
         $params = $request->getQueryParams();
         $examDate = $params['exam_date'] ?? '';
-        $studentId = (int) ($params['student_id'] ?? 0);
+        $studentId = StudentScope::studentId(
+            $request,
+            isset($params['student_id']) ? (int) $params['student_id'] : null
+        );
         if (!$examDate || !$studentId) {
             $response->getBody()->write(json_encode([
                 'success' => false, 'data' => null, 'pagination' => null,
@@ -59,7 +67,7 @@ class ExamController
         }
 
         try {
-            $result = $this->service->getDetails($examDate, $studentId);
+            $result = $this->service->getDetails($examDate, (int) $studentId);
         } catch (\RuntimeException $e) {
             $response->getBody()->write(json_encode([
                 'success' => false, 'data' => null, 'pagination' => null,
@@ -78,7 +86,10 @@ class ExamController
     {
         $params = $request->getQueryParams();
         $filters = [
-            'student_id' => $params['student_id'] ?? null,
+            'student_id' => StudentScope::studentId(
+                $request,
+                isset($params['student_id']) ? (int) $params['student_id'] : null
+            ),
             'date_from' => $params['date_from'] ?? null,
             'date_to' => $params['date_to'] ?? null,
         ];

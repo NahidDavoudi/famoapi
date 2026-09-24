@@ -129,7 +129,7 @@ return function (App $app) {
     // Exams (protected)
     $app->get('/api/v1/exams', [$examController, 'getAll'])->add($authMiddleware);
     $app->get('/api/v1/exams/dates', [$examController, 'getDates'])->add($authMiddleware);
-    $app->get('/api/v1/exams/students', [$examController, 'getStudents'])->add($authMiddleware);
+    $app->get('/api/v1/exams/students', [$examController, 'getStudents'])->add($requireSupporter)->add($authMiddleware);
     $app->get('/api/v1/exams/details', [$examController, 'getDetails'])->add($authMiddleware);
     $app->post('/api/v1/exams', [$examController, 'save'])->add($requireAdmin)->add($authMiddleware);
 

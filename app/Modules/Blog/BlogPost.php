@@ -87,8 +87,8 @@ class BlogPost
         $db = Database::getConnection();
         $slug = self::makeUniqueSlug($data['slug'] ?? null, $data['title'] ?? '');
         $stmt = $db->prepare(
-            'INSERT INTO blog_posts (title, slug, excerpt, content, cover_image, category, category_id, author_id, is_published, published_at, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())'
+            'INSERT INTO blog_posts (title, slug, excerpt, content, cover_image, category, category_id, meta_description, is_published, published_at, views)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)'
         );
         $stmt->execute([
             $data['title'],
@@ -96,11 +96,11 @@ class BlogPost
             $data['excerpt'] ?? null,
             $data['content'] ?? null,
             $data['cover_image'] ?? null,
-            $data['category'] ?? null,
+            $data['category'] ?? '',
             $data['category_id'] ?? null,
-            $data['author_id'] ?? null,
+            $data['meta_description'] ?? null,
             $data['is_published'] ?? 0,
-            $data['is_published'] ? ($data['published_at'] ?? date('Y-m-d H:i:s')) : null,
+            $data['published_at'] ?? date('Y-m-d H:i:s'),
         ]);
         return (int) $db->lastInsertId();
     }
@@ -111,7 +111,14 @@ class BlogPost
         $fields = [];
         $values = [];
 
-        foreach (['title', 'slug', 'excerpt', 'content', 'cover_image', 'category', 'category_id', 'author_id', 'is_published', 'published_at', 'meta_description'] as $field) {
+        if (!empty($data['is_published']) && empty($data['published_at'])) {
+            $data['published_at'] = date('Y-m-d H:i:s');
+        }
+
+        foreach (['title', 'slug', 'excerpt', 'content', 'cover_image', 'category', 'category_id', 'is_published', 'published_at', 'meta_description'] as $field) {
+            if ($field === 'published_at' && empty($data[$field])) {
+                continue;
+            }
             if (array_key_exists($field, $data)) {
                 $fields[] = "{$field} = ?";
                 $values[] = $data[$field];

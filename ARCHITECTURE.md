@@ -341,10 +341,14 @@ GET    /api/v1/public/blog/categories       # Active categories
   {
       "sub": 42,
       "role": "admin",
+      "student_id": null,
       "iat": 1712345678,
       "exp": 1712432078
   }
   ```
+  - `student_id` is the linked student id (`users.linked_id`) for `student`
+    tokens, and `null` for `admin`/`supporter`. It is used by
+    `App\Core\StudentScope` to pin students to their own data.
 - **Transport:** `Authorization: Bearer <token>` header
 - **Middleware:** `AuthMiddleware` validates token on protected routes, attaches decoded payload to `$request->getAttribute('user')`
 - **Role middleware:** `requireAdmin()`, `requireSupporter()`, `requireStudent()` check role after auth

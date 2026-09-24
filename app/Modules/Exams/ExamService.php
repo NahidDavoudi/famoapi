@@ -6,11 +6,11 @@ use App\Core\Pagination;
 
 class ExamService
 {
-    public function getDates(int $page, int $perPage): array
+    public function getDates(int $page, int $perPage, ?int $studentId = null): array
     {
-        $total = ExamResult::countDates();
+        $total = ExamResult::countDates($studentId);
         $pagination = Pagination::build($page, $perPage, $total);
-        $dates = ExamResult::findDates($pagination['page'], $perPage);
+        $dates = ExamResult::findDates($studentId, $pagination['page'], $perPage);
         return ['dates' => $dates, 'pagination' => $pagination];
     }
 
