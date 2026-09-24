@@ -84,12 +84,27 @@ class PlanTemplate
             throw new \RuntimeException('قالب یافت نشد', 404);
         }
 
-        $items = unserialize($template['items_json']);
+        $items = @unserialize($template['items_json']);
+        if ($items === false) {
+            $items = json_decode((string) $template['items_json'], true);
+        }
         if (!is_array($items)) {
             throw new \RuntimeException('داده‌های قالب نامعتبر است', 400);
         }
 
-        $count = WeeklyPlan::save($studentId, $items);
-        return ['inserted' => $count, 'student_id' => $studentId, 'template_id' => $templateId];
+        $result = WeeklyPlan::save([
+            'student_id'   => $studentId,
+            'week_date'    => $template['week_date'] ?? date('Y/m/d'),
+            'weekly_notes' => null,
+            'times'        => [],
+            'events'       => $items,
+        ]);
+
+        return [
+            'inserted'    => $result['saved'],
+            'plan_id'     => $result['plan_id'],
+            'student_id'  => $studentId,
+            'template_id' => $templateId,
+        ];
     }
 }

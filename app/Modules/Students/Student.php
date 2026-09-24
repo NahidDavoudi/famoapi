@@ -167,6 +167,26 @@ class Student
         return $stmt->fetchAll();
     }
 
+    /** Students with planner stats (plan count + last plan date). */
+    public static function plannerOverview(): array
+    {
+        $stmt = Database::getConnection()->prepare(
+            "SELECT s.id, s.name, s.grade, s.field, s.phone, s.national_id,
+                    COUNT(DISTINCT p.id) AS plan_count,
+                    COUNT(DISTINCT e.id) AS total_events,
+                    MAX(p.week_date)    AS last_week_date,
+                    MAX(p.created_at)   AS last_plan_at
+             FROM students s
+             LEFT JOIN weekly_plans p ON p.student_id = s.id
+             LEFT JOIN events e       ON e.student_id = s.id
+             WHERE s.is_active = 1
+             GROUP BY s.id
+             ORDER BY s.name ASC"
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public static function toggleStatus(int $id): bool
     {
         $stmt = Database::getConnection()->prepare(

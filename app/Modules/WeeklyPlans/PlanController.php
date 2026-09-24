@@ -9,104 +9,125 @@ class PlanController
 {
     public function __construct(private PlanService $service) {}
 
-    public function get(Request $request, Response $response): Response
+    private function ok(Response $response, mixed $data = null, int $status = 200): Response
     {
-        $params = $request->getQueryParams();
-        $studentId = (int) ($params['student_id'] ?? 0);
-        $result = $this->service->get($studentId);
-
         $response->getBody()->write(json_encode([
-            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
+            'success' => true, 'data' => $data, 'pagination' => null, 'error' => null,
         ], JSON_UNESCAPED_UNICODE));
-        return $response;
+        return $response->withStatus($status)->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
 
+    private function fail(Response $response, \RuntimeException $e): Response
+    {
+        $status = (int) $e->getCode();
+        if ($status < 400 || $status > 599) {
+            $status = 400;
+        }
+        $response->getBody()->write(json_encode([
+            'success' => false, 'data' => null, 'pagination' => null,
+            'error' => ['code' => 'PLAN_ERROR', 'message' => $e->getMessage()],
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withStatus($status)->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
+    /** GET /plans?student_id=X — list a student's plans */
+    public function get(Request $request, Response $response): Response
+    {
+        $studentId = (int) ($request->getQueryParams()['student_id'] ?? 0);
+        try {
+            return $this->ok($response, $this->service->listForStudent($studentId));
+        } catch (\RuntimeException $e) {
+            return $this->fail($response, $e);
+        }
+    }
+
+    /** GET /plans/{id} — full plan with events and times */
+    public function getOne(Request $request, Response $response, array $args): Response
+    {
+        try {
+            return $this->ok($response, $this->service->getPlan((int) $args['id']));
+        } catch (\RuntimeException $e) {
+            return $this->fail($response, $e);
+        }
+    }
+
+    /** POST /plans — create a full plan */
     public function save(Request $request, Response $response): Response
     {
         $body = $request->getParsedBody() ?? [];
-        $studentId = (int) ($body['student_id'] ?? 0);
-        $items = $body['items'] ?? [];
-
         try {
-            $result = $this->service->save($studentId, $items);
+            return $this->ok($response, $this->service->saveFull($body), 201);
         } catch (\RuntimeException $e) {
-            $response->getBody()->write(json_encode([
-                'success' => false, 'data' => null, 'pagination' => null,
-                'error' => ['code' => 'ERROR', 'message' => $e->getMessage()],
-            ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 400);
+            return $this->fail($response, $e);
         }
-
-        $response->getBody()->write(json_encode([
-            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
-        ], JSON_UNESCAPED_UNICODE));
-        return $response;
     }
 
-    public function clear(Request $request, Response $response): Response
+    /** PUT /plans/{id} — update an existing plan */
+    public function update(Request $request, Response $response, array $args): Response
     {
         $body = $request->getParsedBody() ?? [];
-        $studentId = (int) ($body['student_id'] ?? 0);
+        $body['plan_id'] = (int) $args['id'];
+        try {
+            return $this->ok($response, $this->service->saveFull($body));
+        } catch (\RuntimeException $e) {
+            return $this->fail($response, $e);
+        }
+    }
+
+    /** DELETE /plans/{id} — delete a single plan */
+    public function deleteOne(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $this->service->deletePlan((int) $args['id']);
+            return $this->ok($response);
+        } catch (\RuntimeException $e) {
+            return $this->fail($response, $e);
+        }
+    }
+
+    /** DELETE /plans?student_id=X — clear every plan of a student */
+    public function clear(Request $request, Response $response): Response
+    {
+        $params = $request->getQueryParams();
+        $body = $request->getParsedBody() ?? [];
+        $studentId = (int) ($params['student_id'] ?? $body['student_id'] ?? 0);
 
         try {
-            $this->service->clear($studentId);
+            $deleted = $this->service->clearForStudent($studentId);
+            return $this->ok($response, ['deleted' => $deleted, 'student_id' => $studentId]);
         } catch (\RuntimeException $e) {
-            $response->getBody()->write(json_encode([
-                'success' => false, 'data' => null, 'pagination' => null,
-                'error' => ['code' => 'ERROR', 'message' => $e->getMessage()],
-            ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 400);
+            return $this->fail($response, $e);
         }
-
-        $response->getBody()->write(json_encode([
-            'success' => true, 'data' => null, 'pagination' => null, 'error' => null,
-        ], JSON_UNESCAPED_UNICODE));
-        return $response;
     }
 
     public function getTemplates(Request $request, Response $response): Response
     {
-        $result = $this->service->getTemplates();
-        $response->getBody()->write(json_encode([
-            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
-        ], JSON_UNESCAPED_UNICODE));
-        return $response;
+        return $this->ok($response, $this->service->getTemplates());
     }
 
     public function getTemplate(Request $request, Response $response, array $args): Response
     {
-        $result = $this->service->getTemplate((int) $args['id']);
-        $response->getBody()->write(json_encode([
-            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
-        ], JSON_UNESCAPED_UNICODE));
-        return $response;
+        $template = $this->service->getTemplate((int) $args['id']);
+        if (!$template) {
+            return $this->fail($response, new \RuntimeException('قالب یافت نشد', 404));
+        }
+        return $this->ok($response, $template);
     }
 
     public function saveTemplate(Request $request, Response $response): Response
     {
         $body = $request->getParsedBody() ?? [];
         try {
-            $result = $this->service->saveTemplate($body);
+            return $this->ok($response, $this->service->saveTemplate($body), 201);
         } catch (\RuntimeException $e) {
-            $response->getBody()->write(json_encode([
-                'success' => false, 'data' => null, 'pagination' => null,
-                'error' => ['code' => 'ERROR', 'message' => $e->getMessage()],
-            ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 400);
+            return $this->fail($response, $e);
         }
-        $response->getBody()->write(json_encode([
-            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
-        ], JSON_UNESCAPED_UNICODE));
-        return $response;
     }
 
     public function deleteTemplate(Request $request, Response $response, array $args): Response
     {
         $this->service->deleteTemplate((int) $args['id']);
-        $response->getBody()->write(json_encode([
-            'success' => true, 'data' => null, 'pagination' => null, 'error' => null,
-        ], JSON_UNESCAPED_UNICODE));
-        return $response;
+        return $this->ok($response);
     }
 
     public function applyTemplate(Request $request, Response $response, array $args): Response
@@ -114,17 +135,9 @@ class PlanController
         $body = $request->getParsedBody() ?? [];
         $studentId = (int) ($body['student_id'] ?? 0);
         try {
-            $result = $this->service->applyTemplate((int) $args['id'], $studentId);
+            return $this->ok($response, $this->service->applyTemplate((int) $args['id'], $studentId));
         } catch (\RuntimeException $e) {
-            $response->getBody()->write(json_encode([
-                'success' => false, 'data' => null, 'pagination' => null,
-                'error' => ['code' => 'ERROR', 'message' => $e->getMessage()],
-            ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 400);
+            return $this->fail($response, $e);
         }
-        $response->getBody()->write(json_encode([
-            'success' => true, 'data' => $result, 'pagination' => null, 'error' => null,
-        ], JSON_UNESCAPED_UNICODE));
-        return $response;
     }
 }

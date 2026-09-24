@@ -716,6 +716,37 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /api/v1/students/overview:
+    get:
+      tags: [Students]
+      summary: Students with planner stats (admin)
+      description: >-
+        Student list enriched with plan_count, total_events and
+        last_week_date. Temporary admin-only while the planner is migrated.
+      operationId: studentOverview
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Students with planner statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          students:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/StudentPlannerStat"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   /api/v1/students:
     get:
       tags: [Students]
@@ -1956,8 +1987,9 @@ paths:
   /api/v1/plans:
     get:
       tags: [WeeklyPlans]
-      summary: Get weekly plan for a student
-      operationId: planGet
+      summary: List a student's weekly plans (admin)
+      description: Temporary admin-only while the planner is migrated.
+      operationId: planList
       security:
         - bearerAuth: []
       parameters:
@@ -1968,7 +2000,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Weekly plan data
+          description: Plan summaries for the student
           content:
             application/json:
               schema:
@@ -1977,11 +2009,26 @@ paths:
                   - properties:
                       data:
                         type: object
+                        properties:
+                          plans:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/WeeklyPlanSummary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags: [WeeklyPlans]
-      summary: Save weekly plan items
+      summary: Create a full weekly plan (admin)
+      description: >-
+        Resolves the student from student_id / national_id / name+grade,
+        creating one when missing, then stores the week date, notes, time
+        slots and events. Each event may carry one or more topics.
+        When no plan id is given and a plan already exists for the same
+        student + week date, it is updated instead of duplicated.
       operationId: planSave
       security:
         - bearerAuth: []
@@ -1990,29 +2037,9 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                student_id:
-                  type: integer
-                items:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      day:
-                        type: integer
-                        description: Day of week (0-6)
-                      subject:
-                        type: string
-                      start_time:
-                        type: string
-                      end_time:
-                        type: string
-                      description:
-                        type: string
-              required: [student_id, items]
+              $ref: "#/components/schemas/PlanSaveRequest"
       responses:
-        "200":
+        "201":
           description: Plan saved
           content:
             application/json:
@@ -2021,38 +2048,141 @@ paths:
                   - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
                       data:
-                        type: object
+                        $ref: "#/components/schemas/PlanSaveResult"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     delete:
       tags: [WeeklyPlans]
-      summary: Clear weekly plan for a student
+      summary: Clear every plan of a student (admin)
       operationId: planClear
       security:
         - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plans cleared
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          deleted:
+                            type: integer
+                          student_id:
+                            type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/plans/{id}:
+    get:
+      tags: [WeeklyPlans]
+      summary: Get a full weekly plan (admin)
+      description: Temporary admin-only while the planner is migrated.
+      operationId: planGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plan with student, time slots and events
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/WeeklyPlanDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [WeeklyPlans]
+      summary: Update a full weekly plan (admin)
+      operationId: planUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                student_id:
-                  type: integer
-              required: [student_id]
+              $ref: "#/components/schemas/PlanSaveRequest"
       responses:
         "200":
-          description: Plan cleared
+          description: Plan updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessResponse"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/PlanSaveResult"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [WeeklyPlans]
+      summary: Delete a single weekly plan (admin)
+      operationId: planDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plan deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/v1/plans/templates:
     get:
@@ -2097,7 +2227,7 @@ paths:
                     type: object
               required: [name, items]
       responses:
-        "200":
+        "201":
           description: Template saved
           content:
             application/json:
@@ -3273,6 +3403,283 @@ components:
             file_path:
               type: string
               nullable: true
+
+    StudentPlannerStat:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grade:
+          type: integer
+        field:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        national_id:
+          type: string
+          nullable: true
+        plan_count:
+          type: integer
+        total_events:
+          type: integer
+        last_week_date:
+          type: string
+          nullable: true
+        last_plan_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PlanTopic:
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: true
+          description: شناسه نود در درخت مباحث
+        label:
+          type: string
+          nullable: true
+        path:
+          type: string
+          nullable: true
+          description: مسیر کامل مبحث
+        pathShort:
+          type: string
+          nullable: true
+          description: مسیر کوتاه نمایشی
+
+    PlanEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        plan_id:
+          type: integer
+        student_id:
+          type: integer
+        day_index:
+          type: integer
+          description: 0=شنبه ... 6=جمعه
+        day_name:
+          type: string
+        time_index:
+          type: integer
+        time_label:
+          type: string
+          nullable: true
+        topic_id:
+          type: string
+          nullable: true
+        topic_path:
+          type: string
+          nullable: true
+        topic_path_short:
+          type: string
+          nullable: true
+        topic_label:
+          type: string
+          nullable: true
+        subject_name:
+          type: string
+          nullable: true
+        selected_grade:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        color:
+          type: string
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanTopic"
+
+    WeeklyPlanSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        week_date:
+          type: string
+        weekly_notes:
+          type: string
+          nullable: true
+        times_json:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        event_count:
+          type: integer
+
+    WeeklyPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        week_date:
+          type: string
+        weekly_notes:
+          type: string
+          nullable: true
+        times_json:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        student_name:
+          type: string
+          nullable: true
+        student_grade:
+          type: integer
+          nullable: true
+        student_field:
+          type: string
+          nullable: true
+        student_national_id:
+          type: string
+          nullable: true
+
+    WeeklyPlanStudent:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          nullable: true
+        grade:
+          type: integer
+          nullable: true
+        field:
+          type: string
+          nullable: true
+        national_id:
+          type: string
+          nullable: true
+
+    WeeklyPlanDetail:
+      type: object
+      properties:
+        plan:
+          $ref: "#/components/schemas/WeeklyPlan"
+        student:
+          $ref: "#/components/schemas/WeeklyPlanStudent"
+        times:
+          type: array
+          items:
+            type: string
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanEvent"
+
+    PlanSaveMeta:
+      type: object
+      properties:
+        name:
+          type: string
+        grade:
+          description: پایه؛ عددی (7-12) یا رشته‌ای (7th..12th)
+          oneOf:
+            - type: integer
+            - type: string
+        major:
+          type: string
+          description: کلید رشته (math/tajrobi/humanities)
+        field:
+          type: string
+          description: نام فارسی رشته (جایگزین major)
+        national_id:
+          type: string
+        date:
+          type: string
+          description: تاریخ هفته، مثلاً 2026/04/09
+
+    PlanSaveEvent:
+      type: object
+      properties:
+        day_index:
+          type: integer
+        day_name:
+          type: string
+        time_index:
+          type: integer
+        time_label:
+          type: string
+        title:
+          type: string
+        notes:
+          type: string
+        color:
+          type: string
+        subject_name:
+          type: string
+        selected_grade:
+          type: string
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanTopic"
+
+    PlanSaveRequest:
+      type: object
+      properties:
+        plan_id:
+          type: integer
+          description: برای ویرایش برنامه موجود
+        student_id:
+          type: integer
+        week_date:
+          type: string
+        weekly_notes:
+          type: string
+        times:
+          type: array
+          items:
+            type: string
+        meta:
+          $ref: "#/components/schemas/PlanSaveMeta"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanSaveEvent"
+
+    PlanSaveResult:
+      type: object
+      properties:
+        plan_id:
+          type: integer
+        student_id:
+          type: integer
+        saved:
+          type: integer
+          description: تعداد ایونت‌های ذخیره‌شده
 
     PlanTemplate:
       type: object

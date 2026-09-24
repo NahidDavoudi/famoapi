@@ -92,6 +92,7 @@ return function (App $app) {
 
     // Students (protected)
     $app->get('/api/v1/students/list', [$studentController, 'getList'])->add($authMiddleware);
+    $app->get('/api/v1/students/overview', [$studentController, 'overview'])->add($requireAdmin)->add($authMiddleware);
     $app->get('/api/v1/students', [$studentController, 'list'])->add($authMiddleware);
     $app->post('/api/v1/students', [$studentController, 'create'])->add($requireAdmin)->add($authMiddleware);
     $app->get('/api/v1/students/{id:[0-9]+}', [$studentController, 'get'])->add($authMiddleware);
@@ -133,15 +134,18 @@ return function (App $app) {
     $app->get('/api/v1/exams/details', [$examController, 'getDetails'])->add($authMiddleware);
     $app->post('/api/v1/exams', [$examController, 'save'])->add($requireAdmin)->add($authMiddleware);
 
-    // Weekly Plans (protected)
-    $app->get('/api/v1/plans', [$planController, 'get'])->add($authMiddleware);
-    $app->post('/api/v1/plans', [$planController, 'save'])->add($authMiddleware);
-    $app->delete('/api/v1/plans', [$planController, 'clear'])->add($authMiddleware);
-    $app->get('/api/v1/plans/templates', [$planController, 'getTemplates'])->add($authMiddleware);
-    $app->get('/api/v1/plans/templates/{id:[0-9]+}', [$planController, 'getTemplate'])->add($authMiddleware);
-    $app->post('/api/v1/plans/templates', [$planController, 'saveTemplate'])->add($authMiddleware);
-    $app->delete('/api/v1/plans/templates/{id:[0-9]+}', [$planController, 'deleteTemplate'])->add($authMiddleware);
-    $app->post('/api/v1/plans/templates/{id:[0-9]+}/apply', [$planController, 'applyTemplate'])->add($authMiddleware);
+    // Weekly Plans (temporary: admin-only while the planner is being migrated)
+    $app->get('/api/v1/plans', [$planController, 'get'])->add($requireAdmin)->add($authMiddleware);
+    $app->post('/api/v1/plans', [$planController, 'save'])->add($requireAdmin)->add($authMiddleware);
+    $app->delete('/api/v1/plans', [$planController, 'clear'])->add($requireAdmin)->add($authMiddleware);
+    $app->get('/api/v1/plans/{id:[0-9]+}', [$planController, 'getOne'])->add($requireAdmin)->add($authMiddleware);
+    $app->put('/api/v1/plans/{id:[0-9]+}', [$planController, 'update'])->add($requireAdmin)->add($authMiddleware);
+    $app->delete('/api/v1/plans/{id:[0-9]+}', [$planController, 'deleteOne'])->add($requireAdmin)->add($authMiddleware);
+    $app->get('/api/v1/plans/templates', [$planController, 'getTemplates'])->add($requireAdmin)->add($authMiddleware);
+    $app->get('/api/v1/plans/templates/{id:[0-9]+}', [$planController, 'getTemplate'])->add($requireAdmin)->add($authMiddleware);
+    $app->post('/api/v1/plans/templates', [$planController, 'saveTemplate'])->add($requireAdmin)->add($authMiddleware);
+    $app->delete('/api/v1/plans/templates/{id:[0-9]+}', [$planController, 'deleteTemplate'])->add($requireAdmin)->add($authMiddleware);
+    $app->post('/api/v1/plans/templates/{id:[0-9]+}/apply', [$planController, 'applyTemplate'])->add($requireAdmin)->add($authMiddleware);
 
     // Reports (protected)
     $app->get('/api/v1/reports', [$reportController, 'list'])->add($requireSupporter)->add($authMiddleware);

@@ -259,6 +259,19 @@ class StudentController
         return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
 
+    public function overview(Request $request, Response $response): Response
+    {
+        $students = $this->service->getPlannerOverview();
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => ['students' => $students],
+            'pagination' => null,
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
     public function toggleStatus(Request $request, Response $response, array $args): Response
     {
         try {

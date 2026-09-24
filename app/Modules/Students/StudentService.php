@@ -143,6 +143,11 @@ class StudentService
         return Student::getList();
     }
 
+    public function getPlannerOverview(): array
+    {
+        return Student::plannerOverview();
+    }
+
     public function toggleStatus(int $id): array
     {
         $student = Student::findById($id);
