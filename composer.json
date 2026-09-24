@@ -1,0 +1,21 @@
+{
+    "name": "famo/api",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "slim/slim": "^4.0",
+        "slim/psr7": "^1.0",
+        "firebase/php-jwt": "^6.0",
+        "vlucas/phpdotenv": "^5.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "config": {
+        "audit": {
+            "ignore": ["GHSA-2x45-7fc3-mxwq"]
+        }
+    }
+}
