@@ -86,8 +86,25 @@ $app->add(function (ServerRequestInterface $request, $handler) {
     $method = strtoupper($request->getMethod());
     $cookieRequest = \App\Core\AuthCookie::isPresent($request);
 
-    if ($method === 'OPTIONS' && $origin !== '' && !$originAllowed) {
-        return (new Response())->withStatus(403);
+    // Handle CORS preflight (OPTIONS) directly in middleware
+    if ($method === 'OPTIONS') {
+        if ($origin !== '' && !$originAllowed) {
+            return (new Response())->withStatus(403);
+        }
+
+        // For allowed origins, return proper preflight response with CORS headers
+        if ($originAllowed) {
+            return (new Response())
+                ->withStatus(204)
+                ->withHeader('Access-Control-Allow-Origin', $origin)
+                ->withHeader('Vary', 'Origin')
+                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With, X-Auth-Mode')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+                ->withHeader('Access-Control-Allow-Credentials', 'true');
+        }
+
+        // No origin header (non-browser request) - allow but without CORS headers
+        return (new Response())->withStatus(204);
     }
 
     // Cookie-authenticated writes are accepted only from an explicitly allowed panel origin.
@@ -129,10 +146,6 @@ $app->add(function (ServerRequestInterface $request, $handler) {
         ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With, X-Auth-Mode')
         ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
         ->withHeader('Access-Control-Allow-Credentials', 'true');
-});
-
-$app->options('/{routes:.+}', function (ServerRequestInterface $request, Response $response) {
-    return $response->withStatus(200);
 });
 
 $app->add(function (ServerRequestInterface $request, $handler) {
