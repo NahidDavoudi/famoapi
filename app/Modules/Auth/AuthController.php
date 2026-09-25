@@ -3,6 +3,7 @@
 namespace App\Modules\Auth;
 
 use App\Core\Auth;
+use App\Core\AuthCookie;
 use App\Core\Validator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -51,13 +52,19 @@ class AuthController
         }
 
         $status = !empty($result['requires_2fa']) ? 202 : 200;
+        $token = $result['token'] ?? null;
+        $cookieOnly = $request->getHeaderLine('X-Auth-Mode') === 'cookie';
+        if ($cookieOnly) {
+            unset($result['token']);
+        }
         $response->getBody()->write(json_encode([
             'success'    => true,
             'data'       => $result,
             'pagination' => null,
             'error'      => null,
         ], JSON_UNESCAPED_UNICODE));
-        return $response->withStatus($status)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        $response = $response->withStatus($status)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        return is_string($token) ? AuthCookie::issue($response, $request, $token) : $response;
     }
 
     public function verify2fa(Request $request, Response $response): Response
@@ -100,13 +107,19 @@ class AuthController
             return $response->withStatus($e->getCode() ?: 401)->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
+        $token = $result['token'] ?? null;
+        $cookieOnly = $request->getHeaderLine('X-Auth-Mode') === 'cookie';
+        if ($cookieOnly) {
+            unset($result['token']);
+        }
         $response->getBody()->write(json_encode([
             'success'    => true,
             'data'       => $result,
             'pagination' => null,
             'error'      => null,
         ], JSON_UNESCAPED_UNICODE));
-        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+        $response = $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+        return is_string($token) ? AuthCookie::issue($response, $request, $token) : $response;
     }
 
     public function register(Request $request, Response $response): Response
@@ -157,13 +170,19 @@ class AuthController
             return $response->withStatus($e->getCode() ?: 409)->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
+        $token = $result['token'] ?? null;
+        $cookieOnly = $request->getHeaderLine('X-Auth-Mode') === 'cookie';
+        if ($cookieOnly) {
+            unset($result['token']);
+        }
         $response->getBody()->write(json_encode([
             'success'    => true,
             'data'       => $result,
             'pagination' => null,
             'error'      => null,
         ], JSON_UNESCAPED_UNICODE));
-        return $response->withStatus(201)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        $response = $response->withStatus(201)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        return is_string($token) ? AuthCookie::issue($response, $request, $token) : $response;
     }
 
     public function me(Request $request, Response $response): Response
@@ -202,6 +221,6 @@ class AuthController
             'pagination' => null,
             'error'      => null,
         ], JSON_UNESCAPED_UNICODE));
-        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+        return AuthCookie::clear($response->withHeader('Content-Type', 'application/json; charset=utf-8'), $request);
     }
 }

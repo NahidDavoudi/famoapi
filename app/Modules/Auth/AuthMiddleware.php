@@ -3,6 +3,7 @@
 namespace App\Modules\Auth;
 
 use App\Core\Auth;
+use App\Core\AuthCookie;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -14,12 +15,13 @@ class AuthMiddleware implements MiddlewareInterface
     public function process(Request $request, RequestHandler $handler): Response
     {
         $authHeader = $request->getHeaderLine('Authorization');
+        $token = str_starts_with($authHeader, 'Bearer ')
+            ? substr($authHeader, 7)
+            : AuthCookie::tokenFromRequest($request);
 
-        if (empty($authHeader) || !str_starts_with($authHeader, 'Bearer ')) {
+        if ($token === null || $token === '') {
             return $this->unauthorized('توکن ارسال نشده است');
         }
-
-        $token = substr($authHeader, 7);
 
         try {
             $decoded = Auth::decode($token);
