@@ -29,4 +29,22 @@ class Instructor
             return [];
         }
     }
+
+    public static function getSocialLinksBatch(array $instructorIds): array
+    {
+        if (empty($instructorIds)) {
+            return [];
+        }
+        $db = Database::getConnection();
+        try {
+            $placeholders = implode(',', array_fill(0, count($instructorIds), '?'));
+            $stmt = $db->prepare(
+                "SELECT * FROM instructor_social_links WHERE instructor_id IN ($placeholders) ORDER BY instructor_id ASC"
+            );
+            $stmt->execute($instructorIds);
+            return $stmt->fetchAll();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
 }

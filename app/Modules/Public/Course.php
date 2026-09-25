@@ -38,4 +38,22 @@ class Course
             return [];
         }
     }
+
+    public static function getFeaturesBatch(array $courseIds): array
+    {
+        if (empty($courseIds)) {
+            return [];
+        }
+        $db = Database::getConnection();
+        try {
+            $placeholders = implode(',', array_fill(0, count($courseIds), '?'));
+            $stmt = $db->prepare(
+                "SELECT * FROM course_features WHERE course_id IN ($placeholders) ORDER BY course_id ASC, display_order ASC"
+            );
+            $stmt->execute($courseIds);
+            return $stmt->fetchAll();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
 }
