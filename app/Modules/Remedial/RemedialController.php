@@ -138,12 +138,30 @@ class RemedialController
     {
         $body = $request->getParsedBody() ?? [];
 
-        $this->service->updateStudentTime(
-            (int) $body['session_id'],
-            (int) $body['student_id'],
-            $body['field'],
-            $body['value']
-        );
+        try {
+            $this->service->updateStudentTime(
+                (int) ($body['session_id'] ?? 0),
+                (int) ($body['student_id'] ?? 0),
+                (string) ($body['field'] ?? ''),
+                (string) ($body['value'] ?? '')
+            );
+        } catch (\InvalidArgumentException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'data' => null,
+                'pagination' => null,
+                'error' => ['code' => 'VALIDATION_ERROR', 'message' => $e->getMessage()],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus(422)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        } catch (\RuntimeException $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'data' => null,
+                'pagination' => null,
+                'error' => ['code' => 'UPDATE_ERROR', 'message' => $e->getMessage()],
+            ], JSON_UNESCAPED_UNICODE));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+        }
 
         $response->getBody()->write(json_encode([
             'success'    => true,
