@@ -56,6 +56,19 @@ class Storage
         return $subDir . '/' . $filename;
     }
 
+    public static function resolve(string $path): string
+    {
+        $basePath = realpath($_ENV['UPLOADS_PATH'] ?? __DIR__ . '/../../uploads');
+        if ($basePath === false) {
+            throw new \RuntimeException('مسیر فایل‌ها در دسترس نیست', 500);
+        }
+        $fullPath = realpath($basePath . '/' . ltrim($path, '/'));
+        if ($fullPath === false || !str_starts_with($fullPath, $basePath . DIRECTORY_SEPARATOR) || !is_file($fullPath)) {
+            throw new \RuntimeException('فایل یافت نشد', 404);
+        }
+        return $fullPath;
+    }
+
     public static function delete(string $path): void
     {
         $basePath = realpath($_ENV['UPLOADS_PATH'] ?? __DIR__ . '/../../uploads');
