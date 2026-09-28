@@ -19,7 +19,11 @@ class ExceptionHandler
         $message = 'خطای داخلی سرور';
 
         $code = $exception->getCode();
-        if (is_int($code) && $code >= 400 && $code < 500) {
+        if ($exception instanceof \PDOException) {
+            $sqlState = (string) $exception->getCode();
+            $statusCode = str_starts_with($sqlState, '23') ? 409 : 500;
+            $message = $statusCode === 409 ? 'داده تکراری یا ناسازگار است' : 'خطای داخلی سرور';
+        } elseif (is_int($code) && $code >= 400 && $code < 500) {
             $statusCode = $code;
             $message = $exception->getMessage();
         }
