@@ -10,7 +10,7 @@ class BlogService
     {
         $total = BlogPost::countPublished();
         $pagination = Pagination::build($page, $perPage, $total);
-        $posts = BlogPost::findAllPublished($pagination['page'], $perPage);
+        $posts = BlogPost::findAllPublished($pagination['page'], $pagination['per_page']);
         return [
             'posts' => $posts,
             'pagination' => $pagination,
@@ -21,7 +21,7 @@ class BlogService
     {
         $total = BlogPost::countByCategory($category);
         $pagination = Pagination::build($page, $perPage, $total);
-        $posts = BlogPost::findByCategory($category, $pagination['page'], $perPage);
+        $posts = BlogPost::findByCategory($category, $pagination['page'], $pagination['per_page']);
         return [
             'posts' => $posts,
             'pagination' => $pagination,
@@ -47,7 +47,7 @@ class BlogService
     {
         $total = BlogPost::countAll();
         $pagination = Pagination::build($page, $perPage, $total);
-        $posts = BlogPost::findAll($pagination['page'], $perPage);
+        $posts = BlogPost::findAll($pagination['page'], $pagination['per_page']);
         return [
             'posts' => $posts,
             'pagination' => $pagination,

@@ -10,7 +10,7 @@ class ExamService
     {
         $total = ExamResult::countDates($studentId);
         $pagination = Pagination::build($page, $perPage, $total);
-        $dates = ExamResult::findDates($studentId, $pagination['page'], $perPage);
+        $dates = ExamResult::findDates($studentId, $pagination['page'], $pagination['per_page']);
         return ['dates' => $dates, 'pagination' => $pagination];
     }
 
@@ -18,7 +18,7 @@ class ExamService
     {
         $total = ExamResult::countStudentsByDate($examDate);
         $pagination = Pagination::build($page, $perPage, $total);
-        $students = ExamResult::findStudentsByDate($examDate, $pagination['page'], $perPage);
+        $students = ExamResult::findStudentsByDate($examDate, $pagination['page'], $pagination['per_page']);
         return ['students' => $students, 'pagination' => $pagination];
     }
 
@@ -33,7 +33,7 @@ class ExamService
     {
         $total = ExamResult::countAll($filters);
         $pagination = Pagination::build($page, $perPage, $total);
-        $exams = ExamResult::findAll($filters, $pagination['page'], $perPage);
+        $exams = ExamResult::findAll($filters, $pagination['page'], $pagination['per_page']);
         return ['exams' => $exams, 'pagination' => $pagination];
     }
 
