@@ -39,7 +39,7 @@ class PlanTemplate
             $data['name'],
             $data['student_id'] ?? null,
             $data['week_date'] ?? null,
-            isset($data['items']) ? serialize($data['items']) : ($data['items_json'] ?? ''),
+            json_encode($data['items'] ?? [], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         ]);
         return (int) $db->lastInsertId();
     }
@@ -57,7 +57,7 @@ class PlanTemplate
         }
         if (isset($data['items'])) {
             $fields[] = 'items_json = ?';
-            $params[] = serialize($data['items']);
+            $params[] = json_encode($data['items'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         }
         if (empty($fields)) return 0;
         $params[] = $id;
@@ -84,10 +84,7 @@ class PlanTemplate
             throw new \RuntimeException('قالب یافت نشد', 404);
         }
 
-        $items = @unserialize($template['items_json']);
-        if ($items === false) {
-            $items = json_decode((string) $template['items_json'], true);
-        }
+        $items = json_decode((string) $template['items_json'], true);
         if (!is_array($items)) {
             throw new \RuntimeException('داده‌های قالب نامعتبر است', 400);
         }

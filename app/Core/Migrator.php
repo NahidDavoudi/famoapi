@@ -10,7 +10,7 @@ class Migrator
 
         $pdo->exec("CREATE TABLE IF NOT EXISTS migrations (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            migration VARCHAR(255) NOT NULL,
+            migration VARCHAR(255) NOT NULL UNIQUE,
             executed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_persian_ci");
 
@@ -36,12 +36,17 @@ class Migrator
             }
 
             try {
+                $pdo->beginTransaction();
                 $pdo->exec($sql);
                 $insert = $pdo->prepare("INSERT INTO migrations (migration, executed_at) VALUES (?, NOW())");
                 $insert->execute([$name]);
+                $pdo->commit();
                 $ran[] = $name;
             } catch (\Throwable $e) {
-                error_log("Migration {$name} failed: " . $e->getMessage());
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                throw new \RuntimeException("Migration {$name} failed", 500, $e);
             }
         }
 
