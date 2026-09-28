@@ -25,6 +25,8 @@ class Pagination
     public static function offset(int $page, int $perPage): int
     {
         if ($page < 1) $page = 1;
+        if ($perPage < 1) $perPage = 20;
+        if ($perPage > 100) $perPage = 100;
         return ($page - 1) * $perPage;
     }
 }
