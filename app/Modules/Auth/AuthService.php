@@ -148,31 +148,25 @@ class AuthService
         $db = Database::getConnection();
         $db->beginTransaction();
         try {
-            // Some legacy imports have no AUTO_INCREMENT on these tables.
-            // Allocate IDs explicitly until the schema migration is applied.
-            $userId = (int) $db->query('SELECT COALESCE(MAX(id), 0) + 1 FROM users')->fetchColumn();
-            User::create([
-                'id'        => $userId,
+            $userId = User::create([
                 'full_name' => $data['name'],
                 'username'  => $data['phone'],
                 'password'  => $data['password'],
                 'role'      => 'student',
             ]);
 
-            // The legacy students table links back through users.linked_id.
             $stmt = $db->prepare(
-                'INSERT INTO students (id, name, national_id, grade, field, phone)
-                 VALUES (:id, :name, :national_id, :grade, :field, :phone)'
+                'INSERT INTO students (name, national_id, grade, field, phone)
+                 VALUES (:name, :national_id, :grade, :field, :phone)'
             );
-            $studentId = (int) $db->query('SELECT COALESCE(MAX(id), 0) + 1 FROM students')->fetchColumn();
             $stmt->execute([
-                'id'          => $studentId,
                 'name'        => $data['name'],
                 'national_id' => $data['nationalId'],
                 'grade'       => $data['grade'],
                 'field'       => $data['field'],
                 'phone'       => $data['phone'],
             ]);
+            $studentId = (int) $db->lastInsertId();
             $db->prepare('UPDATE users SET linked_id = :linked_id WHERE id = :id')
                ->execute(['linked_id' => $studentId, 'id' => $userId]);
             $db->commit();
