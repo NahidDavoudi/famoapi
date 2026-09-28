@@ -35,6 +35,10 @@ class AuthService
             throw new \RuntimeException('نام کاربری یا رمز عبور اشتباه است', 401);
         }
 
+        if (isset($user['is_active']) && (int) $user['is_active'] === 0) {
+            throw new \RuntimeException('حساب کاربری غیرفعال است', 403);
+        }
+
         $role = $user['role'];
 
         if ($role === 'admin' || $role === 'supporter') {
@@ -43,6 +47,8 @@ class AuthService
             $expiresAt = gmdate('Y-m-d H:i:s', time() + 300); // 5 minutes
 
             $db = Database::getConnection();
+            $db->prepare('UPDATE login_codes SET used = 1 WHERE user_id = ? AND used = 0')
+               ->execute([$user['id']]);
             $stmt = $db->prepare(
                 'INSERT INTO login_codes (user_id, code, expires_at) VALUES (?, ?, ?)'
             );
@@ -100,8 +106,14 @@ class AuthService
             throw new \RuntimeException('کد تأیید نامعتبر یا منقضی شده است', 401);
         }
 
-        $stmt = $db->prepare('UPDATE login_codes SET used = 1 WHERE id = ?');
+        $stmt = $db->prepare(
+            'UPDATE login_codes SET used = 1
+             WHERE id = ? AND used = 0 AND expires_at > UTC_TIMESTAMP()'
+        );
         $stmt->execute([$record['id']]);
+        if ($stmt->rowCount() !== 1) {
+            throw new \RuntimeException('کد تأیید نامعتبر یا قبلاً استفاده شده است', 401);
+        }
 
         $user = User::findById($userId);
         if (!$user) {

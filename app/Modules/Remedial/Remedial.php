@@ -147,8 +147,19 @@ class Remedial
 
     public static function updateStudentTime(int $sessionId, int $studentId, string $field, string $value): void
     {
+        $allowed = [
+            'start_time'    => 'start_time',
+            'end_time'      => 'end_time',
+            'total_minutes' => 'total_minutes',
+        ];
+
+        if (!isset($allowed[$field])) {
+            throw new \InvalidArgumentException('فیلد زمان نامعتبر است');
+        }
+
         try {
             $db = Database::getConnection();
+            $column = $allowed[$field];
             $check = $db->prepare(
                 "SELECT id FROM session_student_times WHERE session_id = :session_id AND student_id = :student_id LIMIT 1"
             );
@@ -156,14 +167,12 @@ class Remedial
             $existing = $check->fetch();
 
             if ($existing) {
-                $allowed = ['start_time', 'end_time', 'total_minutes'];
-                if (!in_array($field, $allowed)) return;
                 $stmt = $db->prepare(
-                    "UPDATE session_student_times SET {$field} = :value WHERE id = :id"
+                    "UPDATE session_student_times SET {$column} = :value WHERE id = :id"
                 );
                 $stmt->execute(['value' => $value, 'id' => $existing['id']]);
             } else {
-                $columns = ['session_id', 'student_id', $field];
+                $columns = ['session_id', 'student_id', $column];
                 $placeholders = [':session_id', ':student_id', ':value'];
                 $stmt = $db->prepare(
                     "INSERT INTO session_student_times (" . implode(',', $columns) . ")
@@ -176,6 +185,7 @@ class Remedial
                 ]);
             }
         } catch (\Exception $e) {
+            throw new \RuntimeException('به‌روزرسانی زمان دانش‌آموز امکان‌پذیر نیست', 500, $e);
         }
     }
 

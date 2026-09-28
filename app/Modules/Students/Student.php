@@ -22,8 +22,10 @@ class Student
         }
 
         if (!empty($filters['search'])) {
-            $conditions[] = '(s.name LIKE :search OR s.phone LIKE :search)';
-            $params['search'] = '%' . $filters['search'] . '%';
+            $conditions[] = '(s.name LIKE :search_name OR s.phone LIKE :search_phone)';
+            $search = '%' . $filters['search'] . '%';
+            $params['search_name'] = $search;
+            $params['search_phone'] = $search;
         }
         if (!empty($filters['field'])) {
             $conditions[] = 's.field = :field';
@@ -35,6 +37,8 @@ class Student
         }
 
         $where = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = ($page - 1) * $perPage;
 
         $stmt = Database::getConnection()->prepare(

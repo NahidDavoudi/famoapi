@@ -11,7 +11,10 @@ class Auth
 
     public static function encode(array $user): string
     {
-        $secret = $_ENV['JWT_SECRET'] ?? 'famo-jwt-secret-change-in-production';
+        $secret = $_ENV['JWT_SECRET'] ?? '';
+        if ($secret === '') {
+            throw new \RuntimeException('JWT_SECRET is not configured', 500);
+        }
         $ttl = (int) ($_ENV['JWT_TTL'] ?? 86400);
 
         $payload = [
@@ -27,7 +30,10 @@ class Auth
 
     public static function decode(string $token): object
     {
-        $secret = $_ENV['JWT_SECRET'] ?? 'famo-jwt-secret-change-in-production';
+        $secret = $_ENV['JWT_SECRET'] ?? '';
+        if ($secret === '') {
+            throw new \RuntimeException('JWT_SECRET is not configured', 500);
+        }
         return JWT::decode($token, new Key($secret, self::$algorithm));
     }
 }
