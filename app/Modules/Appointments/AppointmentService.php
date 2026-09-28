@@ -15,7 +15,7 @@ class AppointmentService
     {
         $total = Appointment::countAll();
         $pagination = Pagination::build($page, $perPage, $total);
-        $items = Appointment::findAll($pagination['page'], $perPage);
+        $items = Appointment::findAll($pagination['page'], $pagination['per_page']);
 
         return [
             'items'      => $items,
