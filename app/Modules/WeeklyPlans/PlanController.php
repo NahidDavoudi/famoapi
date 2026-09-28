@@ -21,11 +21,12 @@ class PlanController
     {
         $status = (int) $e->getCode();
         if ($status < 400 || $status > 599) {
-            $status = 400;
+            $status = 500;
         }
+        $message = $status >= 500 ? 'خطای داخلی سرور' : $e->getMessage();
         $response->getBody()->write(json_encode([
             'success' => false, 'data' => null, 'pagination' => null,
-            'error' => ['code' => 'PLAN_ERROR', 'message' => $e->getMessage()],
+            'error' => ['code' => $status === 409 ? 'CONFLICT' : 'PLAN_ERROR', 'message' => $message],
         ], JSON_UNESCAPED_UNICODE));
         return $response->withStatus($status)->withHeader('Content-Type', 'application/json; charset=utf-8');
     }

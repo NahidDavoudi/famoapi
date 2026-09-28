@@ -10,7 +10,7 @@ class ReportService
     {
         $total = Report::countAll($dateFrom, $dateTo);
         $pagination = Pagination::build($page, $perPage, $total);
-        $reports = Report::findAll($dateFrom, $dateTo, $pagination['page'], $perPage);
+        $reports = Report::findAll($dateFrom, $dateTo, $pagination['page'], $pagination['per_page']);
         return ['reports' => $reports, 'pagination' => $pagination];
     }
 

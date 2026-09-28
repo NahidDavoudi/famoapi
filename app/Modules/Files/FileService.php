@@ -11,7 +11,7 @@ class FileService
     {
         $total = File::countAll($studentId);
         $pagination = Pagination::build($page, $perPage, $total);
-        $items = File::findAll($studentId, $pagination['page'], $perPage);
+        $items = File::findAll($studentId, $pagination['page'], $pagination['per_page']);
 
         return [
             'items'      => $items,

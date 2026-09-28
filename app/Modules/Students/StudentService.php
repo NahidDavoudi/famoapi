@@ -12,7 +12,7 @@ class StudentService
         $total = Student::countAll($filters);
         $pagination = Pagination::build($page, $perPage, $total);
 
-        $items = Student::findAll($filters, $pagination['page'], $perPage);
+        $items = Student::findAll($filters, $pagination['page'], $pagination['per_page']);
 
         return [
             'items'      => $items,

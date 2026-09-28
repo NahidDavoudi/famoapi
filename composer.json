@@ -2,7 +2,9 @@
     "name": "famo/api",
     "type": "project",
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.2",
+        "illuminate/database": "^11.0",
+        "illuminate/events": "^11.0",
         "slim/slim": "^4.0",
         "slim/psr7": "^1.0",
         "firebase/php-jwt": "^6.0",

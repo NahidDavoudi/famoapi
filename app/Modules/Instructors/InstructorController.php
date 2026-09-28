@@ -60,7 +60,7 @@ class InstructorController
                 'name'        => $body['name'],
                 'title'       => $body['title'] ?? null,
                 'description' => $body['description'] ?? null,
-                'image_url'   => $image,
+                'image'       => $image,
                 'display_order' => isset($body['display_order']) ? (int) $body['display_order'] : 0,
             ]);
         } catch (\RuntimeException $e) {
@@ -122,7 +122,7 @@ class InstructorController
         if (isset($body['description'])) $data['description'] = $body['description'];
         if (isset($body['display_order'])) $data['display_order'] = (int) $body['display_order'];
         if (!empty($files['image'])) {
-            $data['image_url'] = $files['image'];
+            $data['image'] = $files['image'];
         }
 
         try {
