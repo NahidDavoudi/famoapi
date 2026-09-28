@@ -15,12 +15,47 @@ date_default_timezone_set('UTC');
 
 $app = AppFactory::create();
 
-// Ensure multipart/form-data fields are available via getParsedBody().
-// Slim's BodyParsingMiddleware does not parse multipart, so merge $_POST.
+// Normalize request bodies and support POST + method override for multipart updates.
+// PHP/Slim do not populate multipart fields for a native PUT/PATCH request.
 $app->add(function (ServerRequestInterface $request, $handler) {
-    if ($request->getParsedBody() === null && !empty($_POST)) {
-        $request = $request->withParsedBody($_POST);
+    $method = strtoupper($request->getMethod());
+    $contentType = strtolower($request->getHeaderLine('Content-Type'));
+    $parsedBody = $request->getParsedBody();
+
+    if ($parsedBody === null && !empty($_POST)) {
+        $parsedBody = $_POST;
+        $request = $request->withParsedBody($parsedBody);
+    } elseif ($parsedBody === null
+        && in_array($method, ['PUT', 'PATCH'], true)
+        && str_contains($contentType, 'application/x-www-form-urlencoded')) {
+        parse_str((string) $request->getBody(), $parsedBody);
+        $request = $request->withParsedBody($parsedBody);
     }
+
+    if ($method === 'POST') {
+        $override = $request->getHeaderLine('X-HTTP-Method-Override');
+        if (!$override && is_array($parsedBody)) {
+            $override = (string) ($parsedBody['_method'] ?? '');
+        }
+        $override = strtoupper($override);
+        if (in_array($override, ['PUT', 'PATCH', 'DELETE'], true)) {
+            $request = $request->withMethod($override);
+        }
+    } elseif (in_array($method, ['PUT', 'PATCH'], true)
+        && str_contains($contentType, 'multipart/form-data')) {
+        $response = new Response(415);
+        $response->getBody()->write(json_encode([
+            'success' => false,
+            'data' => null,
+            'pagination' => null,
+            'error' => [
+                'code' => 'UNSUPPORTED_MEDIA_TYPE',
+                'message' => 'برای آپلود multipart از POST همراه با _method=PUT یا PATCH استفاده کنید',
+            ],
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
     return $handler->handle($request);
 });
 
