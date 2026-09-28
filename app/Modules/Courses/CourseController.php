@@ -61,7 +61,7 @@ class CourseController
                 'icon'                => $body['icon'] ?? null,
                 'gradient_color_from' => $body['gradient_color_from'] ?? null,
                 'gradient_color_to'   => $body['gradient_color_to'] ?? null,
-                'background_image_url'=> $body['background_image_url'] ?? ($backgroundImage ?? null),
+                'background_image'    => $backgroundImage,
                 'description'         => $body['description'] ?? null,
                 'price'               => isset($body['price']) ? (int) $body['price'] : 0,
                 'display_order'       => isset($body['display_order']) ? (int) $body['display_order'] : 0,
@@ -127,8 +127,8 @@ class CourseController
         if (isset($body['description'])) $data['description'] = $body['description'];
         if (isset($body['price'])) $data['price'] = (int) $body['price'];
         if (isset($body['display_order'])) $data['display_order'] = (int) $body['display_order'];
-        if (!empty($files['background_image_url'])) {
-            $data['background_image_url'] = $files['background_image_url'];
+        if (!empty($files['background_image'])) {
+            $data['background_image'] = $files['background_image'];
         }
 
         try {
