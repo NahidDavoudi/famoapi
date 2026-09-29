@@ -12,7 +12,7 @@ final class CorsMiddleware implements MiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $origin = rtrim($request->getHeaderLine('Origin'), '/');
+        $origin = trim($request->getHeaderLine('Origin'));
         $originAllowed = AuthCookie::isOriginAllowed($origin);
         $method = strtoupper($request->getMethod());
         $isWrite = in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true);

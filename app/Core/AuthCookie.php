@@ -25,7 +25,7 @@ final class AuthCookie
 
     public static function allowsCookieWrite(Request $request): bool
     {
-        $origin = rtrim($request->getHeaderLine('Origin'), '/');
+        $origin = trim($request->getHeaderLine('Origin'));
         return self::isOriginAllowed($origin);
     }
 
@@ -50,16 +50,36 @@ final class AuthCookie
 
     public static function isOriginAllowed(string $origin): bool
     {
-        $origin = rtrim(trim($origin), '/');
+        $origin = trim($origin);
         if ($origin === '') {
             return false;
         }
 
-        if (in_array($origin, self::allowedOrigins(), true)) {
-            return true;
+        $parts = parse_url($origin);
+        if (!is_array($parts)
+            || !in_array(strtolower((string) ($parts['scheme'] ?? '')), ['http', 'https'], true)
+            || !isset($parts['host'])
+            || $parts['host'] === ''
+            || isset($parts['user'])
+            || isset($parts['pass'])
+            || array_key_exists('path', $parts)
+            || array_key_exists('query', $parts)
+            || array_key_exists('fragment', $parts)) {
+            return false;
         }
 
-        return preg_match('#^https://(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*famoacademy\.ir$#i', $origin) === 1;
+        $host = (string) $parts['host'];
+        $validHost = filter_var($host, FILTER_VALIDATE_IP) !== false
+            || (strlen($host) <= 253 && preg_match('/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)(?:\.(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?))*$/i', $host) === 1);
+        if (!$validHost) {
+            return false;
+        }
+
+        if (isset($parts['port']) && ($parts['port'] < 1 || $parts['port'] > 65535)) {
+            return false;
+        }
+
+        return preg_match('/\s/', $origin) !== 1;
     }
 
     public static function issue(Response $response, Request $request, string $token): Response
