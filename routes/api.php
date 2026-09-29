@@ -29,6 +29,8 @@ use App\Modules\Appointments\AppointmentController;
 use App\Modules\Appointments\AppointmentService;
 use App\Modules\Remedial\RemedialController;
 use App\Modules\Remedial\RemedialService;
+use App\Modules\ParentContacts\ParentContactController;
+use App\Modules\ParentContacts\ParentContactService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
@@ -54,6 +56,7 @@ return function (App $app) {
     $topicController = new TopicController(new TopicService());
     $appointmentController = new AppointmentController(new AppointmentService());
     $remedialController = new RemedialController(new RemedialService());
+    $parentContactController = new ParentContactController(new ParentContactService());
 
     // Health
     $app->get('/api/v1/health', function (Request $request, Response $response) {
@@ -106,6 +109,10 @@ return function (App $app) {
     $app->get('/api/v1/students/{id:[0-9]+}/analytics/week-detail', [$studentController, 'analyticsWeekDetail'])->add($authMiddleware);
     $app->get('/api/v1/students/{id:[0-9]+}/analytics/subject-stats', [$studentController, 'analyticsSubjectStats'])->add($authMiddleware);
     $app->get('/api/v1/students/{id:[0-9]+}/analytics/exam-trend', [$studentController, 'analyticsExamTrend'])->add($authMiddleware);
+    $app->get('/api/v1/students/{studentId:[0-9]+}/parent-contacts', [$parentContactController, 'list'])->add($requireSupporter)->add($authMiddleware);
+    $app->post('/api/v1/students/{studentId:[0-9]+}/parent-contacts', [$parentContactController, 'create'])->add($requireAdmin)->add($authMiddleware);
+    $app->put('/api/v1/students/{studentId:[0-9]+}/parent-contacts/{id:[0-9]+}', [$parentContactController, 'update'])->add($requireAdmin)->add($authMiddleware);
+    $app->delete('/api/v1/students/{studentId:[0-9]+}/parent-contacts/{id:[0-9]+}', [$parentContactController, 'delete'])->add($requireAdmin)->add($authMiddleware);
 
     // Courses (protected)
     $app->get('/api/v1/courses', [$courseController, 'list'])->add($requireSupporter)->add($authMiddleware);

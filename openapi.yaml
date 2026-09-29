@@ -1166,6 +1166,151 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  # ───────────────────── Parent Contacts ─────────────────────
+  /api/v1/students/{studentId}/parent-contacts:
+    get:
+      tags: [Students, ParentContacts]
+      summary: List a student's parent/guardian contacts (admin or supporter)
+      operationId: parentContactList
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contacts ordered by primary first
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ParentContact"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Students, ParentContacts]
+      summary: Add a parent/guardian contact (admin only)
+      operationId: parentContactCreate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParentContactInput"
+      responses:
+        "201":
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ParentContact"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/students/{studentId}/parent-contacts/{id}:
+    put:
+      tags: [Students, ParentContacts]
+      summary: Update a parent/guardian contact (admin only)
+      operationId: parentContactUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ParentContactInput"
+      responses:
+        "200":
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ParentContact"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Students, ParentContacts]
+      summary: Delete a parent/guardian contact (admin only)
+      operationId: parentContactDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contact deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # ───────────────────── Courses ─────────────────────
   /api/v1/courses:
     get:
@@ -3184,6 +3329,48 @@ components:
         updated_at:
           type: string
           format: date-time
+
+    ParentContact:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        parent_name:
+          type: string
+        relationship:
+          type: string
+          enum: [father, mother, guardian, other]
+        phone:
+          type: string
+          maxLength: 15
+        is_primary:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, student_id, parent_name, relationship, phone, is_primary]
+
+    ParentContactInput:
+      type: object
+      properties:
+        parent_name:
+          type: string
+          description: نام والد یا سرپرست
+        relationship:
+          type: string
+          enum: [father, mother, guardian, other]
+        phone:
+          type: string
+          maxLength: 15
+        is_primary:
+          type: boolean
+          description: فقط یک مخاطب اصلی برای هر دانش‌آموز مجاز است
+      required: [parent_name, relationship, phone]
 
     Course:
       type: object
