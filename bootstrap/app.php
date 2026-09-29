@@ -111,6 +111,11 @@ $app->add(function (ServerRequestInterface $request, $handler) {
     return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
 });
 
+\App\Core\Cache::configure(
+    __DIR__ . '/../storage/cache',
+    ($_ENV['CACHE_ENABLED'] ?? 'true') === 'true'
+);
+
 $routes = require __DIR__ . '/../routes/api.php';
 $routes($app);
 

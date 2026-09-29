@@ -2,6 +2,7 @@
 
 namespace App\Modules\Instructors;
 
+use App\Core\Cache;
 use App\Core\Pagination;
 use App\Core\Storage;
 
@@ -39,6 +40,8 @@ class InstructorService
             }
             throw $e;
         }
+
+        Cache::flushGroup('public');
 
         return $this->get($instructorId);
     }
@@ -85,6 +88,8 @@ class InstructorService
             Storage::delete($oldPath);
         }
 
+        Cache::flushGroup('public');
+
         return $this->get($id);
     }
 
@@ -100,5 +105,7 @@ class InstructorService
         }
 
         Instructor::delete($id);
+
+        Cache::flushGroup('public');
     }
 }

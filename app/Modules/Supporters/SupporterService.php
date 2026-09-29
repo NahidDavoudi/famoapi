@@ -2,6 +2,7 @@
 
 namespace App\Modules\Supporters;
 
+use App\Core\Cache;
 use App\Core\Database;
 use App\Core\Pagination;
 
@@ -45,6 +46,8 @@ class SupporterService
             throw $e;
         }
 
+        Cache::flushGroup('public');
+
         return $this->get($supporterId);
     }
 
@@ -77,6 +80,8 @@ class SupporterService
             ]);
         }
 
+        Cache::flushGroup('public');
+
         return $this->get($id);
     }
 
@@ -88,5 +93,7 @@ class SupporterService
         }
 
         Supporter::delete($id);
+
+        Cache::flushGroup('public');
     }
 }

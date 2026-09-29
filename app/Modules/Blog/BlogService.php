@@ -2,30 +2,58 @@
 
 namespace App\Modules\Blog;
 
+use App\Core\Cache;
 use App\Core\Pagination;
 
 class BlogService
 {
+    private const GROUP = 'public';
+    private const TTL = 600;
+    private const MAX_CACHED_PAGE = 10;
+
     public function getPublishedPosts(int $page, int $perPage): array
     {
-        $total = BlogPost::countPublished();
-        $pagination = Pagination::build($page, $perPage, $total);
-        $posts = BlogPost::findAllPublished($pagination['page'], $pagination['per_page']);
-        return [
-            'posts' => $posts,
-            'pagination' => $pagination,
-        ];
+        $page = max($page, 1);
+        $perPage = min(max($perPage, 1), 50);
+
+        $load = function () use ($page, $perPage) {
+            $total = BlogPost::countPublished();
+            $pagination = Pagination::build($page, $perPage, $total);
+            $posts = BlogPost::findAllPublished($pagination['page'], $pagination['per_page']);
+            return [
+                'posts' => $posts,
+                'pagination' => $pagination,
+            ];
+        };
+
+        if ($page > self::MAX_CACHED_PAGE) {
+            return $load();
+        }
+
+        return Cache::remember(self::GROUP, "blog_posts:0:{$page}:{$perPage}", self::TTL, $load);
     }
 
     public function getPostsByCategory(string $category, int $page, int $perPage): array
     {
-        $total = BlogPost::countByCategory($category);
-        $pagination = Pagination::build($page, $perPage, $total);
-        $posts = BlogPost::findByCategory($category, $pagination['page'], $pagination['per_page']);
-        return [
-            'posts' => $posts,
-            'pagination' => $pagination,
-        ];
+        $page = max($page, 1);
+        $perPage = min(max($perPage, 1), 50);
+        $categoryKey = $category === '' ? 'all' : $category;
+
+        $load = function () use ($category, $page, $perPage) {
+            $total = BlogPost::countByCategory($category);
+            $pagination = Pagination::build($page, $perPage, $total);
+            $posts = BlogPost::findByCategory($category, $pagination['page'], $pagination['per_page']);
+            return [
+                'posts' => $posts,
+                'pagination' => $pagination,
+            ];
+        };
+
+        if ($page > self::MAX_CACHED_PAGE) {
+            return $load();
+        }
+
+        return Cache::remember(self::GROUP, "blog_posts:{$categoryKey}:{$page}:{$perPage}", self::TTL, $load);
     }
 
     public function getPost(string $slug): ?array
@@ -40,7 +68,9 @@ class BlogService
 
     public function getCategories(): array
     {
-        return ['categories' => BlogPost::getCategories()];
+        return Cache::remember(self::GROUP, 'blog_categories', self::TTL, function () {
+            return ['categories' => BlogPost::getCategories()];
+        });
     }
 
     public function getAllPosts(int $page, int $perPage): array
@@ -71,6 +101,9 @@ class BlogService
 
         $id = BlogPost::create($data);
         $post = BlogPost::findById($id);
+
+        Cache::flushGroup(self::GROUP);
+
         return ['post' => $post];
     }
 
@@ -83,6 +116,9 @@ class BlogService
 
         BlogPost::update($id, $data);
         $post = BlogPost::findById($id);
+
+        Cache::flushGroup(self::GROUP);
+
         return ['post' => $post];
     }
 
@@ -97,5 +133,7 @@ class BlogService
         if (!$deleted) {
             throw new \App\Core\ApiException('خطا در حذف پست', 500, 'INTERNAL_ERROR');
         }
+
+        Cache::flushGroup(self::GROUP);
     }
 }

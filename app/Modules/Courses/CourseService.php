@@ -2,6 +2,7 @@
 
 namespace App\Modules\Courses;
 
+use App\Core\Cache;
 use App\Core\Pagination;
 use App\Core\Storage;
 
@@ -37,6 +38,8 @@ class CourseService
             }
             throw $e;
         }
+
+        Cache::flushGroup('public');
 
         return $this->get($courseId);
     }
@@ -79,6 +82,8 @@ class CourseService
             Storage::delete($oldPath);
         }
 
+        Cache::flushGroup('public');
+
         return $this->get($id);
     }
 
@@ -94,5 +99,7 @@ class CourseService
         }
 
         Course::delete($id);
+
+        Cache::flushGroup('public');
     }
 }

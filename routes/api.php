@@ -76,13 +76,15 @@ return function (App $app) {
     $app->post('/api/v1/auth/logout', [$authController, 'logout']);
 
     // Public
-    $app->get('/api/v1/public/courses', [$publicController, 'getCourses']);
-    $app->get('/api/v1/public/instructors', [$publicController, 'getInstructors']);
-    $app->get('/api/v1/public/supporters', [$publicController, 'getSupporters']);
-    $app->get('/api/v1/public/blog/posts', [$blogController, 'getPosts']);
-    $app->get('/api/v1/public/blog/posts/{slug}', [$blogController, 'getPost']);
-    $app->get('/api/v1/public/blog/categories', [$blogController, 'getCategories']);
-    $app->get('/api/v1/public/blog/categories/{category}/posts', [$blogController, 'getPostsByCategory']);
+    $app->group('/api/v1/public', function ($group) use ($publicController, $blogController) {
+        $group->get('/courses', [$publicController, 'getCourses']);
+        $group->get('/instructors', [$publicController, 'getInstructors']);
+        $group->get('/supporters', [$publicController, 'getSupporters']);
+        $group->get('/blog/posts', [$blogController, 'getPosts']);
+        $group->get('/blog/posts/{slug}', [$blogController, 'getPost']);
+        $group->get('/blog/categories', [$blogController, 'getCategories']);
+        $group->get('/blog/categories/{category}/posts', [$blogController, 'getPostsByCategory']);
+    })->add(new \App\Core\PublicCacheMiddleware(300));
 
     // Dashboard (protected)
     $app->get('/api/v1/dashboard/stats', [$dashboardController, 'stats'])->add($requireSupporter)->add($authMiddleware);
