@@ -51,7 +51,7 @@ class InstructorController
 
         $files = $request->getUploadedFiles();
         $image = null;
-        if (!empty($files['image'])) {
+        if (($files['image'] ?? null) instanceof \Psr\Http\Message\UploadedFileInterface) {
             $image = $files['image'];
         }
 
@@ -63,7 +63,7 @@ class InstructorController
                 'image'       => $image,
                 'display_order' => isset($body['display_order']) ? (int) $body['display_order'] : 0,
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -89,7 +89,7 @@ class InstructorController
     {
         try {
             $result = $this->service->get((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -121,13 +121,13 @@ class InstructorController
         if (isset($body['title'])) $data['title'] = $body['title'];
         if (isset($body['description'])) $data['description'] = $body['description'];
         if (isset($body['display_order'])) $data['display_order'] = (int) $body['display_order'];
-        if (!empty($files['image'])) {
+        if (($files['image'] ?? null) instanceof \Psr\Http\Message\UploadedFileInterface) {
             $data['image'] = $files['image'];
         }
 
         try {
             $result = $this->service->update((int) $args['id'], $data);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -153,7 +153,7 @@ class InstructorController
     {
         try {
             $this->service->delete((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,

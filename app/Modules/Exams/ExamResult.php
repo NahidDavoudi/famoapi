@@ -8,6 +8,8 @@ class ExamResult
 {
     public static function findDates(?int $studentId, int $page, int $perPage): array
     {
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = ($page - 1) * $perPage;
         $where = $studentId ? 'WHERE student_id = ?' : '';
         $params = $studentId ? [$studentId, $perPage, $offset] : [$perPage, $offset];
@@ -40,6 +42,8 @@ class ExamResult
 
     public static function findStudentsByDate(string $examDate, int $page, int $perPage): array
     {
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = ($page - 1) * $perPage;
         $stmt = Database::getConnection()->prepare(
             'SELECT s.id as student_id, s.name, s.grade, s.field,
@@ -94,6 +98,8 @@ class ExamResult
     {
         $conditions = ['1=1'];
         $params = [];
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = ($page - 1) * $perPage;
 
         if (!empty($filters['student_id'])) {
@@ -152,18 +158,18 @@ class ExamResult
         $db = Database::getConnection();
         $db->beginTransaction();
         try {
-            $inserted = 0;
+            $db->prepare('DELETE FROM exam_results WHERE student_id = ? AND exam_date = ?')
+                ->execute([$studentId, $examDate]);
             $stmt = $db->prepare(
                 'INSERT INTO exam_results (student_id, exam_date, subject, chapter, total_q, correct, wrong, skipped)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
             );
+            $inserted = 0;
             foreach ($subjects as $subj) {
-                if (empty($subj['subject']) || !isset($subj['total_q'])) continue;
                 $total = (int) $subj['total_q'];
                 $correct = (int) ($subj['correct'] ?? 0);
                 $wrong = (int) ($subj['wrong'] ?? 0);
                 $skipped = (int) ($subj['skipped'] ?? 0);
-                if ($correct + $wrong + $skipped > $total) continue;
                 $stmt->execute([
                     $studentId, $examDate,
                     $subj['subject'],
@@ -174,8 +180,10 @@ class ExamResult
             }
             $db->commit();
             return $inserted;
-        } catch (\Exception $e) {
-            $db->rollBack();
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             throw $e;
         }
     }

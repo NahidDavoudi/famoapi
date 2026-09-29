@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         beStrictAboutTestsThatDoNotTestAnything="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutChangesToGlobalState="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         failOnIncomplete="true"
+         failOnSkipped="true"
+         executionOrder="depends,defects">
+    <testsuites>
+        <testsuite name="Unit Tests">
+            <directory suffix="Test.php">tests</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">app</directory>
+        </whitelist>
+    </filter>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="DB_HOST" value="localhost"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_NAME" value="nadcot_famo"/>
+        <env name="DB_USER" value="root"/>
+        <env name="DB_PASS" value=""/>
+        <env name="JWT_SECRET" value="test-secret-key-for-testing-only"/>
+        <env name="JWT_TTL" value="3600"/>
+        <env name="JWT_COOKIE_NAME" value="famo_jwt"/>
+        <env name="JWT_COOKIE_DOMAIN" value=""/>
+        <env name="JWT_COOKIE_SECURE" value=""/>
+        <env name="JWT_COOKIE_SAMESITE" value=""/>
+        <env name="CORS_ORIGINS" value="http://localhost"/>
+        <env name="APP_DEBUG" value="true"/>
+        <env name="APP_MODE" value="development"/>
+    </php>
+</phpunit>

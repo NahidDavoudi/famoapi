@@ -19,7 +19,8 @@ $app = AppFactory::create();
 // PHP/Slim do not populate multipart fields for a native PUT/PATCH request.
 $app->add(function (ServerRequestInterface $request, $handler) {
     $method = strtoupper($request->getMethod());
-    $contentType = strtolower($request->getHeaderLine('Content-Type'));
+    $contentTypeHeader = $request->getHeaderLine('Content-Type');
+    $contentType = strtolower($contentTypeHeader);
     $parsedBody = $request->getParsedBody();
 
     if ($parsedBody === null && !empty($_POST)) {
@@ -43,17 +44,7 @@ $app->add(function (ServerRequestInterface $request, $handler) {
         }
     } elseif (in_array($method, ['PUT', 'PATCH'], true)
         && str_contains($contentType, 'multipart/form-data')) {
-        $response = new Response(415);
-        $response->getBody()->write(json_encode([
-            'success' => false,
-            'data' => null,
-            'pagination' => null,
-            'error' => [
-                'code' => 'UNSUPPORTED_MEDIA_TYPE',
-                'message' => 'برای آپلود multipart از POST همراه با _method=PUT یا PATCH استفاده کنید',
-            ],
-        ], JSON_UNESCAPED_UNICODE));
-        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+        $request = App\Core\MultipartFormDataParser::applyToRequest($request);
     }
 
     return $handler->handle($request);

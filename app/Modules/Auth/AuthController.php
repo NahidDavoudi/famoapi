@@ -38,17 +38,17 @@ class AuthController
 
         try {
             $result = $this->service->login($body['username'], $body['password']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'AUTH_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 401)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $status = !empty($result['requires_2fa']) ? 202 : 200;
@@ -94,17 +94,17 @@ class AuthController
                 (int) $body['user_id'],
                 $body['code']
             );
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => '2FA_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 401)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $token = $result['token'] ?? null;
@@ -157,17 +157,17 @@ class AuthController
 
         try {
             $result = $this->service->register($body);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'REGISTRATION_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 409)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $token = $result['token'] ?? null;
@@ -191,17 +191,17 @@ class AuthController
 
         try {
             $userData = $this->service->me((int) $decoded->sub);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'USER_NOT_FOUND',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([

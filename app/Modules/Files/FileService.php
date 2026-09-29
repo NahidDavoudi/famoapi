@@ -4,6 +4,7 @@ namespace App\Modules\Files;
 
 use App\Core\Pagination;
 use App\Core\Storage;
+use Psr\Http\Message\UploadedFileInterface;
 
 class FileService
 {
@@ -19,38 +20,58 @@ class FileService
         ];
     }
 
-    public function upload(array $uploadedFile, int $studentId, ?string $description): array
+    public function upload(UploadedFileInterface $uploadedFile, int $studentId, ?string $description): array
     {
         $filePath = Storage::upload($uploadedFile, 'exams', $studentId);
 
-        $extension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+        $extension = strtolower(pathinfo($uploadedFile->getClientFilename() ?? '', PATHINFO_EXTENSION));
 
-        $fileId = File::create([
-            'owner_type'  => 'student',
-            'owner_id'    => $studentId,
-            'file_type'   => $extension,
-            'file_path'   => $filePath,
-            'file_size'   => $uploadedFile['size'],
-            'description' => $description,
-        ]);
+        try {
+            $fileId = File::create([
+                'owner_type'  => 'student',
+                'owner_id'    => $studentId,
+                'file_type'   => $extension,
+                'file_path'   => $filePath,
+                'file_size'   => $uploadedFile->getSize() ?? 0,
+                'description' => $description,
+            ]);
 
-        $file = File::findById($fileId);
-        if (!$file) {
-            throw new \RuntimeException('خطا در ذخیره اطلاعات فایل', 500);
+            $file = File::findById($fileId);
+            if (!$file) {
+                throw new \App\Core\ApiException('خطا در ذخیره اطلاعات فایل', 500, 'INTERNAL_ERROR');
+            }
+        } catch (\Throwable $exception) {
+            Storage::delete($filePath);
+            throw $exception;
         }
 
         return $file;
+    }
+
+    public function getDownload(int $id, ?int $enforceStudentId = null): array
+    {
+        $file = File::findById($id);
+        if (!$file) {
+            throw new \App\Core\ApiException('فایل یافت نشد', 404, 'NOT_FOUND');
+        }
+        if ($enforceStudentId !== null && (int) $file['owner_id'] !== $enforceStudentId) {
+            throw new \App\Core\ApiException('دسترسی غیرمجاز', 403, 'FORBIDDEN');
+        }
+
+        $path = Storage::resolve((string) $file['file_path']);
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($path) ?: 'application/octet-stream';
+        return ['path' => $path, 'mime_type' => $mime, 'file' => $file];
     }
 
     public function deleteFile(int $id, ?int $enforceStudentId = null): void
     {
         $file = File::findById($id);
         if (!$file) {
-            throw new \RuntimeException('فایل یافت نشد', 404);
+            throw new \App\Core\ApiException('فایل یافت نشد', 404, 'NOT_FOUND');
         }
 
         if ($enforceStudentId !== null && (int) $file['owner_id'] !== $enforceStudentId) {
-            throw new \RuntimeException('دسترسی غیرمجاز', 403);
+            throw new \App\Core\ApiException('دسترسی غیرمجاز', 403, 'FORBIDDEN');
         }
 
         Storage::delete($file['file_path']);

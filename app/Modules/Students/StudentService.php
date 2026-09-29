@@ -52,7 +52,7 @@ class StudentService
     {
         $student = Student::findById($id);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
         return $student;
     }
@@ -61,7 +61,7 @@ class StudentService
     {
         $student = Student::findById($id);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         Student::update($id, $data);
@@ -84,7 +84,7 @@ class StudentService
     {
         $student = Student::findById($id);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         Student::delete($id);
@@ -94,11 +94,11 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         if (!empty($student['user_id'])) {
-            throw new \RuntimeException('این دانش‌آموز قبلاً حساب کاربری دارد', 409);
+            throw new \App\Core\ApiException('این دانش‌آموز قبلاً حساب کاربری دارد', 409, 'ACCOUNT_ERROR');
         }
 
         $db = Database::getConnection();
@@ -120,11 +120,11 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         if (empty($student['user_id'])) {
-            throw new \RuntimeException('این دانش‌آموز حساب کاربری ندارد', 400);
+            throw new \App\Core\ApiException('این دانش‌آموز حساب کاربری ندارد', 400, 'RESET_ERROR');
         }
 
         $stmt = Database::getConnection()->prepare(
@@ -152,7 +152,7 @@ class StudentService
     {
         $student = Student::findById($id);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         Student::toggleStatus($id);
@@ -164,7 +164,7 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         $db = Database::getConnection();
@@ -234,7 +234,7 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         $db = Database::getConnection();
@@ -275,7 +275,7 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         $db = Database::getConnection();
@@ -299,7 +299,7 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         $db = Database::getConnection();

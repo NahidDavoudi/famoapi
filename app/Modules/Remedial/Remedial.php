@@ -154,7 +154,7 @@ class Remedial
         ];
 
         if (!isset($allowed[$field])) {
-            throw new \InvalidArgumentException('فیلد زمان نامعتبر است');
+            throw new \App\Core\ApiException('فیلد زمان نامعتبر است', 422, 'VALIDATION_ERROR');
         }
 
         try {
@@ -185,7 +185,7 @@ class Remedial
                 ]);
             }
         } catch (\Exception $e) {
-            throw new \RuntimeException('به‌روزرسانی زمان دانش‌آموز امکان‌پذیر نیست', 500, $e);
+            throw new \App\Core\ApiException('به‌روزرسانی زمان دانش‌آموز امکان‌پذیر نیست', 500, 'INTERNAL_ERROR', $e);
         }
     }
 

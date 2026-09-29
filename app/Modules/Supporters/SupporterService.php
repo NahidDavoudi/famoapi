@@ -12,7 +12,7 @@ class SupporterService
         $total = Supporter::countAll();
         $pagination = Pagination::build($page, $perPage, $total);
 
-        $items = Supporter::findAll($pagination['page'], $perPage);
+        $items = Supporter::findAll($pagination['page'], $pagination['per_page']);
 
         return [
             'items'      => $items,
@@ -52,7 +52,7 @@ class SupporterService
     {
         $supporter = Supporter::findById($id);
         if (!$supporter) {
-            throw new \RuntimeException('پشتیبان یافت نشد', 404);
+            throw new \App\Core\ApiException('پشتیبان یافت نشد', 404, 'NOT_FOUND');
         }
         return $supporter;
     }
@@ -61,7 +61,7 @@ class SupporterService
     {
         $supporter = Supporter::findById($id);
         if (!$supporter) {
-            throw new \RuntimeException('پشتیبان یافت نشد', 404);
+            throw new \App\Core\ApiException('پشتیبان یافت نشد', 404, 'NOT_FOUND');
         }
 
         Supporter::update($id, $data);
@@ -84,7 +84,7 @@ class SupporterService
     {
         $supporter = Supporter::findById($id);
         if (!$supporter) {
-            throw new \RuntimeException('پشتیبان یافت نشد', 404);
+            throw new \App\Core\ApiException('پشتیبان یافت نشد', 404, 'NOT_FOUND');
         }
 
         Supporter::delete($id);

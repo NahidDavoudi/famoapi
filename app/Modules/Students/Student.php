@@ -72,8 +72,9 @@ class Student
         }
 
         if (!empty($filters['search'])) {
-            $conditions[] = '(s.name LIKE :search OR s.phone LIKE :search)';
-            $params['search'] = '%' . $filters['search'] . '%';
+            $conditions[] = '(s.name LIKE :search_name OR s.phone LIKE :search_phone)';
+            $params['search_name'] = '%' . $filters['search'] . '%';
+            $params['search_phone'] = '%' . $filters['search'] . '%';
         }
         if (!empty($filters['field'])) {
             $conditions[] = 's.field = :field';
@@ -86,7 +87,10 @@ class Student
 
         $where = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
         $stmt = Database::getConnection()->prepare("SELECT COUNT(*) FROM students s {$where}");
-        $stmt->execute($params);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value);
+        }
+        $stmt->execute();
         return (int) $stmt->fetchColumn();
     }
 

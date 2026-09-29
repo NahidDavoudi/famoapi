@@ -10,6 +10,8 @@ class BlogPost
     public static function findAllPublished(int $page, int $perPage): array
     {
         $db = Database::getConnection();
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = Pagination::offset($page, $perPage);
         $stmt = $db->prepare(
             'SELECT * FROM blog_posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT ? OFFSET ?'
@@ -38,25 +40,38 @@ class BlogPost
     public static function findByCategory(string $category, int $page, int $perPage): array
     {
         $db = Database::getConnection();
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = Pagination::offset($page, $perPage);
         $stmt = $db->prepare(
-            'SELECT * FROM blog_posts WHERE category = ? AND is_published = 1 ORDER BY published_at DESC LIMIT ? OFFSET ?'
+            'SELECT bp.* FROM blog_posts bp
+             LEFT JOIN blog_categories bc ON bc.id = bp.category_id
+             WHERE (bc.slug = ? OR (bp.category_id IS NULL AND bp.category = ?))
+               AND bp.is_published = 1
+             ORDER BY bp.published_at DESC, bp.id DESC LIMIT ? OFFSET ?'
         );
-        $stmt->execute([$category, $perPage, $offset]);
+        $stmt->execute([$category, $category, $perPage, $offset]);
         return $stmt->fetchAll();
     }
 
     public static function countByCategory(string $category): int
     {
         $db = Database::getConnection();
-        $stmt = $db->prepare('SELECT COUNT(*) FROM blog_posts WHERE category = ? AND is_published = 1');
-        $stmt->execute([$category]);
+        $stmt = $db->prepare(
+            'SELECT COUNT(*) FROM blog_posts bp
+             LEFT JOIN blog_categories bc ON bc.id = bp.category_id
+             WHERE (bc.slug = ? OR (bp.category_id IS NULL AND bp.category = ?))
+               AND bp.is_published = 1'
+        );
+        $stmt->execute([$category, $category]);
         return (int) $stmt->fetchColumn();
     }
 
     public static function findAll(int $page, int $perPage): array
     {
         $db = Database::getConnection();
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = Pagination::offset($page, $perPage);
         $stmt = $db->prepare(
             'SELECT * FROM blog_posts ORDER BY published_at DESC LIMIT ? OFFSET ?'
@@ -90,6 +105,7 @@ class BlogPost
             'INSERT INTO blog_posts (title, slug, excerpt, content, cover_image, category, category_id, meta_description, is_published, published_at, views)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)'
         );
+        $isPublished = filter_var($data['is_published'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
         $stmt->execute([
             $data['title'],
             $slug,
@@ -99,8 +115,8 @@ class BlogPost
             $data['category'] ?? '',
             $data['category_id'] ?? null,
             $data['meta_description'] ?? null,
-            $data['is_published'] ?? 0,
-            $data['published_at'] ?? date('Y-m-d H:i:s'),
+            $isPublished,
+            $isPublished ? ($data['published_at'] ?? date('Y-m-d H:i:s')) : null,
         ]);
         return (int) $db->lastInsertId();
     }
@@ -111,14 +127,19 @@ class BlogPost
         $fields = [];
         $values = [];
 
+        if (array_key_exists('is_published', $data)) {
+            $data['is_published'] = filter_var($data['is_published'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+        }
         if (!empty($data['is_published']) && empty($data['published_at'])) {
-            $data['published_at'] = date('Y-m-d H:i:s');
+            $current = $db->prepare('SELECT is_published, published_at FROM blog_posts WHERE id = ?');
+            $current->execute([$id]);
+            $existing = $current->fetch();
+            if ($existing && !(bool) $existing['is_published']) {
+                $data['published_at'] = date('Y-m-d H:i:s');
+            }
         }
 
         foreach (['title', 'slug', 'excerpt', 'content', 'cover_image', 'category', 'category_id', 'is_published', 'published_at', 'meta_description'] as $field) {
-            if ($field === 'published_at' && empty($data[$field])) {
-                continue;
-            }
             if (array_key_exists($field, $data)) {
                 $fields[] = "{$field} = ?";
                 $values[] = $data[$field];

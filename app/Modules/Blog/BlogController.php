@@ -140,14 +140,14 @@ class BlogController
                 'error' => null,
             ], JSON_UNESCAPED_UNICODE));
             return $response->withStatus(201);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'data' => null,
                 'pagination' => null,
-                'error' => ['code' => 'VALIDATION_ERROR', 'message' => $e->getMessage()],
+                'error' => ['code' => $e->getErrorCode(), 'message' => $e->getMessage()],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus(400);
+            return $response->withStatus($e->getHttpStatus());
         }
     }
 
@@ -165,16 +165,14 @@ class BlogController
                 'error' => null,
             ], JSON_UNESCAPED_UNICODE));
             return $response;
-        } catch (\RuntimeException $e) {
-            $code = $e->getMessage() === 'پست مورد نظر یافت نشد' ? 404 : 400;
-            $errorCode = $code === 404 ? 'NOT_FOUND' : 'VALIDATION_ERROR';
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'data' => null,
                 'pagination' => null,
-                'error' => ['code' => $errorCode, 'message' => $e->getMessage()],
+                'error' => ['code' => $e->getErrorCode(), 'message' => $e->getMessage()],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($code);
+            return $response->withStatus($e->getHttpStatus());
         }
     }
 
@@ -191,14 +189,14 @@ class BlogController
                 'error' => null,
             ], JSON_UNESCAPED_UNICODE));
             return $response;
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'data' => null,
                 'pagination' => null,
-                'error' => ['code' => 'NOT_FOUND', 'message' => $e->getMessage()],
+                'error' => ['code' => $e->getErrorCode(), 'message' => $e->getMessage()],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus(404);
+            return $response->withStatus($e->getHttpStatus());
         }
     }
 }

@@ -51,7 +51,7 @@ class AppointmentService
     {
         $appointment = Appointment::findById($id);
         if (!$appointment) {
-            throw new \RuntimeException('نوبت یافت نشد', 404);
+            throw new \App\Core\ApiException('نوبت یافت نشد', 404, 'NOT_FOUND');
         }
 
         Appointment::updateStatus($id, $status);
@@ -62,7 +62,7 @@ class AppointmentService
     {
         $appointment = Appointment::findById($id);
         if (!$appointment) {
-            throw new \RuntimeException('نوبت یافت نشد', 404);
+            throw new \App\Core\ApiException('نوبت یافت نشد', 404, 'NOT_FOUND');
         }
 
         Appointment::delete($id);

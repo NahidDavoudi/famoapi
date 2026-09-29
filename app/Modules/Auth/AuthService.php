@@ -32,11 +32,11 @@ class AuthService
         $user = User::findByUsername($username);
 
         if (!$user || !password_verify($password, $user['password_hash'])) {
-            throw new \RuntimeException('نام کاربری یا رمز عبور اشتباه است', 401);
+            throw new \App\Core\ApiException('نام کاربری یا رمز عبور اشتباه است', 401, 'AUTH_ERROR');
         }
 
         if (isset($user['is_active']) && (int) $user['is_active'] === 0) {
-            throw new \RuntimeException('حساب کاربری غیرفعال است', 403);
+            throw new \App\Core\ApiException('حساب کاربری غیرفعال است', 403, 'FORBIDDEN');
         }
 
         $role = $user['role'];
@@ -59,7 +59,7 @@ class AuthService
 
             if (!$sent) {
                 error_log('[' . date('Y-m-d H:i:s') . '] AuthService: Failed to send 2FA code to user ' . $user['id'] . PHP_EOL, 3, __DIR__ . '/../../../storage/logs/app.log');
-                throw new \RuntimeException('ارسال کد تأیید با مشکل مواجه شد. لطفاً دقایقی بعد تلاش کنید.', 500);
+                throw new \App\Core\ApiException('ارسال کد تأیید با مشکل مواجه شد. لطفاً دقایقی بعد تلاش کنید.', 500, 'AUTH_ERROR');
             }
 
             return [
@@ -103,7 +103,7 @@ class AuthService
         $record = $stmt->fetch();
 
         if (!$record) {
-            throw new \RuntimeException('کد تأیید نامعتبر یا منقضی شده است', 401);
+            throw new \App\Core\ApiException('کد تأیید نامعتبر یا منقضی شده است', 401, '2FA_ERROR');
         }
 
         $stmt = $db->prepare(
@@ -112,12 +112,12 @@ class AuthService
         );
         $stmt->execute([$record['id']]);
         if ($stmt->rowCount() !== 1) {
-            throw new \RuntimeException('کد تأیید نامعتبر یا قبلاً استفاده شده است', 401);
+            throw new \App\Core\ApiException('کد تأیید نامعتبر یا قبلاً استفاده شده است', 401, '2FA_ERROR');
         }
 
         $user = User::findById($userId);
         if (!$user) {
-            throw new \RuntimeException('کاربر یافت نشد', 404);
+            throw new \App\Core\ApiException('کاربر یافت نشد', 404, 'NOT_FOUND');
         }
 
         $studentId = $this->studentIdFor($user);
@@ -142,7 +142,7 @@ class AuthService
     public function register(array $data): array
     {
         if (User::findByUsername($data['phone'])) {
-            throw new \RuntimeException('این شماره تلفن قبلاً ثبت‌نام کرده است', 409);
+            throw new \App\Core\ApiException('این شماره تلفن قبلاً ثبت‌نام کرده است', 409, 'REGISTRATION_ERROR');
         }
 
         $db = Database::getConnection();
@@ -198,7 +198,7 @@ class AuthService
     {
         $user = User::findById($userId);
         if (!$user) {
-            throw new \RuntimeException('کاربر یافت نشد', 404);
+            throw new \App\Core\ApiException('کاربر یافت نشد', 404, 'NOT_FOUND');
         }
         return [
             'id'         => (int) $user['id'],

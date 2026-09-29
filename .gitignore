@@ -2,3 +2,4 @@ vendor/
 .env
 uploads/
 storage/logs/*.log
+Famo-Backend-Audit.md

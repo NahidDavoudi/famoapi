@@ -9,8 +9,14 @@ class PlanTemplate
     public static function findAll(): array
     {
         try {
-            $stmt = Database::getConnection()->query('SELECT * FROM plan_templates ORDER BY name');
-            return $stmt->fetchAll();
+            $stmt = Database::getConnection()->query('SELECT id, name, student_id, week_date, items_json, created_at, updated_at FROM plan_templates ORDER BY name');
+            $rows = $stmt->fetchAll();
+            foreach ($rows as &$row) {
+                $row['items'] = self::decodeItems($row['items_json'] ?? null);
+                unset($row['items_json']);
+            }
+            unset($row);
+            return $rows;
         } catch (\Exception $e) {
             return [];
         }
@@ -22,6 +28,10 @@ class PlanTemplate
             $stmt = Database::getConnection()->prepare('SELECT * FROM plan_templates WHERE id = ? LIMIT 1');
             $stmt->execute([$id]);
             $result = $stmt->fetch();
+            if ($result) {
+                $result['items'] = self::decodeItems($result['items_json'] ?? null);
+                unset($result['items_json']);
+            }
             return $result ?: null;
         } catch (\Exception $e) {
             return null;
@@ -39,7 +49,7 @@ class PlanTemplate
             $data['name'],
             $data['student_id'] ?? null,
             $data['week_date'] ?? null,
-            json_encode($data['items'] ?? [], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+            json_encode(self::validateItems($data['items'] ?? []), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         ]);
         return (int) $db->lastInsertId();
     }
@@ -49,7 +59,7 @@ class PlanTemplate
         $db = Database::getConnection();
         $fields = [];
         $params = [];
-        foreach (['name', 'student_id', 'week_date', 'items_json'] as $col) {
+        foreach (['name', 'student_id', 'week_date'] as $col) {
             if (isset($data[$col])) {
                 $fields[] = "$col = ?";
                 $params[] = $data[$col];
@@ -57,7 +67,7 @@ class PlanTemplate
         }
         if (isset($data['items'])) {
             $fields[] = 'items_json = ?';
-            $params[] = json_encode($data['items'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+            $params[] = json_encode(self::validateItems($data['items']), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         }
         if (empty($fields)) return 0;
         $params[] = $id;
@@ -81,12 +91,12 @@ class PlanTemplate
     {
         $template = self::findById($templateId);
         if (!$template) {
-            throw new \RuntimeException('قالب یافت نشد', 404);
+            throw new \App\Core\ApiException('قالب یافت نشد', 404, 'NOT_FOUND');
         }
 
-        $items = json_decode((string) $template['items_json'], true);
+        $items = $template['items'] ?? self::decodeItems($template['items_json'] ?? null);
         if (!is_array($items)) {
-            throw new \RuntimeException('داده‌های قالب نامعتبر است', 400);
+            throw new \App\Core\ApiException('داده‌های قالب نامعتبر است', 400, 'VALIDATION_ERROR');
         }
 
         $result = WeeklyPlan::save([
@@ -103,5 +113,42 @@ class PlanTemplate
             'student_id'  => $studentId,
             'template_id' => $templateId,
         ];
+    }
+
+    private static function validateItems(mixed $items): array
+    {
+        if (!is_array($items)) {
+            throw new \App\Core\ApiException('فهرست آیتم‌های قالب نامعتبر است', 422, 'VALIDATION_ERROR');
+        }
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                throw new \App\Core\ApiException('هر آیتم قالب باید یک شیء باشد', 422, 'VALIDATION_ERROR');
+            }
+            foreach ($item as $value) {
+                if (!is_null($value) && !is_scalar($value)) {
+                    throw new \App\Core\ApiException('مقدارهای آیتم قالب باید ساده باشند', 422, 'VALIDATION_ERROR');
+                }
+            }
+        }
+        return $items;
+    }
+
+    private static function decodeItems(mixed $encoded): array
+    {
+        $decoded = json_decode((string) $encoded, true);
+        if (is_array($decoded)) {
+            return self::validateItems($decoded);
+        }
+
+        // Existing rows may contain PHP-serialized scalar/array data. Never
+        // instantiate classes while providing a controlled read-only fallback.
+        $legacy = @unserialize((string) $encoded, ['allowed_classes' => false]);
+        if (is_array($legacy)) {
+            return self::validateItems($legacy);
+        }
+        if ($encoded === null || $encoded === '') {
+            return [];
+        }
+        throw new \App\Core\ApiException('داده‌های قالب نامعتبر است', 500, 'TEMPLATE_DATA_ERROR');
     }
 }

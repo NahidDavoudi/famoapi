@@ -17,16 +17,13 @@ class PlanController
         return $response->withStatus($status)->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
 
-    private function fail(Response $response, \RuntimeException $e): Response
+    private function fail(Response $response, \App\Core\ApiException $e): Response
     {
-        $status = (int) $e->getCode();
-        if ($status < 400 || $status > 599) {
-            $status = 500;
-        }
-        $message = $status >= 500 ? 'خطای داخلی سرور' : $e->getMessage();
+        $status = $e->getHttpStatus();
+        $message = $e->getMessage();
         $response->getBody()->write(json_encode([
             'success' => false, 'data' => null, 'pagination' => null,
-            'error' => ['code' => $status === 409 ? 'CONFLICT' : 'PLAN_ERROR', 'message' => $message],
+            'error' => ['code' => $e->getErrorCode(), 'message' => $message],
         ], JSON_UNESCAPED_UNICODE));
         return $response->withStatus($status)->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
@@ -37,7 +34,7 @@ class PlanController
         $studentId = (int) ($request->getQueryParams()['student_id'] ?? 0);
         try {
             return $this->ok($response, $this->service->listForStudent($studentId));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             return $this->fail($response, $e);
         }
     }
@@ -47,7 +44,7 @@ class PlanController
     {
         try {
             return $this->ok($response, $this->service->getPlan((int) $args['id']));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             return $this->fail($response, $e);
         }
     }
@@ -58,7 +55,7 @@ class PlanController
         $body = $request->getParsedBody() ?? [];
         try {
             return $this->ok($response, $this->service->saveFull($body), 201);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             return $this->fail($response, $e);
         }
     }
@@ -70,7 +67,7 @@ class PlanController
         $body['plan_id'] = (int) $args['id'];
         try {
             return $this->ok($response, $this->service->saveFull($body));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             return $this->fail($response, $e);
         }
     }
@@ -81,7 +78,7 @@ class PlanController
         try {
             $this->service->deletePlan((int) $args['id']);
             return $this->ok($response);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             return $this->fail($response, $e);
         }
     }
@@ -96,7 +93,7 @@ class PlanController
         try {
             $deleted = $this->service->clearForStudent($studentId);
             return $this->ok($response, ['deleted' => $deleted, 'student_id' => $studentId]);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             return $this->fail($response, $e);
         }
     }
@@ -110,7 +107,7 @@ class PlanController
     {
         $template = $this->service->getTemplate((int) $args['id']);
         if (!$template) {
-            return $this->fail($response, new \RuntimeException('قالب یافت نشد', 404));
+            return $this->fail($response, new \App\Core\ApiException('قالب یافت نشد', 404, 'NOT_FOUND'));
         }
         return $this->ok($response, $template);
     }
@@ -120,7 +117,7 @@ class PlanController
         $body = $request->getParsedBody() ?? [];
         try {
             return $this->ok($response, $this->service->saveTemplate($body), 201);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             return $this->fail($response, $e);
         }
     }
@@ -137,7 +134,7 @@ class PlanController
         $studentId = (int) ($body['student_id'] ?? 0);
         try {
             return $this->ok($response, $this->service->applyTemplate((int) $args['id'], $studentId));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             return $this->fail($response, $e);
         }
     }

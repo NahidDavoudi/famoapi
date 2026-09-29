@@ -21,7 +21,7 @@ class PlanService
     public function listForStudent(int $studentId): array
     {
         if ($studentId <= 0) {
-            throw new \RuntimeException('شناسه دانش‌آموز الزامی است', 400);
+            throw new \App\Core\ApiException('شناسه دانش‌آموز الزامی است', 400, 'VALIDATION_ERROR');
         }
         return ['plans' => WeeklyPlan::listByStudent($studentId)];
     }
@@ -31,7 +31,7 @@ class PlanService
     {
         $plan = WeeklyPlan::findById($planId);
         if (!$plan) {
-            throw new \RuntimeException('برنامه یافت نشد', 404);
+            throw new \App\Core\ApiException('برنامه یافت نشد', 404, 'NOT_FOUND');
         }
 
         return [
@@ -81,14 +81,14 @@ class PlanService
     public function deletePlan(int $planId): void
     {
         if (!WeeklyPlan::delete($planId)) {
-            throw new \RuntimeException('برنامه یافت نشد', 404);
+            throw new \App\Core\ApiException('برنامه یافت نشد', 404, 'NOT_FOUND');
         }
     }
 
     public function clearForStudent(int $studentId): int
     {
         if ($studentId <= 0) {
-            throw new \RuntimeException('شناسه دانش‌آموز الزامی است', 400);
+            throw new \App\Core\ApiException('شناسه دانش‌آموز الزامی است', 400, 'VALIDATION_ERROR');
         }
         return WeeklyPlan::clearForStudent($studentId);
     }
@@ -105,7 +105,7 @@ class PlanService
         if ($studentId > 0) {
             $student = Student::findById($studentId);
             if (!$student) {
-                throw new \RuntimeException('دانش‌آموز یافت نشد', 404);
+                throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
             }
             $this->applyStudentUpdates($studentId, $name, $grade, $field, $nationalId);
             return $studentId;
@@ -130,7 +130,7 @@ class PlanService
         }
 
         if ($name === '' || $grade <= 0) {
-            throw new \RuntimeException('نام و پایه دانش‌آموز الزامی است', 400);
+            throw new \App\Core\ApiException('نام و پایه دانش‌آموز الزامی است', 400, 'VALIDATION_ERROR');
         }
 
         return Student::create([
@@ -199,7 +199,7 @@ class PlanService
     public function saveTemplate(array $data): array
     {
         if (empty($data['name'])) {
-            throw new \RuntimeException('نام قالب الزامی است', 400);
+            throw new \App\Core\ApiException('نام قالب الزامی است', 400, 'VALIDATION_ERROR');
         }
         $id = PlanTemplate::create($data);
         return PlanTemplate::findById($id) ?? ['id' => $id];

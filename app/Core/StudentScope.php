@@ -28,16 +28,16 @@ class StudentScope
         if (self::role($request) === 'student') {
             $selfId = self::selfId($request);
             if ($selfId <= 0) {
-                throw new \RuntimeException('حساب کاربری به دانش‌آموزی متصل نیست', 403);
+                throw new ApiException('حساب کاربری به دانش‌آموزی متصل نیست', 403, 'FORBIDDEN');
             }
             if ($requested !== null && $requested !== $selfId) {
-                throw new \RuntimeException('دسترسی غیرمجاز', 403);
+                throw new ApiException('دسترسی غیرمجاز', 403, 'FORBIDDEN');
             }
             return $selfId;
         }
 
         if ($requested === null && $required) {
-            throw new \RuntimeException('شناسه دانش‌آموز الزامی است', 400);
+            throw new ApiException('شناسه دانش‌آموز الزامی است', 400, 'VALIDATION_ERROR');
         }
 
         return $requested;

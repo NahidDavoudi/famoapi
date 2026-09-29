@@ -66,7 +66,7 @@ class BlogService
             $errors[] = 'عنوان پست الزامی است';
         }
         if (!empty($errors)) {
-            throw new \RuntimeException(implode(' | ', $errors));
+            throw new \App\Core\ApiException(implode(' | ', $errors), 422, 'VALIDATION_ERROR');
         }
 
         $id = BlogPost::create($data);
@@ -78,7 +78,7 @@ class BlogService
     {
         $post = BlogPost::findById($id);
         if (!$post) {
-            throw new \RuntimeException('پست مورد نظر یافت نشد');
+            throw new \App\Core\ApiException('پست مورد نظر یافت نشد', 404, 'NOT_FOUND');
         }
 
         BlogPost::update($id, $data);
@@ -90,12 +90,12 @@ class BlogService
     {
         $post = BlogPost::findById($id);
         if (!$post) {
-            throw new \RuntimeException('پست مورد نظر یافت نشد');
+            throw new \App\Core\ApiException('پست مورد نظر یافت نشد', 404, 'NOT_FOUND');
         }
 
         $deleted = BlogPost::delete($id);
         if (!$deleted) {
-            throw new \RuntimeException('خطا در حذف پست');
+            throw new \App\Core\ApiException('خطا در حذف پست', 500, 'INTERNAL_ERROR');
         }
     }
 }

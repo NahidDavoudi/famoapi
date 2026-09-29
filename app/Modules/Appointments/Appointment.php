@@ -8,12 +8,14 @@ class Appointment
 {
     public static function findAll(int $page, int $perPage): array
     {
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = ($page - 1) * $perPage;
         $stmt = Database::getConnection()->prepare(
             "SELECT a.*, s.name as student_name, s.grade, s.field, s.phone
              FROM appointments a
              JOIN students s ON a.student_id = s.id
-             ORDER BY a.appointment_date DESC
+             ORDER BY a.appointment_date DESC, a.id DESC
              LIMIT :limit OFFSET :offset"
         );
         $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);

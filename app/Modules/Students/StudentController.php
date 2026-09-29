@@ -85,17 +85,17 @@ class StudentController
                 'phone'       => $body['phone'],
                 'national_id' => $body['nationalId'],
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'CREATION_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -111,17 +111,17 @@ class StudentController
     {
         try {
             $result = $this->service->get($this->resolveStudentId($request, $args));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -146,17 +146,17 @@ class StudentController
 
         try {
             $result = $this->service->update((int) $args['id'], $data);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'UPDATE_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -172,17 +172,17 @@ class StudentController
     {
         try {
             $this->service->delete((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'DELETE_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -198,17 +198,17 @@ class StudentController
     {
         try {
             $result = $this->service->createUserAccount((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'ACCOUNT_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -224,17 +224,17 @@ class StudentController
     {
         try {
             $result = $this->service->resetPassword((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'RESET_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -276,17 +276,17 @@ class StudentController
     {
         try {
             $result = $this->service->toggleStatus((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'TOGGLE_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -302,17 +302,17 @@ class StudentController
     {
         try {
             $result = $this->service->getAnalyticsSummary($this->resolveStudentId($request, $args));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -328,17 +328,17 @@ class StudentController
     {
         try {
             $result = $this->service->getAnalyticsWeekDetail($this->resolveStudentId($request, $args));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -354,17 +354,17 @@ class StudentController
     {
         try {
             $result = $this->service->getAnalyticsSubjectStats($this->resolveStudentId($request, $args));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -380,17 +380,17 @@ class StudentController
     {
         try {
             $result = $this->service->getAnalyticsExamTrend($this->resolveStudentId($request, $args));
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'NOT_FOUND',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([

@@ -34,7 +34,7 @@ class RemedialController
                 'start_date' => $body['start_date'],
                 'end_date'   => $body['end_date'],
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -60,7 +60,7 @@ class RemedialController
     {
         try {
             $result = $this->service->getSessionData((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -112,7 +112,7 @@ class RemedialController
                 'class_name'  => $body['class_name'],
                 'description' => $body['description'] ?? '',
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -145,15 +145,15 @@ class RemedialController
                 (string) ($body['field'] ?? ''),
                 (string) ($body['value'] ?? '')
             );
-        } catch (\InvalidArgumentException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'data' => null,
                 'pagination' => null,
                 'error' => ['code' => 'VALIDATION_ERROR', 'message' => $e->getMessage()],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus(422)->withHeader('Content-Type', 'application/json; charset=utf-8');
-        } catch (\RuntimeException $e) {
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'data' => null,

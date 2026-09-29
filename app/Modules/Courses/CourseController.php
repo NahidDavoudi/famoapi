@@ -51,7 +51,7 @@ class CourseController
 
         $files = $request->getUploadedFiles();
         $backgroundImage = null;
-        if (!empty($files['background_image'])) {
+        if (($files['background_image'] ?? null) instanceof \Psr\Http\Message\UploadedFileInterface) {
             $backgroundImage = $files['background_image'];
         }
 
@@ -66,7 +66,7 @@ class CourseController
                 'price'               => isset($body['price']) ? (int) $body['price'] : 0,
                 'display_order'       => isset($body['display_order']) ? (int) $body['display_order'] : 0,
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -92,7 +92,7 @@ class CourseController
     {
         try {
             $result = $this->service->get((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -127,13 +127,13 @@ class CourseController
         if (isset($body['description'])) $data['description'] = $body['description'];
         if (isset($body['price'])) $data['price'] = (int) $body['price'];
         if (isset($body['display_order'])) $data['display_order'] = (int) $body['display_order'];
-        if (!empty($files['background_image'])) {
+        if (($files['background_image'] ?? null) instanceof \Psr\Http\Message\UploadedFileInterface) {
             $data['background_image'] = $files['background_image'];
         }
 
         try {
             $result = $this->service->update((int) $args['id'], $data);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -159,7 +159,7 @@ class CourseController
     {
         try {
             $this->service->delete((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,

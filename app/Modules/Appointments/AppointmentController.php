@@ -41,17 +41,17 @@ class AppointmentController
                 'type'             => $body['type'] ?? '',
                 'description'      => $body['description'] ?? '',
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'CREATION_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -69,17 +69,17 @@ class AppointmentController
 
         try {
             $result = $this->service->updateStatus((int) $args['id'], $body['status']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'UPDATE_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -95,17 +95,17 @@ class AppointmentController
     {
         try {
             $this->service->delete((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'DELETE_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([

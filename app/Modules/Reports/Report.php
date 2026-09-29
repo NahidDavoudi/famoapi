@@ -10,6 +10,8 @@ class Report
     {
         $conditions = ['1=1'];
         $params = [];
+        $perPage = max(1, min(100, $perPage));
+        $page = max(1, $page);
         $offset = ($page - 1) * $perPage;
 
         if ($dateFrom) {
@@ -17,7 +19,7 @@ class Report
             $params[] = $dateFrom;
         }
         if ($dateTo) {
-            $conditions[] = 'r.report_date <= ?';
+            $conditions[] = 'r.report_date < DATE_ADD(?, INTERVAL 1 DAY)';
             $params[] = $dateTo;
         }
 
@@ -41,8 +43,8 @@ class Report
         $conditions = ['1=1'];
         $params = [];
 
-        if ($dateFrom) { $conditions[] = 'report_date >= ?'; $params[] = $dateFrom; }
-        if ($dateTo) { $conditions[] = 'report_date <= ?'; $params[] = $dateTo; }
+        if ($dateFrom) { $conditions[] = 'r.report_date >= ?'; $params[] = $dateFrom; }
+        if ($dateTo) { $conditions[] = 'r.report_date < DATE_ADD(?, INTERVAL 1 DAY)'; $params[] = $dateTo; }
 
         $sql = 'SELECT COUNT(*) FROM reports_status WHERE ' . implode(' AND ', $conditions);
         $stmt = Database::getConnection()->prepare($sql);

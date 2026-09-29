@@ -10,7 +10,7 @@ class Supporter
     {
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'SELECT * FROM supporters'
+            'SELECT id, name, grade, field FROM supporters'
         );
         $stmt->execute();
         return $stmt->fetchAll();

@@ -96,7 +96,7 @@ return function (App $app) {
     $app->get('/api/v1/students/overview', [$studentController, 'overview'])->add($requireAdmin)->add($authMiddleware);
     $app->get('/api/v1/students', [$studentController, 'list'])->add($requireSupporter)->add($authMiddleware);
     $app->post('/api/v1/students', [$studentController, 'create'])->add($requireAdmin)->add($authMiddleware);
-    $app->get('/api/v1/students/{id:[0-9]+}', [$studentController, 'get'])->add($authMiddleware);
+    $app->get('/api/v1/students/{id:[0-9]+}', [$studentController, 'get'])->add($requireSupporter)->add($authMiddleware);
     $app->put('/api/v1/students/{id:[0-9]+}', [$studentController, 'update'])->add($requireAdmin)->add($authMiddleware);
     $app->delete('/api/v1/students/{id:[0-9]+}', [$studentController, 'delete'])->add($requireAdmin)->add($authMiddleware);
     $app->post('/api/v1/students/{id:[0-9]+}/create-account', [$studentController, 'createAccount'])->add($requireAdmin)->add($authMiddleware);
@@ -124,7 +124,7 @@ return function (App $app) {
     // Supporters (protected)
     $app->get('/api/v1/supporters', [$supporterController, 'list'])->add($requireSupporter)->add($authMiddleware);
     $app->post('/api/v1/supporters', [$supporterController, 'create'])->add($requireAdmin)->add($authMiddleware);
-    $app->get('/api/v1/supporters/{id:[0-9]+}', [$supporterController, 'get'])->add($authMiddleware);
+    $app->get('/api/v1/supporters/{id:[0-9]+}', [$supporterController, 'get'])->add($requireSupporter)->add($authMiddleware);
     $app->put('/api/v1/supporters/{id:[0-9]+}', [$supporterController, 'update'])->add($requireAdmin)->add($authMiddleware);
     $app->delete('/api/v1/supporters/{id:[0-9]+}', [$supporterController, 'delete'])->add($requireAdmin)->add($authMiddleware);
 
@@ -155,6 +155,7 @@ return function (App $app) {
     // Files (protected)
     $app->get('/api/v1/files', [$fileController, 'list'])->add($authMiddleware);
     $app->post('/api/v1/files/upload', [$fileController, 'upload'])->add($authMiddleware);
+    $app->get('/api/v1/files/{id:[0-9]+}/download', [$fileController, 'download'])->add($authMiddleware);
     $app->delete('/api/v1/files/{id:[0-9]+}', [$fileController, 'delete'])->add($authMiddleware);
 
     // Topics (protected)

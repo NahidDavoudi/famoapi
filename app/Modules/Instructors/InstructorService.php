@@ -12,7 +12,7 @@ class InstructorService
         $total = Instructor::countAll();
         $pagination = Pagination::build($page, $perPage, $total);
 
-        $items = Instructor::findAll($pagination['page'], $perPage);
+        $items = Instructor::findAll($pagination['page'], $pagination['per_page']);
 
         return [
             'items'      => $items,
@@ -24,11 +24,20 @@ class InstructorService
     {
         $data['initial_letter'] = mb_substr($data['name'], 0, 1);
 
-        $instructorId = Instructor::create($data);
-
+        $path = null;
         if (!empty($data['image'])) {
-            $path = Storage::upload($data['image'], 'instructors', $instructorId);
-            Instructor::update($instructorId, ['image_url' => $path]);
+            $path = Storage::upload($data['image'], 'instructors');
+            $data['image_url'] = $path;
+            unset($data['image']);
+        }
+
+        try {
+            $instructorId = Instructor::create($data);
+        } catch (\Throwable $e) {
+            if ($path !== null) {
+                Storage::delete($path);
+            }
+            throw $e;
         }
 
         return $this->get($instructorId);
@@ -38,7 +47,7 @@ class InstructorService
     {
         $instructor = Instructor::findById($id);
         if (!$instructor) {
-            throw new \RuntimeException('استاد یافت نشد', 404);
+            throw new \App\Core\ApiException('استاد یافت نشد', 404, 'NOT_FOUND');
         }
         return $instructor;
     }
@@ -47,23 +56,34 @@ class InstructorService
     {
         $instructor = Instructor::findById($id);
         if (!$instructor) {
-            throw new \RuntimeException('استاد یافت نشد', 404);
+            throw new \App\Core\ApiException('استاد یافت نشد', 404, 'NOT_FOUND');
         }
 
         if (isset($data['name'])) {
             $data['initial_letter'] = mb_substr($data['name'], 0, 1);
         }
 
+        $oldPath = $instructor['image_url'] ?? null;
+        $newPath = null;
         if (!empty($data['image'])) {
-            if (!empty($instructor['image_url'])) {
-                Storage::delete($instructor['image_url']);
-            }
-            $path = Storage::upload($data['image'], 'instructors', $id);
+            $path = Storage::upload($data['image'], 'instructors');
             $data['image_url'] = $path;
+            $newPath = $path;
             unset($data['image']);
         }
 
-        Instructor::update($id, $data);
+        try {
+            Instructor::update($id, $data);
+        } catch (\Throwable $e) {
+            if ($newPath !== null) {
+                Storage::delete($newPath);
+            }
+            throw $e;
+        }
+
+        if ($newPath !== null && $oldPath) {
+            Storage::delete($oldPath);
+        }
 
         return $this->get($id);
     }
@@ -72,7 +92,7 @@ class InstructorService
     {
         $instructor = Instructor::findById($id);
         if (!$instructor) {
-            throw new \RuntimeException('استاد یافت نشد', 404);
+            throw new \App\Core\ApiException('استاد یافت نشد', 404, 'NOT_FOUND');
         }
 
         if (!empty($instructor['image_url'])) {

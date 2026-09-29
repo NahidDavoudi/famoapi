@@ -38,14 +38,15 @@ class FileController
         $uploadedFiles = $request->getUploadedFiles();
         $body = $request->getParsedBody() ?? [];
 
-        $file = $_FILES['file'] ?? null;
-        if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+        $file = $uploadedFiles['file'] ?? null;
+        if (!$file instanceof \Psr\Http\Message\UploadedFileInterface
+            || $file->getError() !== UPLOAD_ERR_OK) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => 'UPLOAD_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => 'آپلود فایل با خطا مواجه شد',
                 ],
             ], JSON_UNESCAPED_UNICODE));
@@ -74,7 +75,7 @@ class FileController
 
         try {
             $result = $this->service->upload($file, $studentId, $description);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -84,7 +85,7 @@ class FileController
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -96,22 +97,50 @@ class FileController
         return $response->withStatus(201)->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
 
+    public function download(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $enforceStudentId = StudentScope::isStudent($request) ? StudentScope::selfId($request) : null;
+            $download = $this->service->getDownload((int) $args['id'], $enforceStudentId);
+        } catch (\App\Core\ApiException $e) {
+            return \App\Core\ResponseHelper::error(
+                $response,
+                $e->getErrorCode(),
+                $e->getMessage(),
+                $e->getHttpStatus()
+            );
+        }
+
+        $bytes = file_get_contents($download['path']);
+        if ($bytes === false) {
+            return \App\Core\ResponseHelper::error($response, 'INTERNAL_ERROR', 'خطای داخلی سرور', 500);
+        }
+        $filename = basename((string) $download['file']['file_path']);
+        $response->getBody()->write($bytes);
+        return $response
+            ->withHeader('Content-Type', $download['mime_type'])
+            ->withHeader('Content-Length', (string) strlen($bytes))
+            ->withHeader('Content-Disposition', 'attachment; filename="' . rawurlencode($filename) . '"')
+            ->withHeader('X-Content-Type-Options', 'nosniff')
+            ->withHeader('Cache-Control', 'private, no-store');
+    }
+
     public function delete(Request $request, Response $response, array $args): Response
     {
         try {
             $enforceStudentId = StudentScope::isStudent($request) ? StudentScope::selfId($request) : null;
             $this->service->deleteFile((int) $args['id'], $enforceStudentId);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => ((int) $e->getCode() === 403) ? 'FORBIDDEN' : 'DELETE_ERROR',
+                    'code'    => $e->getErrorCode(),
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus())->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([

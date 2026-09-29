@@ -112,7 +112,7 @@ class WeeklyPlan
         $events = is_array($data['events'] ?? null) ? $data['events'] : [];
 
         if ($studentId <= 0) {
-            throw new \RuntimeException('شناسه دانش‌آموز الزامی است', 400);
+            throw new \App\Core\ApiException('شناسه دانش‌آموز الزامی است', 400, 'VALIDATION_ERROR');
         }
 
         $db->beginTransaction();
@@ -130,7 +130,7 @@ class WeeklyPlan
             if ($planId > 0) {
                 $existing = self::findById($planId);
                 if (!$existing) {
-                    throw new \RuntimeException('برنامه یافت نشد', 404);
+                    throw new \App\Core\ApiException('برنامه یافت نشد', 404, 'NOT_FOUND');
                 }
 
                 $update = $db->prepare(
@@ -280,15 +280,40 @@ class WeeklyPlan
 
     public static function delete(int $id): bool
     {
-        $stmt = Database::getConnection()->prepare('DELETE FROM weekly_plans WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-        return $stmt->rowCount() > 0;
+        $db = Database::getConnection();
+        $db->beginTransaction();
+        try {
+            $db->prepare('DELETE FROM events WHERE plan_id = :plan_id')->execute(['plan_id' => $id]);
+            $stmt = $db->prepare('DELETE FROM weekly_plans WHERE id = :id');
+            $stmt->execute(['id' => $id]);
+            $deleted = $stmt->rowCount() > 0;
+            $db->commit();
+            return $deleted;
+        } catch (\Throwable $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     public static function clearForStudent(int $studentId): int
     {
-        $stmt = Database::getConnection()->prepare('DELETE FROM weekly_plans WHERE student_id = :student_id');
-        $stmt->execute(['student_id' => $studentId]);
-        return $stmt->rowCount();
+        $db = Database::getConnection();
+        $db->beginTransaction();
+        try {
+            $db->prepare('DELETE e FROM events e INNER JOIN weekly_plans p ON p.id = e.plan_id WHERE p.student_id = :student_id')
+                ->execute(['student_id' => $studentId]);
+            $stmt = $db->prepare('DELETE FROM weekly_plans WHERE student_id = :student_id');
+            $stmt->execute(['student_id' => $studentId]);
+            $deleted = $stmt->rowCount();
+            $db->commit();
+            return $deleted;
+        } catch (\Throwable $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $exception;
+        }
     }
 }

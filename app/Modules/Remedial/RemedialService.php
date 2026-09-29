@@ -13,7 +13,7 @@ class RemedialService
     {
         $id = Remedial::createSession($data);
         if (!$id) {
-            throw new \RuntimeException('ایجاد جلسه جبرانی امکان‌پذیر نیست', 500);
+            throw new \App\Core\ApiException('ایجاد جلسه جبرانی امکان‌پذیر نیست', 500, 'INTERNAL_ERROR');
         }
         return Remedial::findSessionById($id);
     }
@@ -22,7 +22,7 @@ class RemedialService
     {
         $session = Remedial::findSessionById($sessionId);
         if (!$session) {
-            throw new \RuntimeException('جلسه جبرانی یافت نشد', 404);
+            throw new \App\Core\ApiException('جلسه جبرانی یافت نشد', 404, 'NOT_FOUND');
         }
 
         $fields = ['ریاضی', 'تجربی', 'انسانی', 'زبان', 'هنر'];
@@ -46,7 +46,7 @@ class RemedialService
     {
         $id = Remedial::createClass($data);
         if (!$id) {
-            throw new \RuntimeException('ایجاد کلاس جبرانی امکان‌پذیر نیست', 500);
+            throw new \App\Core\ApiException('ایجاد کلاس جبرانی امکان‌پذیر نیست', 500, 'INTERNAL_ERROR');
         }
         return ['id' => $id];
     }

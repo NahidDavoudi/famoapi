@@ -67,7 +67,7 @@ class SupporterController
                 'phone'   => $body['phone'],
                 'chat_id' => $body['chat_id'] ?? null,
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -93,7 +93,7 @@ class SupporterController
     {
         try {
             $result = $this->service->get((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -128,7 +128,7 @@ class SupporterController
 
         try {
             $result = $this->service->update((int) $args['id'], $data);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
@@ -154,7 +154,7 @@ class SupporterController
     {
         try {
             $this->service->delete((int) $args['id']);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,

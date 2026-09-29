@@ -68,12 +68,12 @@ class ExamController
 
         try {
             $result = $this->service->getDetails($examDate, (int) $studentId);
-        } catch (\RuntimeException $e) {
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success' => false, 'data' => null, 'pagination' => null,
-                'error' => ['code' => 'NOT_FOUND', 'message' => $e->getMessage()],
+                'error' => ['code' => $e->getErrorCode(), 'message' => $e->getMessage()],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus(404);
+            return $response->withStatus($e->getHttpStatus());
         }
 
         $response->getBody()->write(json_encode([
@@ -94,7 +94,7 @@ class ExamController
             'date_to' => $params['date_to'] ?? null,
         ];
         $page = (int) ($params['page'] ?? 1);
-        $perPage = (int) ($params['per_page'] ?? 200);
+        $perPage = (int) ($params['per_page'] ?? 20);
         $result = $this->service->getAll($filters, $page, $perPage);
 
         $response->getBody()->write(json_encode([
@@ -113,13 +113,12 @@ class ExamController
 
         try {
             $result = $this->service->save($studentId, $examDate, $subjects);
-        } catch (\RuntimeException $e) {
-            $code = $e->getCode() ?: 400;
+        } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success' => false, 'data' => null, 'pagination' => null,
-                'error' => ['code' => 'ERROR', 'message' => $e->getMessage()],
+                'error' => ['code' => $e->getErrorCode(), 'message' => $e->getMessage()],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($code);
+            return $response->withStatus($e->getHttpStatus());
         }
 
         $response->getBody()->write(json_encode([
