@@ -3,3 +3,4 @@ vendor/
 uploads/
 storage/logs/*.log
 Famo-Backend-Audit.md
+database/nadcot_famo.sql
