@@ -106,75 +106,7 @@ $errorMiddleware->setErrorHandler(HttpMethodNotAllowedException::class, function
 
 $errorMiddleware->setDefaultErrorHandler(new App\Core\ExceptionHandler());
 
-$app->add(function (ServerRequestInterface $request, $handler) {
-    $origin = rtrim($request->getHeaderLine('Origin'), '/');
-    $configuredOrigins = \App\Core\AuthCookie::allowedOrigins();
-
-    $originAllowed = $origin !== '' && in_array($origin, $configuredOrigins, true);
-    $method = strtoupper($request->getMethod());
-    $cookieRequest = \App\Core\AuthCookie::isPresent($request);
-
-    // Handle CORS preflight (OPTIONS) directly in middleware
-    if ($method === 'OPTIONS') {
-        if ($origin !== '' && !$originAllowed) {
-            return (new Response())->withStatus(403);
-        }
-
-        // For allowed origins, return proper preflight response with CORS headers
-        if ($originAllowed) {
-            return (new Response())
-                ->withStatus(204)
-                ->withHeader('Access-Control-Allow-Origin', $origin)
-                ->withHeader('Vary', 'Origin')
-                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With, X-Auth-Mode')
-                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-                ->withHeader('Access-Control-Allow-Credentials', 'true');
-        }
-
-        // No origin header (non-browser request) - allow but without CORS headers
-        return (new Response())->withStatus(204);
-    }
-
-    // Cookie-authenticated writes are accepted only from an explicitly allowed panel origin.
-    $cookieAuthRoute = str_starts_with($request->getUri()->getPath(), '/api/v1/auth/');
-    if (
-        $cookieAuthRoute
-        && in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)
-        && !\App\Core\AuthCookie::allowsCookieWrite($request)
-    ) {
-        $response = new Response();
-        $response->getBody()->write(json_encode([
-            'success' => false,
-            'data' => null,
-            'pagination' => null,
-            'error' => ['code' => 'CSRF_ORIGIN_REJECTED', 'message' => 'مبدأ درخواست مجاز نیست'],
-        ], JSON_UNESCAPED_UNICODE));
-        return $response->withStatus(403)->withHeader('Content-Type', 'application/json; charset=utf-8');
-    }
-
-    if ($cookieRequest && in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true) && !$originAllowed) {
-        $response = new Response();
-        $response->getBody()->write(json_encode([
-            'success' => false,
-            'data' => null,
-            'pagination' => null,
-            'error' => ['code' => 'CSRF_ORIGIN_REJECTED', 'message' => 'مبدأ درخواست مجاز نیست'],
-        ], JSON_UNESCAPED_UNICODE));
-        return $response->withStatus(403)->withHeader('Content-Type', 'application/json; charset=utf-8');
-    }
-
-    $response = $handler->handle($request);
-
-    if ($originAllowed) {
-        $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
-        $response = $response->withHeader('Vary', 'Origin');
-    }
-
-    return $response
-        ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With, X-Auth-Mode')
-        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-        ->withHeader('Access-Control-Allow-Credentials', 'true');
-});
+$app->add(new App\Core\CorsMiddleware());
 
 $app->add(function (ServerRequestInterface $request, $handler) {
     $response = $handler->handle($request);

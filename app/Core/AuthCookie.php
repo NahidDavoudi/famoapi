@@ -26,13 +26,7 @@ final class AuthCookie
     public static function allowsCookieWrite(Request $request): bool
     {
         $origin = rtrim($request->getHeaderLine('Origin'), '/');
-        if ($origin === '') {
-            return false;
-        }
-
-        $origins = self::allowedOrigins();
-
-        return in_array($origin, $origins, true);
+        return self::isOriginAllowed($origin);
     }
 
     public static function allowedOrigins(): array
@@ -52,6 +46,20 @@ final class AuthCookie
         }
 
         return $origins;
+    }
+
+    public static function isOriginAllowed(string $origin): bool
+    {
+        $origin = rtrim(trim($origin), '/');
+        if ($origin === '') {
+            return false;
+        }
+
+        if (in_array($origin, self::allowedOrigins(), true)) {
+            return true;
+        }
+
+        return preg_match('#^https://(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*famoacademy\.ir$#i', $origin) === 1;
     }
 
     public static function issue(Response $response, Request $request, string $token): Response
