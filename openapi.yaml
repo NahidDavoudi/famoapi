@@ -1795,6 +1795,13 @@ paths:
                   enum: [7, 8, 9, 10, 11, 12]
                 field:
                   type: string
+                phone:
+                  type: string
+                  nullable: true
+                  description: Persian/Arabic digits and +98/98/0098/09 accepted; normalized to 09XXXXXXXXX
+                is_active:
+                  type: integer
+                  enum: [0, 1]
                 chat_id:
                   type: string
                 password:
@@ -3212,6 +3219,1454 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  # ───────────────────── Bot Gateway ─────────────────────
+  /api/v1/bot/ping:
+    get:
+      tags: [Bot]
+      summary: Bot gateway health check
+      operationId: botPing
+      security:
+        - botKey: []
+      responses:
+        "200":
+          description: Gateway reachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+
+  /api/v1/bot/me:
+    get:
+      tags: [Bot]
+      summary: Resolve the acting account for the given Telegram identity
+      operationId: botMe
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+      responses:
+        "200":
+          description: Acting account
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          role:
+                            type: string
+                            enum: [student, supporter]
+                          account_id:
+                            type: integer
+                          name:
+                            type: string
+                          telegram_user_id:
+                            type: integer
+                            format: int64
+                          chat_id:
+                            type: integer
+                            format: int64
+                          is_blocked:
+                            type: boolean
+                          linked_at:
+                            type: string
+                            format: date-time
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+
+  # ───────────────────── Bot Identity & Linking ─────────────────────
+  /api/v1/bot/identity/lookup:
+    post:
+      tags: [BotIdentity]
+      summary: Look up all roles for a phone number
+      operationId: botIdentityLookup
+      security:
+        - botKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+                  description: Persian/Arabic digits and +98/98/0098/09 forms accepted
+                telegram_user_id:
+                  type: integer
+                  format: int64
+                  description: Optional, to report existing link state
+              required: [phone]
+      responses:
+        "200":
+          description: Matching identities
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          phone:
+                            type: string
+                          identities:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/BotIdentity"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/identity/link:
+    post:
+      tags: [BotIdentity]
+      summary: Link a Telegram user/chat to an account (contact already verified by the bot host)
+      operationId: botIdentityLink
+      security:
+        - botKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                telegram_user_id:
+                  type: integer
+                  format: int64
+                chat_id:
+                  type: integer
+                  format: int64
+                role:
+                  type: string
+                  enum: [student, supporter]
+                account_id:
+                  type: integer
+                contact_verified:
+                  type: boolean
+                  description: Must be true; the bot host proves contact ownership
+              required: [telegram_user_id, chat_id, role, account_id, contact_verified]
+      responses:
+        "200":
+          description: Link created or refreshed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/TelegramLink"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/identity/resolve:
+    get:
+      tags: [BotIdentity]
+      summary: Resolve link(s) by telegram_user_id or chat_id
+      operationId: botIdentityResolve
+      security:
+        - botKey: []
+      parameters:
+        - name: telegram_user_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: chat_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [student, supporter]
+      responses:
+        "200":
+          description: Matching links
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          links:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/TelegramLink"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/identity/unlink:
+    post:
+      tags: [BotIdentity]
+      summary: Remove a Telegram link
+      operationId: botIdentityUnlink
+      security:
+        - botKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                telegram_user_id:
+                  type: integer
+                  format: int64
+                role:
+                  type: string
+                  enum: [student, supporter]
+                account_id:
+                  type: integer
+                  description: Alternative to telegram_user_id (requires role)
+      responses:
+        "200":
+          description: Unlink result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          unlinked:
+                            type: integer
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/identity/block:
+    post:
+      tags: [BotIdentity]
+      summary: Mark a Telegram link as blocked
+      operationId: botIdentityBlock
+      security:
+        - botKey: []
+      requestBody:
+        $ref: "#/components/requestBodies/BotBlockRequest"
+      responses:
+        "200":
+          description: Block result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          blocked:
+                            type: boolean
+                          affected:
+                            type: integer
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/identity/unblock:
+    post:
+      tags: [BotIdentity]
+      summary: Clear the blocked flag on a Telegram link
+      operationId: botIdentityUnblock
+      security:
+        - botKey: []
+      requestBody:
+        $ref: "#/components/requestBodies/BotBlockRequest"
+      responses:
+        "200":
+          description: Unblock result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          blocked:
+                            type: boolean
+                          affected:
+                            type: integer
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  # ───────────────────── Threads & Messages ─────────────────────
+  /api/v1/bot/threads/messages:
+    post:
+      tags: [Threads]
+      summary: Student sends a message (with optional attachments) to today's thread
+      operationId: botThreadSendMessage
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Message stored
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ReportMessage"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/threads/day:
+    get:
+      tags: [Threads]
+      summary: Get a day's thread with paginated messages
+      operationId: botThreadDay
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+        - name: day
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Tehran date (defaults to today)
+        - name: student_id
+          in: query
+          schema:
+            type: integer
+          description: Required when acting as a supporter
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPageAlt"
+      responses:
+        "200":
+          description: Day thread
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ReportThreadDay"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/threads/weekly:
+    get:
+      tags: [Threads]
+      summary: Weekly status (Sat→Fri) for a student
+      operationId: botThreadWeekly
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+        - name: week_start
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Any date in the week; defaults to current week
+        - name: student_id
+          in: query
+          schema:
+            type: integer
+          description: Required when acting as a supporter
+      responses:
+        "200":
+          description: Weekly status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          student_id:
+                            type: integer
+                          week_start:
+                            type: string
+                            format: date
+                          week_start_jalali:
+                            type: string
+                          days:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/WeeklyDay"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/threads/read:
+    post:
+      tags: [Threads]
+      summary: Mark messages as read (student marks replies; supporter marks student messages)
+      operationId: botThreadRead
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                  description: Required for supporter role
+                day:
+                  type: string
+                  format: date
+                  description: Restrict to one day; omit to mark all
+      responses:
+        "200":
+          description: Marked count
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          marked:
+                            type: integer
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/supporter/inbox:
+    get:
+      tags: [SupporterInbox]
+      summary: Students with unread student messages (badge count included)
+      operationId: botSupporterInbox
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPageAlt"
+      responses:
+        "200":
+          description: Inbox
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          total_students:
+                            type: integer
+                          students:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                student_id:
+                                  type: integer
+                                student_name:
+                                  type: string
+                                grade:
+                                  type: integer
+                                  nullable: true
+                                field:
+                                  type: string
+                                  nullable: true
+                                unread_count:
+                                  type: integer
+                                last_message_at:
+                                  type: string
+                                  format: date-time
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+
+  /api/v1/bot/supporter/students:
+    get:
+      tags: [SupporterInbox]
+      summary: Assigned students with today's report status and unread counts
+      operationId: botSupporterStudents
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+      responses:
+        "200":
+          description: Students
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          total_students:
+                            type: integer
+                          day:
+                            type: string
+                            format: date
+                          day_jalali:
+                            type: string
+                          students:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                student_id:
+                                  type: integer
+                                name:
+                                  type: string
+                                grade:
+                                  type: integer
+                                field:
+                                  type: string
+                                report_submitted:
+                                  type: boolean
+                                has_reply:
+                                  type: boolean
+                                unread_count:
+                                  type: integer
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+
+  /api/v1/bot/supporter/students/{studentId}/unread:
+    get:
+      tags: [SupporterInbox]
+      summary: A student's unread messages
+      operationId: botSupporterStudentUnread
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/StudentIdPath"
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 200
+            maximum: 500
+      responses:
+        "200":
+          description: Unread messages
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          student_id:
+                            type: integer
+                          unread_count:
+                            type: integer
+                          messages:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/ReportMessage"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/bot/supporter/reply:
+    post:
+      tags: [SupporterInbox]
+      summary: Supporter replies to a student (thread of the day of the latest unread message by default)
+      operationId: botSupporterReply
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/MessageInput"
+                - type: object
+                  properties:
+                    student_id:
+                      type: integer
+                    day:
+                      type: string
+                      format: date
+                  required: [student_id]
+      responses:
+        "201":
+          description: Reply stored
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ReportMessage"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  # ───────────────────── Broadcasts ─────────────────────
+  /api/v1/bot/broadcasts/preview:
+    post:
+      tags: [Broadcasts]
+      summary: Preview broadcast recipients (no writes)
+      operationId: botBroadcastPreview
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BroadcastInput"
+      responses:
+        "200":
+          description: Preview
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          audience:
+                            type: string
+                            enum: [no_report_today, all_students]
+                          day:
+                            type: string
+                            format: date
+                          day_jalali:
+                            type: string
+                          recipient_count:
+                            type: integer
+                          recipients:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/BroadcastRecipient"
+                          daily_limit:
+                            type: integer
+                          used_today:
+                            type: integer
+                          remaining_today:
+                            type: integer
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/bot/broadcasts/confirm:
+    post:
+      tags: [Broadcasts]
+      summary: Confirm broadcast (freezes recipients, queues one outbox item each)
+      operationId: botBroadcastConfirm
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/BroadcastInput"
+                - $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Broadcast created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          broadcast_id:
+                            type: integer
+                          audience:
+                            type: string
+                          day:
+                            type: string
+                            format: date
+                          day_jalali:
+                            type: string
+                          recipient_count:
+                            type: integer
+                          enqueued:
+                            type: integer
+                          blocked:
+                            type: integer
+                          failed:
+                            type: integer
+                          summary:
+                            $ref: "#/components/schemas/BroadcastSummary"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          description: Supporter broadcast daily limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/bot/broadcasts:
+    get:
+      tags: [Broadcasts]
+      summary: List the supporter's broadcasts
+      operationId: botBroadcastList
+      security:
+        - botKey: []
+      parameters:
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPageAlt"
+      responses:
+        "200":
+          description: Broadcasts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+
+  /api/v1/bot/broadcasts/{id}:
+    get:
+      tags: [Broadcasts]
+      summary: Broadcast detail with per-recipient delivery status
+      operationId: botBroadcastGet
+      security:
+        - botKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/BotRole"
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramChatId"
+      responses:
+        "200":
+          description: Broadcast
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          broadcast:
+                            type: object
+                          summary:
+                            $ref: "#/components/schemas/BroadcastSummary"
+                          recipients:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/BroadcastRecipient"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "403":
+          $ref: "#/components/responses/BotForbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ───────────────────── Outbox ─────────────────────
+  /api/v1/bot/outbox/claim:
+    post:
+      tags: [Outbox]
+      summary: Claim a batch of pending outbox items (locked to the worker)
+      operationId: botOutboxClaim
+      security:
+        - botKey: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  default: 10
+                  minimum: 1
+                  maximum: 50
+                worker_id:
+                  type: string
+                  description: Optional; generated when omitted
+      responses:
+        "200":
+          description: Claimed items
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          worker_id:
+                            type: string
+                          items:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/OutboxItem"
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+
+  /api/v1/bot/outbox/report:
+    post:
+      tags: [Outbox]
+      summary: Report delivery results for claimed items
+      operationId: botOutboxReport
+      security:
+        - botKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                worker_id:
+                  type: string
+                results:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      status:
+                        type: string
+                        enum: [sent, failed, blocked]
+                      telegram_message_id:
+                        type: string
+                      error:
+                        type: string
+                    required: [id, status]
+              required: [worker_id, results]
+      responses:
+        "200":
+          description: Per-item results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          processed:
+                            type: integer
+                          results:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: integer
+                                result:
+                                  type: string
+                                  enum: [sent, retry, failed, blocked, ignored]
+                                attempts:
+                                  type: integer
+                                next_attempt_in:
+                                  type: integer
+        "401":
+          $ref: "#/components/responses/BotUnauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  # ───────────────────── Supporters: contact admin ─────────────────────
+  /api/v1/supporters/missing-phone:
+    get:
+      tags: [Supporters]
+      summary: List supporters without a phone number (admin)
+      operationId: listSupportersMissingPhone
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPageAlt"
+      responses:
+        "200":
+          description: Supporters missing a phone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ───────────────────── Student → Supporter Assignments (admin) ─────────────────────
+  /api/v1/assignments/students:
+    get:
+      tags: [Assignments]
+      summary: List students with/without an active supporter (admin)
+      operationId: listAssignmentStudents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, assigned, unassigned]
+            default: all
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: field
+          in: query
+          schema:
+            type: string
+        - name: grade
+          in: query
+          schema:
+            type: integer
+        - name: supporter_id
+          in: query
+          schema:
+            type: integer
+        - name: include_inactive
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPageAlt"
+      responses:
+        "200":
+          description: Students
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/assignments:
+    post:
+      tags: [Assignments]
+      summary: Assign or reassign a student to a supporter (admin)
+      operationId: assignStudent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                supporter_id:
+                  type: integer
+                note:
+                  type: string
+                  nullable: true
+              required: [student_id, supporter_id]
+      responses:
+        "200":
+          description: Current assignment
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/SupportAssignment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/assignments/{studentId}:
+    delete:
+      tags: [Assignments]
+      summary: Unassign a student's active supporter (admin)
+      operationId: unassignStudent
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StudentIdPath"
+      responses:
+        "200":
+          description: Unassigned
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/SupportAssignment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/assignments/supporters/{supporterId}/students:
+    get:
+      tags: [Assignments]
+      summary: List the active students of a supporter (admin)
+      operationId: listSupporterStudents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: supporterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Students
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/assignments/history/{studentId}:
+    get:
+      tags: [Assignments]
+      summary: Assignment history for a student (admin)
+      operationId: assignmentHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StudentIdPath"
+      responses:
+        "200":
+          description: History
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/assignments/initial-fill:
+    post:
+      tags: [Assignments]
+      summary: One-time initial fill; assigns only when exactly one active supporter matches (admin)
+      operationId: assignmentInitialFill
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dry_run:
+                  type: boolean
+                  default: true
+                only_unassigned:
+                  type: boolean
+                  default: true
+                student_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          description: Fill report (dry-run when dry_run is true)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ───────────────────── Admin Statistics ─────────────────────
+  /api/v1/admin/stats/reports/overview:
+    get:
+      tags: [AdminStats]
+      summary: Overall report rate with a per-day series (admin)
+      operationId: adminStatsOverview
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DateFrom"
+        - $ref: "#/components/parameters/DateTo"
+      responses:
+        "200":
+          description: Overview
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                            format: date
+                          to:
+                            type: string
+                            format: date
+                          active_students:
+                            type: integer
+                          days_count:
+                            type: integer
+                          total_reports:
+                            type: integer
+                          overall_rate:
+                            type: number
+                          days:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/AdminReportDay"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/stats/reports/by-major:
+    get:
+      tags: [AdminStats]
+      summary: Report rate per major/field (admin)
+      operationId: adminStatsByMajor
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DateFrom"
+        - $ref: "#/components/parameters/DateTo"
+      responses:
+        "200":
+          description: Per-major rates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/stats/reports/by-supporter:
+    get:
+      tags: [AdminStats]
+      summary: Report rate per supporter (admin)
+      operationId: adminStatsBySupporter
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DateFrom"
+        - $ref: "#/components/parameters/DateTo"
+      responses:
+        "200":
+          description: Per-supporter rates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/stats/students/no-report:
+    get:
+      tags: [AdminStats]
+      summary: Students with no report in the last N days (admin)
+      operationId: adminStatsNoReport
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+            minimum: 1
+            maximum: 365
+        - name: search
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPageAlt"
+      responses:
+        "200":
+          description: Students without recent reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/stats/supporters/performance:
+    get:
+      tags: [AdminStats]
+      summary: Per-supporter performance metrics (admin)
+      operationId: adminStatsSupporterPerformance
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DateFrom"
+        - $ref: "#/components/parameters/DateTo"
+      responses:
+        "200":
+          description: Performance
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                            format: date
+                          to:
+                            type: string
+                            format: date
+                          items:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/AdminSupporterPerformance"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/stats/students/{id}/history:
+    get:
+      tags: [AdminStats]
+      summary: Drill-down daily history for a student (admin, stats-only)
+      operationId: adminStatsStudentHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/DateFrom"
+        - $ref: "#/components/parameters/DateTo"
+      responses:
+        "200":
+          description: History
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/admin/stats/students/{id}/thread:
+    get:
+      tags: [AdminStats]
+      summary: Read a student's day thread content (admin, separate content permission; off by default)
+      operationId: adminStatsStudentThread
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: day
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Tehran date (defaults to today)
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPageAlt"
+      responses:
+        "200":
+          description: Thread content
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          student:
+                            type: object
+                          day:
+                            type: string
+                            format: date
+                          day_jalali:
+                            type: string
+                          thread_id:
+                            type: integer
+                            nullable: true
+                          messages:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/ReportMessage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/ContentAccessDisabled"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -3219,6 +4674,14 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT token obtained from POST /api/v1/auth/login
+    botKey:
+      type: apiKey
+      in: header
+      name: X-Bot-Key
+      description: >
+        Service key for the external Telegram bot host. Grants access only to
+        /api/v1/bot/* endpoints. Completely separate from bearerAuth. An optional
+        IP allow-list (BOT_IP_ALLOWLIST) may further restrict callers.
 
   parameters:
     Page:
@@ -3245,6 +4708,68 @@ components:
         default: 20
         minimum: 1
       description: Items per page (alternate casing)
+    BotRole:
+      name: X-Bot-Role
+      in: header
+      required: true
+      schema:
+        type: string
+        enum: [student, supporter]
+      description: Acting role for the linked Telegram account
+    TelegramUserId:
+      name: X-Telegram-User-Id
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Telegram numeric user id
+    TelegramChatId:
+      name: X-Telegram-Chat-Id
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Telegram numeric chat id (must match the stored link)
+    StudentIdPath:
+      name: studentId
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Student id
+    DateFrom:
+      name: from
+      in: query
+      schema:
+        type: string
+        format: date
+      description: Start Tehran date (inclusive)
+    DateTo:
+      name: to
+      in: query
+      schema:
+        type: string
+        format: date
+      description: End Tehran date (inclusive)
+
+  requestBodies:
+    BotBlockRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              telegram_user_id:
+                type: integer
+                format: int64
+              chat_id:
+                type: integer
+                format: int64
+              role:
+                type: string
+                enum: [student, supporter]
+            description: Provide telegram_user_id (optionally with role) or chat_id
 
   schemas:
     # ──── Envelope ────
@@ -3469,6 +4994,10 @@ components:
           type: string
         phone:
           type: string
+          nullable: true
+          description: Canonical Iranian mobile (09XXXXXXXXX); nullable
+        is_active:
+          type: boolean
         chat_id:
           type: string
           nullable: true
@@ -4005,6 +5534,193 @@ components:
           type: string
           format: date-time
 
+    # ──── Bot / Threads / Outbox ────
+    TelegramAttachment:
+      type: object
+      properties:
+        id: {type: integer}
+        kind: {type: string, enum: [photo, document, voice, video, audio]}
+        tg_file_id: {type: string}
+        file_name: {type: string, nullable: true}
+        mime_type: {type: string, nullable: true}
+        file_size: {type: integer, nullable: true}
+      required: [kind, tg_file_id]
+
+    MessageInput:
+      type: object
+      properties:
+        text: {type: string, nullable: true}
+        media_group_id: {type: string, nullable: true}
+        attachments:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/TelegramAttachment"
+
+    ReportMessage:
+      type: object
+      properties:
+        id: {type: integer}
+        thread_id: {type: integer}
+        day: {type: string, format: date, nullable: true}
+        day_jalali: {type: string, nullable: true}
+        sender_role: {type: string, enum: [student, supporter, broadcast]}
+        sender_account_id: {type: integer, nullable: true}
+        body: {type: string, nullable: true}
+        media_group_id: {type: string, nullable: true}
+        is_broadcast: {type: boolean}
+        read_by_student: {type: boolean}
+        read_by_supporter: {type: boolean}
+        created_at: {type: string, format: date-time}
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/TelegramAttachment"
+
+    ReportThreadDay:
+      type: object
+      properties:
+        student_id: {type: integer}
+        day: {type: string, format: date}
+        day_jalali: {type: string}
+        weekday: {type: string}
+        thread_id: {type: integer, nullable: true}
+        supporter_id: {type: integer, nullable: true}
+        report_submitted: {type: boolean}
+        unread_replies: {type: integer}
+        unread_by_supporter: {type: integer}
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportMessage"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    WeeklyDay:
+      type: object
+      properties:
+        day: {type: string, format: date}
+        day_jalali: {type: string}
+        weekday: {type: string}
+        state: {type: string, enum: [sent, missed, pending]}
+        report_submitted: {type: boolean}
+        has_reply: {type: boolean}
+        reply_unread: {type: boolean}
+        unread_replies: {type: integer}
+        supporter_id: {type: integer, nullable: true}
+
+    BotIdentity:
+      type: object
+      properties:
+        role: {type: string, enum: [student, supporter]}
+        account_id: {type: integer}
+        name: {type: string}
+        is_active: {type: boolean}
+        is_linked: {type: boolean}
+        linked_to_this_telegram: {type: boolean}
+        linked_to_other_telegram: {type: boolean}
+
+    TelegramLink:
+      type: object
+      properties:
+        link_id: {type: integer}
+        role: {type: string, enum: [student, supporter]}
+        account_id: {type: integer}
+        name: {type: string}
+        is_active: {type: boolean}
+        is_blocked: {type: boolean}
+        telegram_user_id: {type: integer, format: int64}
+        chat_id: {type: integer, format: int64}
+        linked_at: {type: string, format: date-time}
+
+    OutboxItem:
+      type: object
+      properties:
+        id: {type: integer}
+        kind: {type: string, enum: [student_report, supporter_reply, broadcast]}
+        recipient_role: {type: string, enum: [student, supporter]}
+        recipient_account_id: {type: integer}
+        telegram_user_id: {type: integer, format: int64, nullable: true}
+        chat_id: {type: integer, format: int64, nullable: true}
+        attempts: {type: integer}
+        max_attempts: {type: integer}
+        payload:
+          type: object
+          properties:
+            kind: {type: string}
+            text: {type: string, nullable: true}
+            attachments:
+              type: array
+              items:
+                $ref: "#/components/schemas/TelegramAttachment"
+            meta:
+              type: object
+              additionalProperties: true
+        created_at: {type: string, format: date-time}
+
+    BroadcastInput:
+      type: object
+      properties:
+        audience: {type: string, enum: [no_report_today, all_students]}
+        day: {type: string, format: date, nullable: true}
+      required: [audience]
+
+    BroadcastRecipient:
+      type: object
+      properties:
+        student_id: {type: integer}
+        name: {type: string, nullable: true}
+        student_name: {type: string, nullable: true}
+        grade: {type: integer, nullable: true}
+        field: {type: string, nullable: true}
+        status: {type: string, enum: [pending, sent, failed, blocked], nullable: true}
+        telegram_message_id: {type: string, nullable: true}
+        error: {type: string, nullable: true}
+
+    BroadcastSummary:
+      type: object
+      properties:
+        pending: {type: integer}
+        sent: {type: integer}
+        failed: {type: integer}
+        blocked: {type: integer}
+
+    SupportAssignment:
+      type: object
+      properties:
+        student_id: {type: integer}
+        supporter_id: {type: integer, nullable: true}
+        supporter_name: {type: string, nullable: true}
+        assigned_at: {type: string, format: date-time, nullable: true}
+
+    AdminReportDay:
+      type: object
+      properties:
+        day: {type: string, format: date}
+        day_jalali: {type: string}
+        weekday: {type: string}
+        report_count: {type: integer}
+        active_students: {type: integer}
+        rate: {type: number}
+
+    AdminSupporterPerformance:
+      type: object
+      properties:
+        supporter_id: {type: integer}
+        supporter_name: {type: string, nullable: true}
+        assigned_students: {type: integer}
+        report_count: {type: integer}
+        threads_with_reports: {type: integer}
+        threads_with_reply: {type: integer}
+        reply_rate: {type: number}
+        unanswered_threads: {type: integer}
+        oldest_unanswered_day: {type: string, format: date, nullable: true}
+        avg_first_reply_seconds: {type: integer, nullable: true}
+        median_first_reply_seconds: {type: integer, nullable: true}
+        messages_sent: {type: integer}
+        broadcasts_sent: {type: integer}
+        unread_backlog: {type: integer}
+
   responses:
     BadRequest:
       description: Bad request
@@ -4097,6 +5813,45 @@ components:
             error:
               code: INTERNAL_ERROR
               message: خطای داخلی سرور
+    BotUnauthorized:
+      description: Missing or invalid bot service key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: BOT_UNAUTHORIZED
+              message: کلید سرویس ربات نامعتبر است
+    BotForbidden:
+      description: Bot IP not allowed, or acting account blocked/inactive
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: BOT_ACCOUNT_BLOCKED
+              message: کاربر ربات را مسدود کرده است
+    ContentAccessDisabled:
+      description: Content-reading permission is off for this admin
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: CONTENT_ACCESS_DISABLED
+              message: دسترسی به محتوای پیام‌ها فعال نیست
 
 tags:
   - name: Health
@@ -4133,3 +5888,19 @@ tags:
     description: Appointment scheduling (supporter role)
   - name: Remedial
     description: Remedial education sessions & classes
+  - name: Assignments
+    description: Canonical student → supporter assignments (admin)
+  - name: AdminStats
+    description: Admin statistics & reporting (admin)
+  - name: Bot
+    description: Telegram bot gateway (service key)
+  - name: BotIdentity
+    description: Telegram identity & linking (service key)
+  - name: Threads
+    description: Daily report threads & messages (service key)
+  - name: SupporterInbox
+    description: Supporter inbox, student list & replies (service key)
+  - name: Broadcasts
+    description: Supporter broadcasts (service key)
+  - name: Outbox
+    description: Telegram outbox pull/report protocol (service key)
