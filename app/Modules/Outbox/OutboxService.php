@@ -4,6 +4,7 @@ namespace App\Modules\Outbox;
 
 use App\Core\Database;
 use App\Modules\Bot\TelegramLink;
+use App\Modules\Broadcasts\BroadcastRecipient;
 use App\Modules\Students\Student;
 
 /**
@@ -81,6 +82,36 @@ class OutboxService
         );
     }
 
+    public function enqueueBroadcast(
+        int $studentId,
+        int $supporterId,
+        int $messageId,
+        int $broadcastId,
+        int $recipientId,
+        string $day,
+        ?string $body,
+        array $attachments
+    ): array {
+        return $this->enqueue(
+            'broadcast',
+            'student',
+            $studentId,
+            $body,
+            $attachments,
+            [
+                'student_id'   => $studentId,
+                'supporter_id' => $supporterId,
+                'day'          => $day,
+                'message_id'   => $messageId,
+                'broadcast_id' => $broadcastId,
+                'is_broadcast' => true,
+            ],
+            null,
+            'broadcast_recipient',
+            $recipientId
+        );
+    }
+
     /**
      * @param array<int,array> $attachments
      * @param array<string,mixed> $meta
@@ -92,7 +123,9 @@ class OutboxService
         ?string $text,
         array $attachments,
         array $meta,
-        ?string $dedupKey
+        ?string $dedupKey,
+        ?string $refType = null,
+        ?int $refId = null
     ): array {
         $link = TelegramLink::findByRoleAndAccount($recipientRole, $recipientAccountId);
         if (!$link) {
@@ -122,6 +155,8 @@ class OutboxService
             'chat_id'              => (int) $link['chat_id'],
             'status'               => 'pending',
             'payload_json'         => $payload,
+            'ref_type'             => $refType,
+            'ref_id'               => $refId,
             'dedup_key'            => $dedupKey,
             'max_attempts'         => $maxAttempts,
         ]);
@@ -197,7 +232,9 @@ class OutboxService
             }
 
             if ($status === 'sent') {
-                OutboxItem::markSent($id, isset($result['telegram_message_id']) ? (string) $result['telegram_message_id'] : null);
+                $tgMessageId = isset($result['telegram_message_id']) ? (string) $result['telegram_message_id'] : null;
+                OutboxItem::markSent($id, $tgMessageId);
+                $this->syncRef($item, 'sent', $tgMessageId, null);
                 $out[] = ['id' => $id, 'result' => 'sent'];
                 continue;
             }
@@ -205,6 +242,7 @@ class OutboxService
             if ($status === 'blocked') {
                 OutboxItem::markSkipped($id, 'blocked');
                 TelegramLink::setBlockedByRoleAndAccount((string) $item['recipient_role'], (int) $item['recipient_account_id'], true);
+                $this->syncRef($item, 'blocked', null, 'blocked');
                 $out[] = ['id' => $id, 'result' => 'blocked'];
                 continue;
             }
@@ -215,6 +253,7 @@ class OutboxService
 
             if ($attempts >= $maxAttempts) {
                 OutboxItem::markFailed($id, $error);
+                $this->syncRef($item, 'failed', null, $error);
                 $out[] = ['id' => $id, 'result' => 'failed', 'attempts' => $attempts];
             } else {
                 $next = $backoff * $attempts;
@@ -224,6 +263,13 @@ class OutboxService
         }
 
         return ['processed' => count($out), 'results' => $out];
+    }
+
+    private function syncRef(array $item, string $status, ?string $telegramMessageId, ?string $error): void
+    {
+        if (($item['ref_type'] ?? null) === 'broadcast_recipient' && $item['ref_id'] !== null) {
+            BroadcastRecipient::updateResult((int) $item['ref_id'], $status, $telegramMessageId, $error);
+        }
     }
 
     /**

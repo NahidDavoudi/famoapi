@@ -17,8 +17,6 @@ use App\Modules\Outbox\OutboxService;
  */
 class ThreadService
 {
-    private const MAX_ATTACHMENTS = 10;
-
     private OutboxService $outbox;
 
     public function __construct(?OutboxService $outbox = null)
@@ -29,7 +27,7 @@ class ThreadService
     public function sendStudentMessage(array $actor, array $data): array
     {
         $studentId = $this->requireStudent($actor);
-        [$body, $attachments, $mediaGroupId] = $this->parseContent($data);
+        [$body, $attachments, $mediaGroupId] = MessageContent::parse($data);
 
         $assignment = Assignment::findActiveByStudent($studentId);
         if (!$assignment) {
@@ -283,7 +281,7 @@ class ThreadService
         }
         $this->assertSupporterAccess($supporterId, $studentId, true);
 
-        [$body, $attachments, $mediaGroupId] = $this->parseContent($data);
+        [$body, $attachments, $mediaGroupId] = MessageContent::parse($data);
 
         $day = isset($data['day']) && is_string($data['day']) && $data['day'] !== ''
             ? $this->resolveDay($data['day'])
@@ -388,65 +386,6 @@ class ThreadService
         }
 
         return $day;
-    }
-
-    /**
-     * @return array{0:?string,1:array,2:?string}
-     */
-    private function parseContent(array $data): array
-    {
-        $body = isset($data['text']) ? trim((string) $data['text']) : '';
-        $body = $body === '' ? null : $body;
-
-        $attachments = $this->normalizeAttachments($data['attachments'] ?? []);
-
-        if ($body === null && $attachments === []) {
-            throw new ApiException('متن یا پیوست پیام الزامی است', 422, 'EMPTY_MESSAGE');
-        }
-
-        $mediaGroupId = isset($data['media_group_id']) && $data['media_group_id'] !== ''
-            ? (string) $data['media_group_id']
-            : null;
-
-        return [$body, $attachments, $mediaGroupId];
-    }
-
-    /**
-     * @return array<int,array>
-     */
-    private function normalizeAttachments(mixed $attachments): array
-    {
-        if ($attachments === null || $attachments === []) {
-            return [];
-        }
-        if (!is_array($attachments)) {
-            throw new ApiException('ساختار پیوست نامعتبر است', 422, 'INVALID_ATTACHMENT');
-        }
-        if (count($attachments) > self::MAX_ATTACHMENTS) {
-            throw new ApiException('تعداد پیوست‌ها بیش از حد مجاز است', 422, 'TOO_MANY_ATTACHMENTS');
-        }
-
-        $normalized = [];
-        foreach ($attachments as $attachment) {
-            if (!is_array($attachment)) {
-                throw new ApiException('ساختار پیوست نامعتبر است', 422, 'INVALID_ATTACHMENT');
-            }
-            $kind = (string) ($attachment['kind'] ?? '');
-            $fileId = trim((string) ($attachment['tg_file_id'] ?? ''));
-            if (!in_array($kind, MessageAttachment::KINDS, true) || $fileId === '') {
-                throw new ApiException('پیوست نامعتبر است (نوع یا شناسه فایل)', 422, 'INVALID_ATTACHMENT');
-            }
-
-            $normalized[] = [
-                'kind'       => $kind,
-                'tg_file_id' => $fileId,
-                'file_name'  => isset($attachment['file_name']) ? (string) $attachment['file_name'] : null,
-                'mime_type'  => isset($attachment['mime_type']) ? (string) $attachment['mime_type'] : null,
-                'file_size'  => isset($attachment['file_size']) ? (int) $attachment['file_size'] : null,
-            ];
-        }
-
-        return $normalized;
     }
 
     private function messageResponse(int $messageId): array

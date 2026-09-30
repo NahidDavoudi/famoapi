@@ -23,9 +23,9 @@ class OutboxItem
             $stmt = $db->prepare(
                 'INSERT INTO bot_outbox
                     (kind, recipient_role, recipient_account_id, telegram_user_id, chat_id, status,
-                     payload_json, dedup_key, max_attempts, available_at, created_at, updated_at)
+                     payload_json, ref_type, ref_id, dedup_key, max_attempts, available_at, created_at, updated_at)
                  VALUES (:kind, :recipient_role, :recipient_account_id, :telegram_user_id, :chat_id, :status,
-                     :payload_json, :dedup_key, :max_attempts, UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP())'
+                     :payload_json, :ref_type, :ref_id, :dedup_key, :max_attempts, UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP())'
             );
             $stmt->execute([
                 'kind'                 => $data['kind'],
@@ -35,6 +35,8 @@ class OutboxItem
                 'chat_id'              => $data['chat_id'] ?? null,
                 'status'               => $data['status'] ?? 'pending',
                 'payload_json'         => $data['payload_json'],
+                'ref_type'             => $data['ref_type'] ?? null,
+                'ref_id'               => $data['ref_id'] ?? null,
                 'dedup_key'            => $data['dedup_key'] ?? null,
                 'max_attempts'         => $data['max_attempts'] ?? 3,
             ]);

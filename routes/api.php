@@ -38,6 +38,8 @@ use App\Modules\Bot\BotController;
 use App\Modules\Bot\BotServiceMiddleware;
 use App\Modules\Linking\LinkController;
 use App\Modules\Linking\LinkService;
+use App\Modules\Broadcasts\BroadcastController;
+use App\Modules\Broadcasts\BroadcastService;
 use App\Modules\Outbox\OutboxController;
 use App\Modules\Outbox\OutboxService;
 use App\Modules\Threads\SupporterThreadController;
@@ -75,6 +77,7 @@ return function (App $app) {
     $threadController = new ThreadController(new ThreadService());
     $supporterThreadController = new SupporterThreadController(new ThreadService());
     $outboxController = new OutboxController(new OutboxService());
+    $broadcastController = new BroadcastController(new BroadcastService());
     $botServiceMiddleware = new BotServiceMiddleware();
     $botActorMiddleware = new BotActorMiddleware();
 
@@ -173,6 +176,7 @@ return function (App $app) {
         $threadController,
         $supporterThreadController,
         $outboxController,
+        $broadcastController,
         $botActorMiddleware
     ) {
         $group->get('/ping', [$botController, 'ping']);
@@ -195,6 +199,12 @@ return function (App $app) {
         $group->get('/supporter/students', [$supporterThreadController, 'students'])->add($botActorMiddleware);
         $group->get('/supporter/students/{studentId:[0-9]+}/unread', [$supporterThreadController, 'unread'])->add($botActorMiddleware);
         $group->post('/supporter/reply', [$supporterThreadController, 'reply'])->add($botActorMiddleware);
+
+        // Broadcasts (supporter → own students)
+        $group->post('/broadcasts/preview', [$broadcastController, 'preview'])->add($botActorMiddleware);
+        $group->post('/broadcasts/confirm', [$broadcastController, 'confirm'])->add($botActorMiddleware);
+        $group->get('/broadcasts', [$broadcastController, 'list'])->add($botActorMiddleware);
+        $group->get('/broadcasts/{id:[0-9]+}', [$broadcastController, 'get'])->add($botActorMiddleware);
 
         // Outbox pull/report protocol (bot worker; service key only)
         $group->post('/outbox/claim', [$outboxController, 'claim']);
