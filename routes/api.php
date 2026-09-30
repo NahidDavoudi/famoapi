@@ -27,6 +27,8 @@ use App\Modules\Topics\TopicController;
 use App\Modules\Topics\TopicService;
 use App\Modules\Appointments\AppointmentController;
 use App\Modules\Appointments\AppointmentService;
+use App\Modules\Attendance\AttendanceController;
+use App\Modules\Attendance\AttendanceService;
 use App\Modules\Remedial\RemedialController;
 use App\Modules\Remedial\RemedialService;
 use App\Modules\ParentContacts\ParentContactController;
@@ -72,6 +74,7 @@ return function (App $app) {
     $fileController = new FileController(new FileService());
     $topicController = new TopicController(new TopicService());
     $appointmentController = new AppointmentController(new AppointmentService());
+    $attendanceController = new AttendanceController(new AttendanceService());
     $remedialController = new RemedialController(new RemedialService());
     $parentContactController = new ParentContactController(new ParentContactService());
     $assignmentController = new AssignmentController(new AssignmentService());
@@ -258,6 +261,13 @@ return function (App $app) {
     $app->post('/api/v1/appointments', [$appointmentController, 'create'])->add($requireSupporter)->add($authMiddleware);
     $app->put('/api/v1/appointments/{id:[0-9]+}/status', [$appointmentController, 'updateStatus'])->add($requireSupporter)->add($authMiddleware);
     $app->delete('/api/v1/appointments/{id:[0-9]+}', [$appointmentController, 'delete'])->add($requireSupporter)->add($authMiddleware);
+
+    // Attendance (protected)
+    $app->get('/api/v1/attendance', [$attendanceController, 'list'])->add($requireSupporter)->add($authMiddleware);
+    $app->get('/api/v1/attendance/print', [$attendanceController, 'printList'])->add($requireSupporter)->add($authMiddleware);
+    $app->put('/api/v1/attendance/entries', [$attendanceController, 'upsertEntry'])->add($requireSupporter)->add($authMiddleware);
+    $app->patch('/api/v1/attendance/{id:[0-9]+}/times', [$attendanceController, 'setTime'])->add($requireSupporter)->add($authMiddleware);
+    $app->post('/api/v1/attendance/guests', [$attendanceController, 'addGuest'])->add($requireSupporter)->add($authMiddleware);
 
     // Remedial (protected)
     $app->get('/api/v1/remedial/sessions', [$remedialController, 'getSessions'])->add($requireSupporter)->add($authMiddleware);
