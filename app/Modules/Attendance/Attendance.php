@@ -125,24 +125,27 @@ class Attendance
 
             return self::findEntryById((int) $db->lastInsertId());
         } catch (\PDOException $e) {
-            if ((string) $e->getCode() !== '23000') {
-                throw $e;
-            }
-
-            if ($clientUuid !== null) {
+            // Only a concurrent insert of the same client_uuid is an idempotent
+            // replay. Foreign-key and other integrity violations must surface.
+            if ((string) $e->getCode() === '23000' && $clientUuid !== null) {
                 $existing = self::findEntryByClientUuid($clientUuid);
                 if ($existing !== null) {
                     return $existing;
                 }
             }
 
-            $existingId = self::findIdByDateStudent($date, $studentId);
-            if ($existingId !== null) {
-                return self::findEntryById($existingId);
-            }
-
             throw $e;
         }
+    }
+
+    public static function studentExists(int $studentId): bool
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT 1 FROM students WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute(['id' => $studentId]);
+
+        return $stmt->fetchColumn() !== false;
     }
 
     /**

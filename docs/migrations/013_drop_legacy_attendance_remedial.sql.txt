@@ -13,7 +13,7 @@
 -- executes `database/migrations/*.sql`, so this file is never run automatically.
 --
 -- Usage (review, back up, then execute):
---   mysql -u <user> -p <database> < 013_drop_legacy_attendance_remedial.sql
+--   mysql -u <user> -p <database> < 013_drop_legacy_attendance_remedial.sql.txt
 -- ============================================================================
 
 

@@ -55,6 +55,9 @@ class AttendanceService
         if ($studentId <= 0) {
             throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
         }
+        if (!Attendance::studentExists($studentId)) {
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+        }
 
         $status = $data['status'] ?? null;
         if ($status !== null && !in_array($status, ['present', 'absent'], true)) {
@@ -70,7 +73,7 @@ class AttendanceService
             $date,
             $studentId,
             $status,
-            (bool) ($data['removed'] ?? false),
+            $this->resolveRemoved($data['removed'] ?? null),
             $clientUuid
         );
     }
@@ -118,6 +121,15 @@ class AttendanceService
         }
 
         return $date;
+    }
+
+    private function resolveRemoved(mixed $value): bool
+    {
+        if ($value === null || is_bool($value)) {
+            return (bool) $value;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
     }
 
     private function resolveTimeValue(mixed $value): ?string

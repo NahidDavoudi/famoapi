@@ -127,6 +127,39 @@ class AttendanceTest extends TestCase
         $this->assertNull($data['data']['entries'][0]['status']);
     }
 
+    public function testUpsertUnknownStudentReturns404(): void
+    {
+        $response = $this->handleRequest($this->supporterWrite('PUT', '/api/v1/attendance/entries', [
+            'date' => self::DATE,
+            'student_id' => 999999999,
+        ]));
+        $this->assertJsonResponse($response, 404, null, 'NOT_FOUND');
+    }
+
+    public function testUpsertWithRemovedFalseStringDoesNotRemove(): void
+    {
+        $studentId = $this->seedAttendanceStudent();
+        $entryId = $this->upsertPresent($studentId);
+
+        $response = $this->handleRequest($this->supporterWrite('PUT', '/api/v1/attendance/entries', [
+            'date' => self::DATE,
+            'student_id' => $studentId,
+            'removed' => 'false',
+        ]));
+        $data = $this->assertJsonResponse($response, 200);
+        $this->assertSame($entryId, (int) $data['data']['id']);
+
+        $row = $this->fetchOne('daily_attendance', ['id' => $entryId]);
+        $this->assertNull($row['removed_at']);
+
+        $list = $this->handleRequest(
+            $this->supporterRequest('GET', '/api/v1/attendance?date=' . self::DATE . '&field=' . self::FIELD)
+        );
+        $listData = $this->assertJsonResponse($list, 200);
+        $this->assertCount(1, $listData['data']['entries']);
+        $this->assertSame($entryId, $listData['data']['entries'][0]['id']);
+    }
+
     public function testSetTimeWithNow(): void
     {
         $studentId = $this->seedAttendanceStudent();
