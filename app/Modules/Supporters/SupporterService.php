@@ -2,12 +2,28 @@
 
 namespace App\Modules\Supporters;
 
+use App\Core\ApiException;
 use App\Core\Cache;
 use App\Core\Database;
 use App\Core\Pagination;
+use App\Modules\Bot\PhoneNormalizer;
 
 class SupporterService
 {
+    private function normalizePhoneOrFail(?string $phone): ?string
+    {
+        if ($phone === null || trim($phone) === '') {
+            return null;
+        }
+
+        $normalized = PhoneNormalizer::normalize($phone);
+        if ($normalized === null) {
+            throw new ApiException('شماره تلفن پشتیبان معتبر نیست', 422, 'VALIDATION_ERROR');
+        }
+
+        return $normalized;
+    }
+
     public function list(int $page, int $perPage): array
     {
         $total = Supporter::countAll();
@@ -23,6 +39,10 @@ class SupporterService
 
     public function create(array $data): array
     {
+        if (array_key_exists('phone', $data)) {
+            $data['phone'] = $this->normalizePhoneOrFail($data['phone']);
+        }
+
         $db = Database::getConnection();
         $db->beginTransaction();
 
@@ -60,11 +80,26 @@ class SupporterService
         return $supporter;
     }
 
+    public function missingPhone(int $page, int $perPage): array
+    {
+        $total = Supporter::countMissingPhone();
+        $pagination = Pagination::build($page, $perPage, $total);
+
+        return [
+            'items'      => Supporter::findMissingPhone($pagination['page'], $pagination['per_page']),
+            'pagination' => $pagination,
+        ];
+    }
+
     public function update(int $id, array $data): array
     {
         $supporter = Supporter::findById($id);
         if (!$supporter) {
             throw new \App\Core\ApiException('پشتیبان یافت نشد', 404, 'NOT_FOUND');
+        }
+
+        if (array_key_exists('phone', $data)) {
+            $data['phone'] = $this->normalizePhoneOrFail($data['phone']);
         }
 
         Supporter::update($id, $data);

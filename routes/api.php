@@ -31,6 +31,18 @@ use App\Modules\Remedial\RemedialController;
 use App\Modules\Remedial\RemedialService;
 use App\Modules\ParentContacts\ParentContactController;
 use App\Modules\ParentContacts\ParentContactService;
+use App\Modules\Assignments\AssignmentController;
+use App\Modules\Assignments\AssignmentService;
+use App\Modules\Bot\BotActorMiddleware;
+use App\Modules\Bot\BotController;
+use App\Modules\Bot\BotServiceMiddleware;
+use App\Modules\Linking\LinkController;
+use App\Modules\Linking\LinkService;
+use App\Modules\Outbox\OutboxController;
+use App\Modules\Outbox\OutboxService;
+use App\Modules\Threads\SupporterThreadController;
+use App\Modules\Threads\ThreadController;
+use App\Modules\Threads\ThreadService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
@@ -57,6 +69,14 @@ return function (App $app) {
     $appointmentController = new AppointmentController(new AppointmentService());
     $remedialController = new RemedialController(new RemedialService());
     $parentContactController = new ParentContactController(new ParentContactService());
+    $assignmentController = new AssignmentController(new AssignmentService());
+    $botController = new BotController();
+    $linkController = new LinkController(new LinkService());
+    $threadController = new ThreadController(new ThreadService());
+    $supporterThreadController = new SupporterThreadController(new ThreadService());
+    $outboxController = new OutboxController(new OutboxService());
+    $botServiceMiddleware = new BotServiceMiddleware();
+    $botActorMiddleware = new BotActorMiddleware();
 
     // Health
     $app->get('/api/v1/health', function (Request $request, Response $response) {
@@ -132,10 +152,54 @@ return function (App $app) {
 
     // Supporters (protected)
     $app->get('/api/v1/supporters', [$supporterController, 'list'])->add($requireSupporter)->add($authMiddleware);
+    $app->get('/api/v1/supporters/missing-phone', [$supporterController, 'missingPhone'])->add($requireAdmin)->add($authMiddleware);
     $app->post('/api/v1/supporters', [$supporterController, 'create'])->add($requireAdmin)->add($authMiddleware);
     $app->get('/api/v1/supporters/{id:[0-9]+}', [$supporterController, 'get'])->add($requireSupporter)->add($authMiddleware);
     $app->put('/api/v1/supporters/{id:[0-9]+}', [$supporterController, 'update'])->add($requireAdmin)->add($authMiddleware);
     $app->delete('/api/v1/supporters/{id:[0-9]+}', [$supporterController, 'delete'])->add($requireAdmin)->add($authMiddleware);
+
+    // Student → supporter assignments (canonical). Admin only.
+    $app->get('/api/v1/assignments/students', [$assignmentController, 'listStudents'])->add($requireAdmin)->add($authMiddleware);
+    $app->post('/api/v1/assignments', [$assignmentController, 'assign'])->add($requireAdmin)->add($authMiddleware);
+    $app->delete('/api/v1/assignments/{studentId:[0-9]+}', [$assignmentController, 'unassign'])->add($requireAdmin)->add($authMiddleware);
+    $app->get('/api/v1/assignments/supporters/{supporterId:[0-9]+}/students', [$assignmentController, 'supporterStudents'])->add($requireAdmin)->add($authMiddleware);
+    $app->get('/api/v1/assignments/history/{studentId:[0-9]+}', [$assignmentController, 'history'])->add($requireAdmin)->add($authMiddleware);
+    $app->post('/api/v1/assignments/initial-fill', [$assignmentController, 'initialFill'])->add($requireAdmin)->add($authMiddleware);
+
+    // Bot gateway + identity/linking. Service-key protected, never JWT.
+    $app->group('/api/v1/bot', function ($group) use (
+        $botController,
+        $linkController,
+        $threadController,
+        $supporterThreadController,
+        $outboxController,
+        $botActorMiddleware
+    ) {
+        $group->get('/ping', [$botController, 'ping']);
+        $group->get('/me', [$botController, 'me'])->add($botActorMiddleware);
+
+        $group->post('/identity/lookup', [$linkController, 'lookup']);
+        $group->post('/identity/link', [$linkController, 'link']);
+        $group->get('/identity/resolve', [$linkController, 'resolve']);
+        $group->post('/identity/unlink', [$linkController, 'unlink']);
+        $group->post('/identity/block', [$linkController, 'block']);
+        $group->post('/identity/unblock', [$linkController, 'unblock']);
+
+        // Threads & messages (acting on behalf of a linked account)
+        $group->post('/threads/messages', [$threadController, 'sendMessage'])->add($botActorMiddleware);
+        $group->get('/threads/day', [$threadController, 'getDay'])->add($botActorMiddleware);
+        $group->get('/threads/weekly', [$threadController, 'weekly'])->add($botActorMiddleware);
+        $group->post('/threads/read', [$threadController, 'markRead'])->add($botActorMiddleware);
+
+        $group->get('/supporter/inbox', [$supporterThreadController, 'inbox'])->add($botActorMiddleware);
+        $group->get('/supporter/students', [$supporterThreadController, 'students'])->add($botActorMiddleware);
+        $group->get('/supporter/students/{studentId:[0-9]+}/unread', [$supporterThreadController, 'unread'])->add($botActorMiddleware);
+        $group->post('/supporter/reply', [$supporterThreadController, 'reply'])->add($botActorMiddleware);
+
+        // Outbox pull/report protocol (bot worker; service key only)
+        $group->post('/outbox/claim', [$outboxController, 'claim']);
+        $group->post('/outbox/report', [$outboxController, 'report']);
+    })->add($botServiceMiddleware);
 
     // Exams (protected)
     $app->get('/api/v1/exams', [$examController, 'getAll'])->add($authMiddleware);

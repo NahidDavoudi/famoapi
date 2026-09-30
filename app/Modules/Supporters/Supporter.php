@@ -49,18 +49,141 @@ class Supporter
         return $result ?: null;
     }
 
+    /**
+     * Lookup supporters by equivalent raw phone representations.
+     *
+     * @param string[] $forms
+     * @return array<int,array>
+     */
+    public static function findByPhoneForms(array $forms): array
+    {
+        if ($forms === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($forms), '?'));
+        $stmt = Database::getConnection()->prepare(
+            "SELECT id, name, grade, field, phone, is_active
+             FROM supporters
+             WHERE phone IN ({$placeholders})"
+        );
+        $stmt->execute(array_values($forms));
+
+        return $stmt->fetchAll();
+    }
+
+    public static function findMissingPhone(int $page, int $perPage): array
+    {
+        $offset = ($page - 1) * $perPage;
+        $stmt = Database::getConnection()->prepare(
+            "SELECT id, name, grade, field, phone, is_active, created_at
+             FROM supporters
+             WHERE phone IS NULL OR phone = ''
+             ORDER BY name ASC
+             LIMIT :limit OFFSET :offset"
+        );
+        $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public static function countMissingPhone(): int
+    {
+        $stmt = Database::getConnection()->query(
+            "SELECT COUNT(*) FROM supporters WHERE phone IS NULL OR phone = ''"
+        );
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Active supporters considered for assignment matching.
+     *
+     * @return array<int,array>
+     */
+    public static function findActiveForAssignment(): array
+    {
+        $stmt = Database::getConnection()->query(
+            'SELECT id, name, grade, field, phone
+             FROM supporters
+             WHERE is_active = 1
+             ORDER BY id ASC'
+        );
+
+        $rows = $stmt->fetchAll();
+
+        if (self::hasUsersActiveFlag()) {
+            $rows = array_values(array_filter($rows, static function (array $row): bool {
+                return self::isAccountActive((int) $row['id']);
+            }));
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Supporters are active when supporters.is_active = 1 AND, if a linked
+     * users row exists and exposes an is_active flag, it is not explicitly 0.
+     */
+    public static function isAccountActive(int $id): bool
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT is_active FROM supporters WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+        $flag = $stmt->fetchColumn();
+        if ($flag === false || (int) $flag !== 1) {
+            return false;
+        }
+
+        if (!self::hasUsersActiveFlag()) {
+            return true;
+        }
+
+        $stmt = Database::getConnection()->prepare(
+            'SELECT u.is_active
+             FROM users u
+             WHERE u.role = :role AND u.linked_id = :linked_id
+             LIMIT 1'
+        );
+        $stmt->execute(['role' => 'supporter', 'linked_id' => $id]);
+        $userFlag = $stmt->fetchColumn();
+
+        return $userFlag === false || (int) $userFlag !== 0;
+    }
+
+    private static ?bool $usersActiveFlag = null;
+
+    private static function hasUsersActiveFlag(): bool
+    {
+        if (self::$usersActiveFlag === null) {
+            $stmt = Database::getConnection()->prepare(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_active'"
+            );
+            $stmt->execute();
+            self::$usersActiveFlag = (int) $stmt->fetchColumn() > 0;
+        }
+
+        return self::$usersActiveFlag;
+    }
+
     public static function create(array $data): int
     {
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO supporters (name, grade, field, chat_id)
-             VALUES (:name, :grade, :field, :chat_id)'
+            'INSERT INTO supporters (name, grade, field, phone, chat_id, is_active)
+             VALUES (:name, :grade, :field, :phone, :chat_id, :is_active)'
         );
         $stmt->execute([
-            'name'    => $data['name'],
-            'grade'   => $data['grade'] ?? null,
-            'field'   => $data['field'] ?? null,
-            'chat_id' => $data['chat_id'] ?? null,
+            'name'      => $data['name'],
+            'grade'     => $data['grade'] ?? null,
+            'field'     => $data['field'] ?? null,
+            'phone'     => $data['phone'] ?? null,
+            'chat_id'   => $data['chat_id'] ?? null,
+            'is_active' => array_key_exists('is_active', $data) ? (int) $data['is_active'] : 1,
         ]);
         return (int) $db->lastInsertId();
     }
@@ -69,7 +192,7 @@ class Supporter
     {
         $sets = [];
         $params = ['id' => $id];
-        $allowed = ['name', 'grade', 'field', 'chat_id'];
+        $allowed = ['name', 'grade', 'field', 'phone', 'chat_id', 'is_active'];
 
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {

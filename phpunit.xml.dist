@@ -35,6 +35,8 @@
         <env name="JWT_COOKIE_SECURE" value=""/>
         <env name="JWT_COOKIE_SAMESITE" value=""/>
         <env name="CORS_ORIGINS" value="http://localhost"/>
+        <env name="BOT_SERVICE_KEY" value="test-bot-key"/>
+        <env name="BOT_IP_ALLOWLIST" value=""/>
         <env name="APP_DEBUG" value="true"/>
         <env name="APP_MODE" value="development"/>
     </php>

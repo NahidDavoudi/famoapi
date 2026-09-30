@@ -3,6 +3,7 @@
 namespace App\Modules\Supporters;
 
 use App\Core\Validator;
+use App\Modules\Bot\PhoneNormalizer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -32,6 +33,23 @@ class SupporterController
         return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
     }
 
+    public function missingPhone(Request $request, Response $response): Response
+    {
+        $params = $request->getQueryParams();
+        $page = (int) ($params['page'] ?? 1);
+        $perPage = (int) ($params['perPage'] ?? 20);
+
+        $result = $this->service->missingPhone($page, $perPage);
+
+        $response->getBody()->write(json_encode([
+            'success'    => true,
+            'data'       => $result['items'],
+            'pagination' => $result['pagination'],
+            'error'      => null,
+        ], JSON_UNESCAPED_UNICODE));
+        return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
     public function create(Request $request, Response $response): Response
     {
         $body = $request->getParsedBody() ?? [];
@@ -43,17 +61,21 @@ class SupporterController
             ->inArray('grade', 'پایه تحصیلی', $body['grade'] ?? null, $this->validGrades)
             ->required('field', 'رشته تحصیلی', $body['field'] ?? null)
             ->inArray('field', 'رشته تحصیلی', $body['field'] ?? null, $this->validFields)
-            ->required('phone', 'شماره تلفن', $body['phone'] ?? null)
-            ->phone('phone', 'شماره تلفن', $body['phone'] ?? null);
+            ->required('phone', 'شماره تلفن', $body['phone'] ?? null);
 
-        if (!$validator->passes()) {
+        $message = $validator->firstError();
+        if ($message === '' && PhoneNormalizer::normalize((string) ($body['phone'] ?? '')) === null) {
+            $message = 'شماره تلفن پشتیبان معتبر نیست';
+        }
+
+        if ($message !== '') {
             $response->getBody()->write(json_encode([
                 'success'    => false,
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
                     'code'    => 'VALIDATION_ERROR',
-                    'message' => $validator->firstError(),
+                    'message' => $message,
                 ],
             ], JSON_UNESCAPED_UNICODE));
             return $response->withStatus(422)->withHeader('Content-Type', 'application/json; charset=utf-8');
@@ -61,11 +83,12 @@ class SupporterController
 
         try {
             $result = $this->service->create([
-                'name'    => $body['name'],
-                'grade'   => $body['grade'],
-                'field'   => $body['field'],
-                'phone'   => $body['phone'],
-                'chat_id' => $body['chat_id'] ?? null,
+                'name'      => $body['name'],
+                'grade'     => $body['grade'],
+                'field'     => $body['field'],
+                'phone'     => $body['phone'],
+                'chat_id'   => $body['chat_id'] ?? null,
+                'is_active' => $body['is_active'] ?? 1,
             ]);
         } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
@@ -123,7 +146,9 @@ class SupporterController
         if (isset($body['name'])) $data['name'] = $body['name'];
         if (isset($body['grade'])) $data['grade'] = $body['grade'];
         if (isset($body['field'])) $data['field'] = $body['field'];
+        if (array_key_exists('phone', $body)) $data['phone'] = $body['phone'];
         if (isset($body['chat_id'])) $data['chat_id'] = $body['chat_id'];
+        if (array_key_exists('is_active', $body)) $data['is_active'] = (int) $body['is_active'];
         if (isset($body['password'])) $data['password'] = $body['password'];
 
         try {

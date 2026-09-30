@@ -117,6 +117,31 @@ class Student
         return $result ?: null;
     }
 
+    /**
+     * Lookup students by a set of equivalent raw phone representations.
+     * Callers must confirm the normalized match (stored numbers may be in
+     * Persian/Arabic digit forms).
+     *
+     * @param string[] $forms
+     * @return array<int,array>
+     */
+    public static function findByPhoneForms(array $forms): array
+    {
+        if ($forms === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($forms), '?'));
+        $stmt = Database::getConnection()->prepare(
+            "SELECT id, name, grade, field, phone, is_active
+             FROM students
+             WHERE phone IN ({$placeholders})"
+        );
+        $stmt->execute(array_values($forms));
+
+        return $stmt->fetchAll();
+    }
+
     public static function create(array $data): int
     {
         $db = Database::getConnection();
