@@ -91,31 +91,42 @@ class Tutoring
         $db = Database::getConnection();
         $now = IranDay::nowUtc();
 
-        $close = $db->prepare(
-            'UPDATE tutoring_teacher_status_log
-                SET ended_at = :ended_at
-              WHERE instructor_id = :instructor_id
-                AND status_date = :date
-                AND ended_at IS NULL'
-        );
-        $close->execute([
-            'ended_at' => $now,
-            'instructor_id' => $instructorId,
-            'date' => $date,
-        ]);
+        $db->beginTransaction();
+        try {
+            $close = $db->prepare(
+                'UPDATE tutoring_teacher_status_log
+                    SET ended_at = :ended_at
+                  WHERE instructor_id = :instructor_id
+                    AND status_date = :date
+                    AND ended_at IS NULL'
+            );
+            $close->execute([
+                'ended_at' => $now,
+                'instructor_id' => $instructorId,
+                'date' => $date,
+            ]);
 
-        $insert = $db->prepare(
-            'INSERT INTO tutoring_teacher_status_log (instructor_id, status, status_date, started_at)
-             VALUES (:instructor_id, :status, :date, :started_at)'
-        );
-        $insert->execute([
-            'instructor_id' => $instructorId,
-            'status' => $status,
-            'date' => $date,
-            'started_at' => $now,
-        ]);
+            $insert = $db->prepare(
+                'INSERT INTO tutoring_teacher_status_log (instructor_id, status, status_date, started_at)
+                 VALUES (:instructor_id, :status, :date, :started_at)'
+            );
+            $insert->execute([
+                'instructor_id' => $instructorId,
+                'status' => $status,
+                'date' => $date,
+                'started_at' => $now,
+            ]);
 
-        return self::findStatusById((int) $db->lastInsertId());
+            $id = (int) $db->lastInsertId();
+            $db->commit();
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+
+        return self::findStatusById($id);
     }
 
     /**
