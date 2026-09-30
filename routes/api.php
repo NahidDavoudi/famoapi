@@ -29,6 +29,8 @@ use App\Modules\Appointments\AppointmentController;
 use App\Modules\Appointments\AppointmentService;
 use App\Modules\Attendance\AttendanceController;
 use App\Modules\Attendance\AttendanceService;
+use App\Modules\Tutoring\TutoringController;
+use App\Modules\Tutoring\TutoringService;
 use App\Modules\Remedial\RemedialController;
 use App\Modules\Remedial\RemedialService;
 use App\Modules\ParentContacts\ParentContactController;
@@ -59,6 +61,7 @@ return function (App $app) {
     $authMiddleware = new AuthMiddleware();
     $requireAdmin = new Authorization('admin');
     $requireSupporter = new Authorization('supporter');
+    $requireTeacher = new Authorization('teacher');
 
     $authController = new AuthController(new AuthService());
     $dashboardController = new DashboardController();
@@ -75,6 +78,7 @@ return function (App $app) {
     $topicController = new TopicController(new TopicService());
     $appointmentController = new AppointmentController(new AppointmentService());
     $attendanceController = new AttendanceController(new AttendanceService());
+    $tutoringController = new TutoringController(new TutoringService());
     $remedialController = new RemedialController(new RemedialService());
     $parentContactController = new ParentContactController(new ParentContactService());
     $assignmentController = new AssignmentController(new AssignmentService());
@@ -268,6 +272,14 @@ return function (App $app) {
     $app->put('/api/v1/attendance/entries', [$attendanceController, 'upsertEntry'])->add($requireSupporter)->add($authMiddleware);
     $app->patch('/api/v1/attendance/{id:[0-9]+}/times', [$attendanceController, 'setTime'])->add($requireSupporter)->add($authMiddleware);
     $app->post('/api/v1/attendance/guests', [$attendanceController, 'addGuest'])->add($requireSupporter)->add($authMiddleware);
+
+    // Tutoring (teacher panel + live board)
+    $app->get('/api/v1/tutoring/me', [$tutoringController, 'me'])->add($requireTeacher)->add($authMiddleware);
+    $app->put('/api/v1/tutoring/status', [$tutoringController, 'setStatus'])->add($requireTeacher)->add($authMiddleware);
+    $app->get('/api/v1/tutoring/students', [$tutoringController, 'students'])->add($requireTeacher)->add($authMiddleware);
+    $app->post('/api/v1/tutoring/sessions', [$tutoringController, 'startSession'])->add($requireTeacher)->add($authMiddleware);
+    $app->post('/api/v1/tutoring/sessions/{id:[0-9]+}/end', [$tutoringController, 'endSession'])->add($requireTeacher)->add($authMiddleware);
+    $app->get('/api/v1/tutoring/board', [$tutoringController, 'board'])->add($requireSupporter)->add($authMiddleware);
 
     // Remedial (protected)
     $app->get('/api/v1/remedial/sessions', [$remedialController, 'getSessions'])->add($requireSupporter)->add($authMiddleware);
