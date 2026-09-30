@@ -18,11 +18,12 @@ class Auth
         $ttl = (int) ($_ENV['JWT_TTL'] ?? 86400);
 
         $payload = [
-            'sub'        => $user['id'],
-            'role'       => $user['role'],
-            'student_id' => isset($user['student_id']) ? (int) $user['student_id'] : null,
-            'iat'        => time(),
-            'exp'        => time() + $ttl,
+            'sub'           => $user['id'],
+            'role'          => $user['role'],
+            'student_id'    => isset($user['student_id']) ? (int) $user['student_id'] : null,
+            'instructor_id' => isset($user['instructor_id']) ? (int) $user['instructor_id'] : null,
+            'iat'           => time(),
+            'exp'           => time() + $ttl,
         ];
 
         return JWT::encode($payload, $secret, self::$algorithm);

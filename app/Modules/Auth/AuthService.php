@@ -27,6 +27,15 @@ class AuthService
         return $id > 0 ? $id : null;
     }
 
+    private function instructorIdFor(array $user): ?int
+    {
+        if (($user['role'] ?? '') !== 'teacher') {
+            return null;
+        }
+        $id = (int) ($user['linked_id'] ?? 0);
+        return $id > 0 ? $id : null;
+    }
+
     public function login(string $username, string $password): array
     {
         $user = User::findByUsername($username);
@@ -41,7 +50,7 @@ class AuthService
 
         $role = $user['role'];
 
-        if ($role === 'admin' || $role === 'supporter') {
+        if ($role === 'admin' || $role === 'supporter' || $role === 'teacher') {
             // TODO: برای فعال‌سازی روی سایر نقش‌ها (مثلاً student)، این شرط را گسترش دهید
             $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
             $expiresAt = gmdate('Y-m-d H:i:s', time() + 300); // 5 minutes
@@ -121,20 +130,23 @@ class AuthService
         }
 
         $studentId = $this->studentIdFor($user);
+        $instructorId = $this->instructorIdFor($user);
 
         $token = Auth::encode([
-            'id'         => $user['id'],
-            'role'       => $user['role'],
-            'student_id' => $studentId,
+            'id'            => $user['id'],
+            'role'          => $user['role'],
+            'student_id'    => $studentId,
+            'instructor_id' => $instructorId,
         ]);
 
         return [
             'token' => $token,
             'user'  => [
-                'id'         => (int) $user['id'],
-                'username'   => $user['username'],
-                'role'       => $user['role'],
-                'student_id' => $studentId,
+                'id'            => (int) $user['id'],
+                'username'      => $user['username'],
+                'role'          => $user['role'],
+                'student_id'    => $studentId,
+                'instructor_id' => $instructorId,
             ],
         ];
     }
@@ -201,11 +213,12 @@ class AuthService
             throw new \App\Core\ApiException('کاربر یافت نشد', 404, 'NOT_FOUND');
         }
         return [
-            'id'         => (int) $user['id'],
-            'username'   => $user['username'],
-            'role'       => $user['role'],
-            'full_name'  => $user['full_name'] ?? null,
-            'student_id' => $this->studentIdFor($user),
+            'id'            => (int) $user['id'],
+            'username'      => $user['username'],
+            'role'          => $user['role'],
+            'full_name'     => $user['full_name'] ?? null,
+            'student_id'    => $this->studentIdFor($user),
+            'instructor_id' => $this->instructorIdFor($user),
         ];
     }
 }
