@@ -174,6 +174,39 @@ final class IranDay
         return self::WEEKDAY_NAMES[($dayOfWeek + 1) % 7];
     }
 
+    /** Shift a Tehran date by a number of days (negative allowed). */
+    public static function addDays(string $tehranDate, int $delta): string
+    {
+        $moment = new DateTimeImmutable($tehranDate . ' 00:00:00', self::timezone());
+
+        return $moment->modify(sprintf('%+d days', $delta))->format('Y-m-d');
+    }
+
+    /**
+     * Inclusive list of Tehran dates between two dates (capped at 400 days).
+     *
+     * @return string[]
+     */
+    public static function datesBetween(string $from, string $to): array
+    {
+        if (!self::isValidDate($from) || !self::isValidDate($to) || $from > $to) {
+            return [];
+        }
+
+        $current = new DateTimeImmutable($from . ' 00:00:00', self::timezone());
+        $end = new DateTimeImmutable($to . ' 00:00:00', self::timezone());
+
+        $dates = [];
+        $guard = 0;
+        while ($current <= $end && $guard < 400) {
+            $dates[] = $current->format('Y-m-d');
+            $current = $current->modify('+1 day');
+            $guard++;
+        }
+
+        return $dates;
+    }
+
     public static function isValidDate(string $tehranDate): bool
     {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tehranDate)) {

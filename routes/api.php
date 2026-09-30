@@ -42,6 +42,9 @@ use App\Modules\Broadcasts\BroadcastController;
 use App\Modules\Broadcasts\BroadcastService;
 use App\Modules\Outbox\OutboxController;
 use App\Modules\Outbox\OutboxService;
+use App\Modules\Stats\ContentAccessMiddleware;
+use App\Modules\Stats\StatsController;
+use App\Modules\Stats\StatsService;
 use App\Modules\Threads\SupporterThreadController;
 use App\Modules\Threads\ThreadController;
 use App\Modules\Threads\ThreadService;
@@ -78,6 +81,8 @@ return function (App $app) {
     $supporterThreadController = new SupporterThreadController(new ThreadService());
     $outboxController = new OutboxController(new OutboxService());
     $broadcastController = new BroadcastController(new BroadcastService());
+    $statsController = new StatsController(new StatsService());
+    $requireContentAccess = new ContentAccessMiddleware();
     $botServiceMiddleware = new BotServiceMiddleware();
     $botActorMiddleware = new BotActorMiddleware();
 
@@ -264,6 +269,17 @@ return function (App $app) {
     $app->delete('/api/v1/remedial/classes/{id:[0-9]+}', [$remedialController, 'deleteClass'])->add($requireSupporter)->add($authMiddleware);
     $app->post('/api/v1/remedial/students', [$remedialController, 'addStudent'])->add($requireSupporter)->add($authMiddleware);
     $app->delete('/api/v1/remedial/students', [$remedialController, 'removeStudent'])->add($requireSupporter)->add($authMiddleware);
+
+    // Admin statistics (admin JWT). Content reading has a separate permission.
+    $app->group('/api/v1/admin/stats', function ($group) use ($statsController, $requireContentAccess) {
+        $group->get('/reports/overview', [$statsController, 'overview']);
+        $group->get('/reports/by-major', [$statsController, 'byMajor']);
+        $group->get('/reports/by-supporter', [$statsController, 'bySupporter']);
+        $group->get('/students/no-report', [$statsController, 'noReport']);
+        $group->get('/supporters/performance', [$statsController, 'performance']);
+        $group->get('/students/{id:[0-9]+}/history', [$statsController, 'history']);
+        $group->get('/students/{id:[0-9]+}/thread', [$statsController, 'thread'])->add($requireContentAccess);
+    })->add($requireAdmin)->add($authMiddleware);
 
     // Catch-all 404
     $app->map(['GET', 'POST', 'PUT', 'DELETE'], '/api/v1/{routes:.+}', function (Request $request, Response $response) {
