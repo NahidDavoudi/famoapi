@@ -31,8 +31,6 @@ use App\Modules\Attendance\AttendanceController;
 use App\Modules\Attendance\AttendanceService;
 use App\Modules\Tutoring\TutoringController;
 use App\Modules\Tutoring\TutoringService;
-use App\Modules\Remedial\RemedialController;
-use App\Modules\Remedial\RemedialService;
 use App\Modules\ParentContacts\ParentContactController;
 use App\Modules\ParentContacts\ParentContactService;
 use App\Modules\Assignments\AssignmentController;
@@ -79,7 +77,6 @@ return function (App $app) {
     $appointmentController = new AppointmentController(new AppointmentService());
     $attendanceController = new AttendanceController(new AttendanceService());
     $tutoringController = new TutoringController(new TutoringService());
-    $remedialController = new RemedialController(new RemedialService());
     $parentContactController = new ParentContactController(new ParentContactService());
     $assignmentController = new AssignmentController(new AssignmentService());
     $botController = new BotController();
@@ -280,17 +277,6 @@ return function (App $app) {
     $app->post('/api/v1/tutoring/sessions', [$tutoringController, 'startSession'])->add($requireTeacher)->add($authMiddleware);
     $app->post('/api/v1/tutoring/sessions/{id:[0-9]+}/end', [$tutoringController, 'endSession'])->add($requireTeacher)->add($authMiddleware);
     $app->get('/api/v1/tutoring/board', [$tutoringController, 'board'])->add($requireSupporter)->add($authMiddleware);
-
-    // Remedial (protected)
-    $app->get('/api/v1/remedial/sessions', [$remedialController, 'getSessions'])->add($requireSupporter)->add($authMiddleware);
-    $app->post('/api/v1/remedial/sessions', [$remedialController, 'createSession'])->add($requireSupporter)->add($authMiddleware);
-    $app->get('/api/v1/remedial/sessions/{id:[0-9]+}', [$remedialController, 'getSessionData'])->add($requireSupporter)->add($authMiddleware);
-    $app->post('/api/v1/remedial/attendance', [$remedialController, 'toggleAttendance'])->add($requireSupporter)->add($authMiddleware);
-    $app->post('/api/v1/remedial/classes', [$remedialController, 'createClass'])->add($requireSupporter)->add($authMiddleware);
-    $app->put('/api/v1/remedial/students/time', [$remedialController, 'updateStudentTime'])->add($requireSupporter)->add($authMiddleware);
-    $app->delete('/api/v1/remedial/classes/{id:[0-9]+}', [$remedialController, 'deleteClass'])->add($requireSupporter)->add($authMiddleware);
-    $app->post('/api/v1/remedial/students', [$remedialController, 'addStudent'])->add($requireSupporter)->add($authMiddleware);
-    $app->delete('/api/v1/remedial/students', [$remedialController, 'removeStudent'])->add($requireSupporter)->add($authMiddleware);
 
     // Admin statistics (admin JWT). Content reading has a separate permission.
     $app->group('/api/v1/admin/stats', function ($group) use ($statsController, $requireContentAccess) {
