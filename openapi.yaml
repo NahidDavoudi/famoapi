@@ -93,7 +93,7 @@ paths:
                                 type: string
                               role:
                                 type: string
-                                enum: [admin, supporter, student]
+                                enum: [admin, supporter, student, teacher]
                               student_id:
                                 type: integer
                                 nullable: true
@@ -165,7 +165,7 @@ paths:
                                 type: string
                               role:
                                 type: string
-                                enum: [admin, supporter, student]
+                                enum: [admin, supporter, student, teacher]
                               student_id:
                                 type: integer
                                 nullable: true
@@ -233,7 +233,7 @@ paths:
                                 type: string
                               role:
                                 type: string
-                                enum: [admin, supporter, student]
+                                enum: [admin, supporter, student, teacher]
                               student_id:
                                 type: integer
                                 nullable: true
@@ -3219,6 +3219,476 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  # ───────────────────── Daily Attendance ─────────────────────
+  /api/v1/attendance:
+    get:
+      tags: [DailyAttendance]
+      summary: List the attendance board for a Tehran day
+      operationId: attendanceList
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Tehran (Jalali-backed) date; defaults to today
+        - name: field
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by student field/رشته
+      responses:
+        "200":
+          description: Attendance day with entries
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/AttendanceDay"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/attendance/entries:
+    put:
+      tags: [DailyAttendance]
+      summary: Create or update a attendance entry for a student
+      operationId: attendanceUpsertEntry
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                student_id:
+                  type: integer
+                status:
+                  type: string
+                  enum: [present, absent]
+                removed:
+                  type: boolean
+                client_uuid:
+                  type: string
+                  nullable: true
+                  description: Idempotency key
+              required: [date, student_id]
+      responses:
+        "200":
+          description: Entry saved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/AttendanceEntry"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/attendance/{id}/times:
+    patch:
+      tags: [DailyAttendance]
+      summary: Set one timestamp column of an attendance entry
+      operationId: attendanceSetTime
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                field:
+                  type: string
+                  enum: [arrived_at, exam_started_at, exam_ended_at, departed_at]
+                value:
+                  type: string
+                  nullable: true
+                  description: Timestamp string, "now", or null/empty to clear
+              required: [field]
+      responses:
+        "200":
+          description: Entry updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/AttendanceEntry"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/attendance/guests:
+    post:
+      tags: [DailyAttendance]
+      summary: Add a guest attendance row
+      operationId: attendanceAddGuest
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                guest_name:
+                  type: string
+                field:
+                  type: string
+              required: [date, guest_name, field]
+      responses:
+        "201":
+          description: Guest created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/AttendanceEntry"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/attendance/print:
+    get:
+      tags: [DailyAttendance]
+      summary: Attendance day for printing (timestamp columns omitted)
+      operationId: attendancePrint
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: field
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attendance day with entries (no *_at keys)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/AttendanceDay"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  # ───────────────────── Tutoring ─────────────────────
+  /api/v1/tutoring/me:
+    get:
+      tags: [Tutoring]
+      summary: Current teacher classroom, status and open session
+      operationId: tutoringMe
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Tutoring state for the caller
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          classroom:
+                            $ref: "#/components/schemas/TutoringClassroom"
+                          status:
+                            type: object
+                            nullable: true
+                            properties:
+                              status:
+                                type: string
+                                enum: [absent, ready, break]
+                              started_at:
+                                type: string
+                                format: date-time
+                              status_date:
+                                type: string
+                                format: date
+                          open_session:
+                            allOf:
+                              - $ref: "#/components/schemas/TutoringSession"
+                              - nullable: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/tutoring/status:
+    put:
+      tags: [Tutoring]
+      summary: Change the teacher's current status
+      operationId: tutoringSetStatus
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [absent, ready, break]
+              required: [status]
+      responses:
+        "200":
+          description: Status changed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/TutoringStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/tutoring/students:
+    get:
+      tags: [Tutoring]
+      summary: Search active students by name/phone
+      operationId: tutoringStudents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Name or phone fragment
+      responses:
+        "200":
+          description: Matching students
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            grade:
+                              type: integer
+                              nullable: true
+                            field:
+                              type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/tutoring/sessions:
+    post:
+      tags: [Tutoring]
+      summary: Start a tutoring session
+      operationId: tutoringStartSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                client_uuid:
+                  type: string
+                  nullable: true
+                  description: Idempotency key
+                entered_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+              required: [student_id]
+      responses:
+        "200":
+          description: Existing session returned (idempotent client_uuid)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/TutoringSession"
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/TutoringSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/tutoring/sessions/{id}/end:
+    post:
+      tags: [Tutoring]
+      summary: End an open tutoring session
+      operationId: tutoringEndSession
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ended_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+      responses:
+        "200":
+          description: Session ended
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/TutoringSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/tutoring/board:
+    get:
+      tags: [Tutoring]
+      summary: Live tutoring board across active classrooms
+      operationId: tutoringBoard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Only return classrooms active at/after this timestamp
+      responses:
+        "200":
+          description: Board rows
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TutoringBoardClass"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   # ───────────────────── Bot Gateway ─────────────────────
   /api/v1/bot/ping:
     get:
@@ -5534,6 +6004,184 @@ components:
           type: string
           format: date-time
 
+    # ──── Daily Attendance ────
+    AttendanceEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          nullable: true
+        student_id:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          nullable: true
+          description: Student name (null for guests)
+        guest_name:
+          type: string
+          nullable: true
+          description: Guest name (null for students)
+        is_guest:
+          type: boolean
+        field:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [present, absent]
+          nullable: true
+        arrived_at:
+          type: string
+          format: date-time
+          nullable: true
+        exam_started_at:
+          type: string
+          format: date-time
+          nullable: true
+        exam_ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        departed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    AttendanceDay:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        date_jalali:
+          type: string
+        field:
+          type: string
+          nullable: true
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceEntry"
+
+    # ──── Tutoring ────
+    TutoringClassroom:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+
+    TutoringStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+        instructor_id:
+          type: integer
+        status:
+          type: string
+          enum: [absent, ready, break]
+        status_date:
+          type: string
+          format: date
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    TutoringSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        session_date:
+          type: string
+          format: date
+        classroom_id:
+          type: integer
+        student_id:
+          type: integer
+        attendance_id:
+          type: integer
+          nullable: true
+        entered_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        client_entered_at:
+          type: string
+          format: date-time
+          nullable: true
+        entry_source:
+          type: string
+        needs_review:
+          type: boolean
+        created_by:
+          type: integer
+          nullable: true
+        client_uuid:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TutoringBoardClass:
+      type: object
+      properties:
+        classroom_id:
+          type: integer
+        classroom_name:
+          type: string
+        instructor_id:
+          type: integer
+        teacher_name:
+          type: string
+        status:
+          type: string
+          enum: [absent, ready, break]
+          nullable: true
+        status_since:
+          type: string
+          format: date-time
+          nullable: true
+        student:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            grade:
+              type: integer
+              nullable: true
+            field:
+              type: string
+        entered_at:
+          type: string
+          format: date-time
+          nullable: true
+
     # ──── Bot / Threads / Outbox ────
     TelegramAttachment:
       type: object
@@ -5888,6 +6536,10 @@ tags:
     description: Appointment scheduling (supporter role)
   - name: Remedial
     description: Remedial education sessions & classes
+  - name: DailyAttendance
+    description: Daily attendance board (admin & supporter)
+  - name: Tutoring
+    description: Tutoring classroom, teacher status & sessions
   - name: Assignments
     description: Canonical student → supporter assignments (admin)
   - name: AdminStats
