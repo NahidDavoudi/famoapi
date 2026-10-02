@@ -101,7 +101,7 @@ class TelegramAuthService
         }
 
         $role = (string) $user['role'];
-        if (!in_array($role, ['student', 'supporter'], true)) {
+        if (!in_array($role, ['student', 'supporter' , 'admin'], true)) {
             throw new ApiException('اتصال تلگرام برای این نقش پشتیبانی نمی‌شود', 403, 'TELEGRAM_LINK_ROLE_UNSUPPORTED');
         }
 
@@ -175,7 +175,7 @@ class TelegramAuthService
             $user = $this->auth->consume2faCode((int) $challenge['user_id'], $code);
 
             $role = (string) $user['role'];
-            if (!in_array($role, ['student', 'supporter'], true)) {
+            if (!in_array($role, ['student', 'supporter' , 'admin'], true)) {
                 throw new ApiException('اتصال تلگرام برای این نقش پشتیبانی نمی‌شود', 403, 'TELEGRAM_LINK_ROLE_UNSUPPORTED');
             }
 
