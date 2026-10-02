@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth;
 
+use App\Core\AuthCookie;
 use App\Core\ClientIp;
 use App\Core\RateLimitedException;
 use App\Core\ResponseHelper;
@@ -61,7 +62,7 @@ class TelegramAuthController
             return $this->rateLimited($response, $e);
         }
 
-        return ResponseHelper::json($response, $result, null, 201);
+        return $this->authResponse($response, $request, $result, 201);
     }
 
     public function link(Request $request, Response $response): Response
@@ -81,7 +82,7 @@ class TelegramAuthController
 
         $status = !empty($result['requires_2fa']) ? 202 : 200;
 
-        return ResponseHelper::json($response, $result, null, $status);
+        return $this->authResponse($response, $request, $result, $status);
     }
 
     public function verify2fa(Request $request, Response $response): Response
@@ -101,7 +102,26 @@ class TelegramAuthController
             return $this->rateLimited($response, $e);
         }
 
-        return ResponseHelper::json($response, $result);
+        return $this->authResponse($response, $request, $result, 200);
+    }
+
+    private function authResponse(Response $response, Request $request, array $result, int $status): Response
+    {
+        $token = $result['token'] ?? null;
+        $cookieOnly = $request->getHeaderLine('X-Auth-Mode') === 'cookie';
+        $redirectToBot = !empty($result['bot_redirect_url']);
+
+        if ($cookieOnly || $redirectToBot) {
+            unset($result['token']);
+        }
+
+        $response = ResponseHelper::json($response, $result, null, $status);
+
+        if (!$redirectToBot && is_string($token)) {
+            $response = AuthCookie::issue($response, $request, $token);
+        }
+
+        return $response;
     }
 
     private function body(Request $request): array

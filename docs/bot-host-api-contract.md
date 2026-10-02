@@ -134,16 +134,19 @@ the Telegram Login Widget, and the website binds the account server-side.
 ### Fixed login button (`BOT_LOGIN_URL`)
 
 The bot must show a **fixed URL button** (an inline keyboard button of type
-`url`, or a plain text link) pointing at the site login page:
+`url`, or a plain text link) pointing at the site login page **with the
+Telegram source query param**:
 
 ```
-BOT_LOGIN_URL=https://<site-host>/login
+BOT_LOGIN_URL=https://<site-host>/login?source=telegram
 ```
 
-Do **not** generate per-user signed links and do **not** pass the Telegram user
-id in the URL. The widget identifies the user; the bot only needs a plain
-button. Show the button in the `/start` reply and in any "link your account"
-prompt.
+The `source=telegram` param tells the page to render the Telegram widget and to
+**skip the auto-redirect** for a browser that already holds a site session, so
+an already-logged-in user still reaches the widget/linking step. Do **not**
+generate per-user signed links and do **not** pass the Telegram user id in the
+URL. The widget identifies the user; the bot only needs a plain button. Show the
+button in the `/start` reply and in any "link your account" prompt.
 
 ### Handling `start=linked`
 
@@ -169,22 +172,40 @@ must:
 This is expected, not a transient error to retry: until the user opens the bot,
 no outbound message can be delivered.
 
-### BotFather and HTTPS requirements
+### BotFather, same-bot, and HTTPS requirements
 
-The Telegram Login Widget only works on an HTTPS origin registered with the bot:
+The Telegram Login Widget only works on an **HTTPS** origin registered with the
+bot:
 
 - Serve the login page over **HTTPS** (the widget will not load on plain HTTP).
-- In **@BotFather** run `/setdomain` and register the exact site host
+- In **@BotFather** run `/setdomain` and register the exact **HTTPS** site host
   (e.g. `famoacademy.ir`). A domain mismatch makes `verify` fail with
   `TELEGRAM_AUTH_INVALID`.
+- **One domain per bot.** A bot has a single `/setdomain` value, so the site
+  host serving the login page must be that bot's registered domain.
+- The **widget bot**, the **bot host bot**, and the derived key
+  **`TELEGRAM_LOGIN_SECRET_KEY`** must all belong to the **SAME bot**.
+  `TELEGRAM_LOGIN_SECRET_KEY` is `SHA256(bot_token)`; a different bot's token
+  makes every widget `hash` fail.
+- The widget's `data-telegram-login` is that bot's username **without** the
+  leading `@` (the login page's `TELEGRAM_BOT_USERNAME`).
 
-### Iran / `oauth.telegram.org` caveat
+The API stores only the **derived** key, never the bot token. Compute it locally
+and set it in the API `.env`:
 
-On some networks in Iran (desktop browsers especially) `oauth.telegram.org`,
-used by the widget's login popup, is unreachable without a VPN, so the widget
-may silently fail to load. The website shows a fallback message advising a
-VPN/filter check and retry. The bot should keep the button visible and not
-assume every user can complete the widget on every device.
+```bash
+php -r "echo hash('sha256', '<BOT_TOKEN>');"
+```
+
+### Iran / in-app browser / `oauth.telegram.org` caveat
+
+When the user taps the button inside the chat, the page may open in **Telegram's
+in-app browser**, so the widget must be tested there as well as in a normal
+browser. On some networks in Iran (desktop browsers especially)
+`oauth.telegram.org`, used by the widget's login popup, is unreachable without a
+VPN, so the widget may silently fail to load. The website shows a fallback
+message advising a VPN/filter check and retry. The bot should keep the button
+visible and not assume every user can complete the widget on every device.
 
 ### API endpoints (website → API, public)
 
@@ -200,6 +221,15 @@ All four are public (no JWT, no `X-Bot-Key`) and live under `/api/v1/auth`:
 Tickets are single-use, short-lived, and travel in the request body only. The
 website performs `verify` → register/link → (`verify-2fa`) and then redirects to
 `bot_redirect_url` (`TELEGRAM_BOT_URL` + `?start=linked`).
+
+### Session handling after linking
+
+After a successful link the site may set an **HttpOnly** auth cookie so the
+panel fallback (the role panel) works in the browser. When the user is redirected
+back to the bot (`bot_redirect_url` is present) **no session is persisted** —
+the redirect happens immediately and the bot confirms the link through its own
+`/bot/me` resolution. If `bot_redirect_url` is null (API `TELEGRAM_BOT_URL`
+unset), the page falls back to the role panel and the cookie is used.
 
 ### Phone/contact endpoints are no longer used
 
@@ -228,14 +258,10 @@ untouched** — no reversal and no new dependency.
 | `TELEGRAM_AUTH_TICKET_TTL` | `600` | ticket lifetime (seconds) |
 | `TELEGRAM_BOT_URL` | — | e.g. `https://t.me/<bot>`; builds `bot_redirect_url` |
 
-The API stores only the **derived** key, never the bot token. Generate it with:
-
-```bash
-php -r "echo hash('sha256', '<BOT_TOKEN>');"
-```
-
-The login page additionally needs `TELEGRAM_BOT_USERNAME` (the widget's
-`data-telegram-login`).
+The API stores only the **derived** key, never the bot token; generate it as
+shown in "BotFather, same-bot, and HTTPS requirements" above. The login page
+additionally needs `TELEGRAM_BOT_USERNAME` (the widget's `data-telegram-login`,
+the bot username without `@`).
 
 ---
 
