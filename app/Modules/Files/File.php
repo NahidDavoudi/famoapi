@@ -60,13 +60,14 @@ class File
     {
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO files (owner_type, owner_id, file_type, file_path, file_size, description, created_at)
-             VALUES (:owner_type, :owner_id, :file_type, :file_path, :file_size, :description, NOW())'
+            'INSERT INTO files (owner_type, owner_id, file_type, report_date, file_path, file_size, description, created_at)
+             VALUES (:owner_type, :owner_id, :file_type, :report_date, :file_path, :file_size, :description, NOW())'
         );
         $stmt->execute([
             'owner_type'  => $data['owner_type'],
             'owner_id'    => $data['owner_id'],
             'file_type'   => $data['file_type'],
+            'report_date' => $data['report_date'],
             'file_path'   => $data['file_path'],
             'file_size'   => $data['file_size'],
             'description' => $data['description'] ?? null,

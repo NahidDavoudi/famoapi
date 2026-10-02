@@ -20,17 +20,24 @@ class FileService
         ];
     }
 
-    public function upload(UploadedFileInterface $uploadedFile, int $studentId, ?string $description): array
+    public function upload(UploadedFileInterface $uploadedFile, int $studentId, ?string $description, ?string $examDate = null): array
     {
         $filePath = Storage::upload($uploadedFile, 'exams', $studentId);
 
-        $extension = strtolower(pathinfo($uploadedFile->getClientFilename() ?? '', PATHINFO_EXTENSION));
+        $reportDate = $this->normalizeDate($examDate);
+        if ($examDate !== null && $examDate !== '' && $reportDate === null) {
+            Storage::delete($filePath);
+            throw new \App\Core\ApiException('تاریخ آزمون نامعتبر است', 422, 'VALIDATION_ERROR');
+        }
+        $reportDate ??= date('Y-m-d');
+        $fileType = ($examDate !== null && $examDate !== '') ? 'exam' : 'other';
 
         try {
             $fileId = File::create([
                 'owner_type'  => 'student',
                 'owner_id'    => $studentId,
-                'file_type'   => $extension,
+                'file_type'   => $fileType,
+                'report_date' => $reportDate,
                 'file_path'   => $filePath,
                 'file_size'   => $uploadedFile->getSize() ?? 0,
                 'description' => $description,
@@ -76,5 +83,15 @@ class FileService
 
         Storage::delete($file['file_path']);
         File::delete($id);
+    }
+
+    private function normalizeDate(?string $date): ?string
+    {
+        if ($date === null || $date === '') {
+            return null;
+        }
+
+        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+        return ($parsed !== false && $parsed->format('Y-m-d') === $date) ? $date : null;
     }
 }

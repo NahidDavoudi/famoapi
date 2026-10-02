@@ -46,7 +46,7 @@ class FileController
                 'data'       => null,
                 'pagination' => null,
                 'error'      => [
-                    'code'    => $e->getErrorCode(),
+                    'code'    => 'UPLOAD_ERROR',
                     'message' => 'آپلود فایل با خطا مواجه شد',
                 ],
             ], JSON_UNESCAPED_UNICODE));
@@ -72,9 +72,13 @@ class FileController
         }
 
         $description = $body['description'] ?? null;
+        $examDate = isset($body['exam_date']) ? trim((string) $body['exam_date']) : null;
+        if ($examDate === '') {
+            $examDate = null;
+        }
 
         try {
-            $result = $this->service->upload($file, $studentId, $description);
+            $result = $this->service->upload($file, $studentId, $description, $examDate);
         } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
