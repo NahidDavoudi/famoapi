@@ -135,7 +135,12 @@ class TelegramAuthService
         if ($ip !== null && $ip !== '') {
             RateLimiter::clear(RateLimiter::key('login:user_ip', $username . '|' . $ip));
         }
-
+        if ($role == 'admin'){
+            return $this->auth->sessionForUser((int) $user['id']) + [
+            'link'             => true,
+            'bot_redirect_url' => $this->botRedirect(),
+        ];
+        }
         return $this->auth->sessionForUser((int) $user['id']) + [
             'link'             => $result,
             'bot_redirect_url' => $this->botRedirect(),
