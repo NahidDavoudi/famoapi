@@ -18,6 +18,7 @@ class ExceptionHandler
         $statusCode = 500;
         $message = 'خطای داخلی سرور';
         $errorCode = 'INTERNAL_ERROR';
+        $retryAfter = null;
 
         $databaseException = $this->findDatabaseException($exception);
         if ($databaseException !== null) {
@@ -29,6 +30,9 @@ class ExceptionHandler
             $statusCode = $exception->getHttpStatus();
             $message = $exception->getMessage();
             $errorCode = $exception->getErrorCode();
+            if ($exception instanceof RateLimitedException) {
+                $retryAfter = $exception->getRetryAfter();
+            }
         } elseif (is_int($exception->getCode()) && $exception->getCode() >= 400 && $exception->getCode() < 500) {
             $statusCode = $exception->getCode();
             $message = $exception->getMessage();
@@ -67,9 +71,15 @@ class ExceptionHandler
             ],
         ], JSON_UNESCAPED_UNICODE));
 
-        return $response
+        $response = $response
             ->withStatus($statusCode)
             ->withHeader('Content-Type', 'application/json; charset=utf-8');
+
+        if ($retryAfter !== null) {
+            $response = $response->withHeader('Retry-After', (string) $retryAfter);
+        }
+
+        return $response;
     }
 
     private function findDatabaseException(\Throwable $exception): ?\PDOException

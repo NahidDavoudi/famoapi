@@ -78,6 +78,11 @@ class LinkService
             throw new ApiException('تأیید مالکیت مخاطب توسط ربات انجام نشده است', 422, 'CONTACT_NOT_VERIFIED');
         }
 
+        return $this->linkVerified($role, $accountId, $telegramUserId, $chatId);
+    }
+
+    public function linkVerified(string $role, int $accountId, int $telegramUserId, int $chatId): array
+    {
         $account = $this->loadAccount($role, $accountId);
         if (!$account['is_active']) {
             throw new ApiException('حساب کاربری فعال نیست', 403, 'ACCOUNT_INACTIVE');

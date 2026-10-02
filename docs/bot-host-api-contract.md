@@ -125,7 +125,121 @@ with `BOT_ACCOUNT_BLOCKED`.
 
 ---
 
-## 4. Threads & Messages
+## 4. Telegram Login (binding flow)
+
+This is the **current and recommended** way to bind a Telegram account. It
+replaces the phone-contact flow: the user authenticates on the **website** with
+the Telegram Login Widget, and the website binds the account server-side.
+
+### Fixed login button (`BOT_LOGIN_URL`)
+
+The bot must show a **fixed URL button** (an inline keyboard button of type
+`url`, or a plain text link) pointing at the site login page:
+
+```
+BOT_LOGIN_URL=https://<site-host>/login
+```
+
+Do **not** generate per-user signed links and do **not** pass the Telegram user
+id in the URL. The widget identifies the user; the bot only needs a plain
+button. Show the button in the `/start` reply and in any "link your account"
+prompt.
+
+### Handling `start=linked`
+
+After a successful bind, the website redirects the user back to the bot at
+`https://t.me/<bot>?start=linked`. When the bot receives `start=linked` it
+should confirm the binding (e.g. "حساب شما با موفقیت متصل شد") and open the
+appropriate role panel. The `linked` marker is a **UX signal only** — the bot
+still resolves the acting account through `/bot/me`; the marker is never a
+credential.
+
+### Outbox delivery before the user opens the bot
+
+A user who authenticated on the website via the widget may **not yet have
+started the bot**. Telegram then rejects outbound sends with
+`403 Forbidden: bot can't initiate conversation with a user`. The bot worker
+must:
+
+- treat a `403` send as **blocked** (report `status: "blocked"` in
+  `POST /bot/outbox/report`), exactly like a user who pressed "Stop";
+- **unblock** the account when the user opens the bot and `/start` runs (call
+  `POST /bot/identity/unblock`).
+
+This is expected, not a transient error to retry: until the user opens the bot,
+no outbound message can be delivered.
+
+### BotFather and HTTPS requirements
+
+The Telegram Login Widget only works on an HTTPS origin registered with the bot:
+
+- Serve the login page over **HTTPS** (the widget will not load on plain HTTP).
+- In **@BotFather** run `/setdomain` and register the exact site host
+  (e.g. `famoacademy.ir`). A domain mismatch makes `verify` fail with
+  `TELEGRAM_AUTH_INVALID`.
+
+### Iran / `oauth.telegram.org` caveat
+
+On some networks in Iran (desktop browsers especially) `oauth.telegram.org`,
+used by the widget's login popup, is unreachable without a VPN, so the widget
+may silently fail to load. The website shows a fallback message advising a
+VPN/filter check and retry. The bot should keep the button visible and not
+assume every user can complete the widget on every device.
+
+### API endpoints (website → API, public)
+
+All four are public (no JWT, no `X-Bot-Key`) and live under `/api/v1/auth`:
+
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /auth/telegram/verify` | Verify the widget payload. Returns a ticket, or `linked:true` + `bot_redirect_url`. **Never returns a session token.** |
+| `POST /auth/telegram/register` | Register a new student with the ticket and link the account. |
+| `POST /auth/telegram/link` | Link an existing account (student → token; supporter → 2FA challenge). |
+| `POST /auth/telegram/verify-2fa` | Complete the supporter 2FA and link. |
+
+Tickets are single-use, short-lived, and travel in the request body only. The
+website performs `verify` → register/link → (`verify-2fa`) and then redirects to
+`bot_redirect_url` (`TELEGRAM_BOT_URL` + `?start=linked`).
+
+### Phone/contact endpoints are no longer used
+
+The bot must **not** use the following going forward. They are kept for
+backwards compatibility only and are **not extended**:
+
+- `POST /bot/identity/lookup` (phone-based lookup)
+- `POST /bot/identity/link` with `contact_verified` (Telegram shared-contact
+  verification)
+
+Binding now happens exclusively through the website Telegram Login flow above.
+
+### Supporter `phone` backfill (migration 008)
+
+The supporter `phone` column/backfill introduced by migration 008 is **not
+needed** for the Telegram Login flow (the widget and the account credential
+identify the user; no shared-contact phone is required). It is **left
+untouched** — no reversal and no new dependency.
+
+### Configuration
+
+| Env var | Default | Purpose |
+|---------|---------|---------|
+| `TELEGRAM_LOGIN_SECRET_KEY` | — | hex `SHA256(bot_token)`; required by the API |
+| `TELEGRAM_LOGIN_MAX_AGE` | `300` | max accepted widget `auth_date` age (seconds) |
+| `TELEGRAM_AUTH_TICKET_TTL` | `600` | ticket lifetime (seconds) |
+| `TELEGRAM_BOT_URL` | — | e.g. `https://t.me/<bot>`; builds `bot_redirect_url` |
+
+The API stores only the **derived** key, never the bot token. Generate it with:
+
+```bash
+php -r "echo hash('sha256', '<BOT_TOKEN>');"
+```
+
+The login page additionally needs `TELEGRAM_BOT_USERNAME` (the widget's
+`data-telegram-login`).
+
+---
+
+## 5. Threads & Messages
 
 One thread per (student, Tehran day). Student messages = the daily report.
 Supporter and broadcast messages never count as a report.
@@ -181,7 +295,7 @@ Mark messages read (explicit; the bot calls this when it displays them).
 
 ---
 
-## 5. Supporter Inbox & Replies  *(supporter acting)*
+## 6. Supporter Inbox & Replies  *(supporter acting)*
 
 ### `GET /bot/supporter/inbox?page=1&perPage=20`
 Students with unread student messages.
@@ -210,11 +324,11 @@ Unread student messages for one student (oldest first), each with `day`.
 ```
 If `day` is omitted, the reply goes to the day of the **latest unread student
 message** (or today if none) — so the student sees it under the right day.
-Returns `201` with the created message (as in §4).
+Returns `201` with the created message (as in §5).
 
 ---
 
-## 6. Broadcasts  *(supporter acting, own students only)*
+## 7. Broadcasts  *(supporter acting, own students only)*
 
 Audiences: `all_students` (all currently assigned) · `no_report_today`
 (assigned students with no report on the target day).
@@ -247,7 +361,7 @@ List campaigns / read one with per-recipient delivery status
 
 ---
 
-## 7. Outbox Pull/Report Protocol  *(bot worker; service key only)*
+## 8. Outbox Pull/Report Protocol  *(bot worker; service key only)*
 
 Everything destined for Telegram (report notifications, replies, broadcasts) is
 queued in the outbox. The bot worker runs a loop:
@@ -314,7 +428,7 @@ Per-item `result`:
 
 ---
 
-## 8. Error codes
+## 9. Error codes
 
 | Code | HTTP | Meaning |
 |------|------|---------|
@@ -340,10 +454,18 @@ Per-item `result`:
 | `BROADCAST_DAILY_LIMIT` | 429 | Supporter daily broadcast limit reached |
 | `VALIDATION_ERROR` | 422 | Generic validation failure |
 | `NOT_FOUND` | 404 | Resource not found |
+| `TELEGRAM_AUTH_INVALID` | 401 | Widget hash invalid, or `auth_date` stale |
+| `TELEGRAM_REPLAY` | 409 | Verified widget payload already consumed |
+| `TELEGRAM_TICKET_INVALID` | 401 | Ticket signature/audience/purpose/TTL/consumption failed |
+| `TELEGRAM_LINK_ROLE_UNSUPPORTED` | 403 | Role is not `student`/`supporter` |
+| `RATE_LIMITED` | 429 | Throttled; `Retry-After` header set |
+
+> `CONTACT_NOT_VERIFIED` and `INVALID_PHONE` belong to the legacy
+> phone/contact linking flow (§3) and are **not** used by the bot going forward.
 
 ---
 
-## 9. Timezone rules
+## 10. Timezone rules
 
 - All days are `Asia/Tehran`. The API returns both the Gregorian ISO date and
   `day_jalali`.
@@ -352,7 +474,7 @@ Per-item `result`:
 
 ---
 
-## 10. Out of scope for the bot host
+## 11. Out of scope for the bot host
 
 Admin statistics (`/api/v1/admin/stats/*`) use the existing **admin JWT**, not
 the service key. Reading message content requires a separate permission

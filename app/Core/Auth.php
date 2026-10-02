@@ -37,4 +37,15 @@ class Auth
         }
         return JWT::decode($token, new Key($secret, self::$algorithm));
     }
+
+    public static function encodeWithKey(array $claims, string $key, int $ttlSeconds): string
+    {
+        $payload = $claims + ['iat' => time(), 'exp' => time() + $ttlSeconds];
+        return JWT::encode($payload, $key, self::$algorithm);
+    }
+
+    public static function decodeWithKey(string $token, string $key): object
+    {
+        return JWT::decode($token, new Key($key, self::$algorithm));
+    }
 }

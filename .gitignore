@@ -5,3 +5,4 @@ storage/logs/*.log
 storage/cache/
 Famo-Backend-Audit.md
 database/nadcot_famo.sql
+node_modules/

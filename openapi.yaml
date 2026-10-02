@@ -296,6 +296,215 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  # ───────────────────── Telegram Login ─────────────────────
+  # Public endpoints (no JWT, no bot service key). The Telegram flow only BINDS
+  # an identity; it never grants a site session from `verify`. Tickets travel in
+  # the request body only and are single-use. See §4 of the design spec.
+  /api/v1/auth/telegram/verify:
+    post:
+      tags: [Auth]
+      summary: Verify Telegram Login Widget payload (never returns a session token)
+      description: >
+        Offline-verifies the Telegram Login Widget payload with
+        HMAC-SHA256 over the alphabetically sorted data-check-string
+        (`secret_key = SHA256(bot_token)`); the API never calls Telegram.
+        For an already-linked account it returns `linked: true` and the bot
+        redirect only. For an unlinked account it returns `linked: false` plus a
+        single-use ticket. **This endpoint NEVER returns a session token for any
+        role.**
+      operationId: telegramVerify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramVerifyRequest"
+      responses:
+        "200":
+          description: >
+            Unlinked account (issues a ticket) or already-linked account
+            (returns `bot_redirect_url` only). No token is ever returned.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        oneOf:
+                          - $ref: "#/components/schemas/TelegramVerifyUnlinked"
+                          - $ref: "#/components/schemas/TelegramVerifyLinked"
+        "401":
+          $ref: "#/components/responses/TelegramAuthInvalid"
+        "409":
+          $ref: "#/components/responses/TelegramReplay"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/v1/auth/telegram/register:
+    post:
+      tags: [Auth]
+      summary: Register a new student with a Telegram ticket and link the account
+      description: >
+        Creates `users` + `students`, inserts the `telegram_links` row
+        (`role=student`), atomically consumes the ticket, and returns a JWT.
+        Validation is identical to `POST /api/v1/auth/register`.
+      operationId: telegramRegister
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramRegisterRequest"
+      responses:
+        "201":
+          description: Registration successful and Telegram account linked (returns a JWT)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/TelegramLinkResult"
+        "401":
+          $ref: "#/components/responses/TelegramTicketInvalid"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/v1/auth/telegram/link:
+    post:
+      tags: [Auth]
+      summary: Link an existing account using a Telegram ticket
+      description: >
+        Authenticates `username`/`password` and links the Telegram account.
+        Students receive a JWT immediately. Supporters require 2FA: the link row
+        is created only after a successful code; the ticket is validated but not
+        consumed until `/verify-2fa`. Errors before successful authentication are
+        generic (`AUTH_ERROR`).
+      operationId: telegramLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramLinkRequest"
+      responses:
+        "200":
+          description: Student linked successfully (returns a JWT)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/TelegramLinkResult"
+        "202":
+          description: Supporter authenticated — 2FA required (no token, no link yet)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/Telegram2faChallenge"
+        "401":
+          description: >
+            Generic auth failure (`AUTH_ERROR`) or invalid/expired ticket
+            (`TELEGRAM_TICKET_INVALID`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                auth_error:
+                  value:
+                    success: false
+                    data: null
+                    pagination: null
+                    error:
+                      code: AUTH_ERROR
+                      message: نام کاربری یا رمز عبور اشتباه است
+                ticket_invalid:
+                  value:
+                    success: false
+                    data: null
+                    pagination: null
+                    error:
+                      code: TELEGRAM_TICKET_INVALID
+                      message: بلیت ورود تلگرام نامعتبر یا منقضی شده است
+        "403":
+          $ref: "#/components/responses/TelegramLinkRoleUnsupported"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /api/v1/auth/telegram/verify-2fa:
+    post:
+      tags: [Auth]
+      summary: Verify the Telegram-flow 2FA code and complete linking
+      description: >
+        Verifies `code` against the server-bound challenge, inserts the
+        `role=supporter` link, consumes ticket + challenge, and returns a JWT.
+        `user_id` is **not** accepted as authority; if sent it must match the
+        server-bound challenge user.
+      operationId: telegramVerify2fa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramVerify2faRequest"
+      responses:
+        "200":
+          description: 2FA verified, supporter linked (returns a JWT)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/TelegramLinkResult"
+        "401":
+          description: >
+            Invalid/expired 2FA code (`2FA_ERROR`) or invalid/expired ticket
+            (`TELEGRAM_TICKET_INVALID`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                twofa_error:
+                  value:
+                    success: false
+                    data: null
+                    pagination: null
+                    error:
+                      code: 2FA_ERROR
+                      message: کد تأیید نامعتبر یا منقضی شده است
+                ticket_invalid:
+                  value:
+                    success: false
+                    data: null
+                    pagination: null
+                    error:
+                      code: TELEGRAM_TICKET_INVALID
+                      message: بلیت ورود تلگرام نامعتبر یا منقضی شده است
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
   # ───────────────────── Public ─────────────────────
   /api/v1/public/courses:
     get:
@@ -6050,6 +6259,174 @@ components:
         broadcasts_sent: {type: integer}
         unread_backlog: {type: integer}
 
+    # ──── Telegram Login (public) ────
+    TelegramVerifyRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Telegram user id
+        auth_date:
+          type: integer
+          format: int64
+          description: Unix timestamp of the widget authentication
+        hash:
+          type: string
+          description: HMAC-SHA256 hash from the Telegram Login Widget
+        first_name:
+          type: string
+        last_name:
+          type: string
+        username:
+          type: string
+        photo_url:
+          type: string
+      required: [id, auth_date, hash]
+
+    TelegramUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+
+    TelegramVerifyUnlinked:
+      type: object
+      properties:
+        linked:
+          type: boolean
+          enum: [false]
+        ticket:
+          type: string
+          description: >
+            Single-use, short-lived link/register ticket. Travels in the request
+            body only — never in a URL.
+        telegram:
+          $ref: "#/components/schemas/TelegramUser"
+      required: [linked, ticket, telegram]
+
+    TelegramVerifyLinked:
+      type: object
+      properties:
+        linked:
+          type: boolean
+          enum: [true]
+        bot_redirect_url:
+          type: string
+          nullable: true
+          description: >
+            `TELEGRAM_BOT_URL` + `?start=linked` (null when the env var is unset;
+            the page then falls back to the role panel).
+      required: [linked, bot_redirect_url]
+
+    TelegramRegisterRequest:
+      type: object
+      properties:
+        ticket:
+          type: string
+          description: Ticket issued by /auth/telegram/verify
+        phone:
+          type: string
+        password:
+          type: string
+          format: password
+          minLength: 4
+        nationalId:
+          type: string
+        grade:
+          type: integer
+          enum: [7, 8, 9, 10, 11, 12]
+        field:
+          type: string
+          enum: [ریاضی, تجربی, انسانی, زبان, هنر, عمومی, راهنمایی]
+        name:
+          type: string
+      required: [ticket, phone, password, nationalId, grade, field, name]
+
+    TelegramLinkRequest:
+      type: object
+      properties:
+        ticket:
+          type: string
+          description: Ticket issued by /auth/telegram/verify
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+      required: [ticket, username, password]
+
+    TelegramVerify2faRequest:
+      type: object
+      properties:
+        ticket:
+          type: string
+        challenge_id:
+          type: string
+          description: Server-bound 2FA challenge nonce returned by /auth/telegram/link
+        code:
+          type: string
+        user_id:
+          type: integer
+          description: >
+            Not accepted as authority; if sent it must match the server-bound
+            challenge user or the request is rejected.
+      required: [ticket, challenge_id, code]
+
+    TelegramLinkUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+          enum: [student, supporter]
+        student_id:
+          type: integer
+          nullable: true
+          description: شناسه دانش‌آموز متصل (فقط برای نقش student)
+
+    TelegramLinkResult:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/TelegramLinkUser"
+        bot_redirect_url:
+          type: string
+          nullable: true
+      required: [token, user, bot_redirect_url]
+
+    Telegram2faChallenge:
+      type: object
+      properties:
+        requires_2fa:
+          type: boolean
+          enum: [true]
+        challenge_id:
+          type: string
+          description: Server-bound challenge nonce (no `user_id` is exposed)
+        phone_mask:
+          type: string
+          description: Masked destination phone, e.g. 0912***89
+      required: [requires_2fa, challenge_id, phone_mask]
+
   responses:
     BadRequest:
       description: Bad request
@@ -6181,6 +6558,76 @@ components:
             error:
               code: CONTENT_ACCESS_DISABLED
               message: دسترسی به محتوای پیام‌ها فعال نیست
+    RateLimited:
+      description: Throttled; retry after the indicated delay
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until the next allowed attempt
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: RATE_LIMITED
+              message: تعداد درخواست‌ها بیش از حد مجاز است
+    TelegramAuthInvalid:
+      description: Widget hash invalid, or auth_date stale
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: TELEGRAM_AUTH_INVALID
+              message: اطلاعات ورود تلگرام نامعتبر است
+    TelegramReplay:
+      description: Verified Telegram widget payload already consumed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: TELEGRAM_REPLAY
+              message: این ورود قبلاً استفاده شده است
+    TelegramTicketInvalid:
+      description: Ticket signature/audience/purpose/TTL/consumption failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: TELEGRAM_TICKET_INVALID
+              message: بلیت ورود تلگرام نامعتبر یا منقضی شده است
+    TelegramLinkRoleUnsupported:
+      description: Role is not student/supporter
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: null
+            pagination: null
+            error:
+              code: TELEGRAM_LINK_ROLE_UNSUPPORTED
+              message: این نقش برای اتصال به تلگرام پشتیبانی نمی‌شود
 
 tags:
   - name: Health

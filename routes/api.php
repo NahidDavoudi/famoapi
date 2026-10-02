@@ -4,6 +4,8 @@ use App\Core\Authorization;
 use App\Modules\Auth\AuthController;
 use App\Modules\Auth\AuthMiddleware;
 use App\Modules\Auth\AuthService;
+use App\Modules\Auth\TelegramAuthController;
+use App\Modules\Auth\TelegramAuthService;
 use App\Modules\Blog\BlogController;
 use App\Modules\Dashboard\DashboardController;
 use App\Modules\Courses\CourseController;
@@ -62,6 +64,7 @@ return function (App $app) {
     $requireTeacher = new Authorization('teacher');
 
     $authController = new AuthController(new AuthService());
+    $telegramAuthController = new TelegramAuthController(new TelegramAuthService());
     $dashboardController = new DashboardController();
     $publicController = new PublicController();
     $blogController = new BlogController();
@@ -106,6 +109,12 @@ return function (App $app) {
     $app->get('/api/v1/auth/me', [$authController, 'me'])->add($authMiddleware);
     // Logout only clears the shared auth cookie and must work for expired sessions.
     $app->post('/api/v1/auth/logout', [$authController, 'logout']);
+
+    // Telegram Login Widget handoff (public; no JWT, no bot service key).
+    $app->post('/api/v1/auth/telegram/verify', [$telegramAuthController, 'verify']);
+    $app->post('/api/v1/auth/telegram/register', [$telegramAuthController, 'register']);
+    $app->post('/api/v1/auth/telegram/link', [$telegramAuthController, 'link']);
+    $app->post('/api/v1/auth/telegram/verify-2fa', [$telegramAuthController, 'verify2fa']);
 
     // Public
     $app->group('/api/v1/public', function ($group) use ($publicController, $blogController) {

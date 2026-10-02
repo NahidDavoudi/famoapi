@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "swagger-editor": "^5.0.0-alpha.124",
+    "swagger-ui": "^5.33.1"
+  }
+}
