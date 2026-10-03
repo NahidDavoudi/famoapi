@@ -15,7 +15,7 @@ use Slim\Psr7\Response;
  * linked user. Requires the service key middleware to have run first.
  *
  * Expected headers:
- *   X-Bot-Role: student|supporter
+ *   X-Bot-Role: student|supporter|admin
  *   X-Telegram-User-Id: <int>
  *   X-Telegram-Chat-Id: <int>
  *

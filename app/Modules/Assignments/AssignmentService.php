@@ -118,8 +118,22 @@ class AssignmentService
 
         $byKey = [];
         foreach ($supporters as $supporter) {
-            $key = $this->matchKey((string) $supporter['field'], (int) $supporter['grade']);
-            $byKey[$key][] = ['id' => (int) $supporter['id'], 'name' => (string) $supporter['name']];
+            $scopes = $supporter['scopes'] ?? [];
+            if ($scopes === [] && isset($supporter['field'], $supporter['grade'])) {
+                $scopes = [['field' => (string) $supporter['field'], 'grade' => (int) $supporter['grade']]];
+            }
+
+            foreach ($scopes as $scope) {
+                $key = $this->matchKey((string) $scope['field'], (int) $scope['grade']);
+                $byKey[$key][(int) $supporter['id']] = [
+                    'id'   => (int) $supporter['id'],
+                    'name' => (string) $supporter['name'],
+                ];
+            }
+        }
+
+        foreach ($byKey as $key => $candidates) {
+            $byKey[$key] = array_values($candidates);
         }
 
         $assigned = [];

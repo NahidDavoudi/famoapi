@@ -137,6 +137,47 @@ class Assignment
         return $stmt->fetchAll();
     }
 
+    /**
+     * Active students that match at least one of the given scopes and have no
+     * active assignment yet. Used by automatic supporter-scope assignment.
+     *
+     * @param array<int,array{field:string,grade:int}> $scopes
+     * @return array<int,array>
+     */
+    public static function unassignedActiveStudentsForScopes(array $scopes): array
+    {
+        $scopes = array_values(array_filter(
+            $scopes,
+            static fn (array $scope): bool => isset($scope['field'], $scope['grade'])
+        ));
+        if ($scopes === []) {
+            return [];
+        }
+
+        $conditions = [];
+        $params = [];
+        foreach ($scopes as $index => $scope) {
+            $conditions[] = "(s.field = :field{$index} AND s.grade = :grade{$index})";
+            $params["field{$index}"] = (string) $scope['field'];
+            $params["grade{$index}"] = (int) $scope['grade'];
+        }
+
+        $sql = 'SELECT s.id, s.name, s.grade, s.field
+                FROM students s
+                WHERE s.is_active = 1
+                  AND NOT EXISTS (
+                      SELECT 1 FROM student_supporter_assignments a
+                      WHERE a.student_id = s.id AND a.is_active = 1
+                  )
+                  AND (' . implode(' OR ', $conditions) . ')
+                ORDER BY s.id ASC';
+
+        $stmt = Database::getConnection()->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
     public static function listStudents(array $filters, int $page, int $perPage): array
     {
         $offset = ($page - 1) * $perPage;

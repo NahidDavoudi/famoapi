@@ -5,7 +5,7 @@ namespace App\Core;
 use RuntimeException;
 use Throwable;
 
-final class ApiException extends RuntimeException
+class ApiException extends RuntimeException
 {
     public function __construct(
         string $message,

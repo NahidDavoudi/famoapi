@@ -19,7 +19,7 @@ use App\Modules\Linking\LinkService;
  * Security invariants enforced here:
  * - verify never issues a session token.
  * - Tickets are single-use and consumed only when the link row is created.
- * - Supporters must clear an SMS 2FA challenge before any link row exists.
+ * - Supporters and admins must clear an SMS 2FA challenge before any link row exists.
  * - Conflict errors are only surfaced after successful authentication.
  */
 class TelegramAuthService
@@ -107,8 +107,8 @@ class TelegramAuthService
 
         $tgUserId = (int) ($claims->tg_user_id ?? 0);
 
-        if ($role === 'supporter') {
-            $challenge = $this->issueSupporterChallenge($claims, (int) $user['id'], (string) $user['username'], $ip);
+        if ($role === 'supporter' || $role === 'admin') {
+            $challenge = $this->issueSmsChallenge($claims, (int) $user['id'], (string) $user['username'], $ip);
 
             return [
                 'requires_2fa' => true,
@@ -123,7 +123,7 @@ class TelegramAuthService
         $db->beginTransaction();
         try {
             TelegramTicket::consume($ticket);
-            $result = $this->links->linkVerified('student', $accountId, $tgUserId, $tgUserId);
+            $result = $this->links->linkVerified($role, $accountId, $tgUserId, $tgUserId);
             $db->commit();
         } catch (\Throwable $e) {
             if ($db->inTransaction()) {
@@ -135,12 +135,7 @@ class TelegramAuthService
         if ($ip !== null && $ip !== '') {
             RateLimiter::clear(RateLimiter::key('login:user_ip', $username . '|' . $ip));
         }
-        if ($role == 'admin'){
-            return $this->auth->sessionForUser((int) $user['id']) + [
-            'link'             => true,
-            'bot_redirect_url' => $this->botRedirect(),
-        ];
-        }
+
         return $this->auth->sessionForUser((int) $user['id']) + [
             'link'             => $result,
             'bot_redirect_url' => $this->botRedirect(),
@@ -210,7 +205,7 @@ class TelegramAuthService
      * @param object $claims validated ticket claims
      * @return array{nonce:string,mask:string}
      */
-    private function issueSupporterChallenge(object $claims, int $userId, string $phone, ?string $ip): array
+    private function issueSmsChallenge(object $claims, int $userId, string $phone, ?string $ip): array
     {
         $phoneKey = RateLimiter::key('sms:phone', $phone);
         $phoneMax = max(1, (int) ($_ENV['AUTH_SMS_PHONE_HOURLY_MAX'] ?? 5));

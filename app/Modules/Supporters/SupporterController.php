@@ -16,6 +16,31 @@ class SupporterController
     {
     }
 
+    /**
+     * @param mixed $scopes
+     */
+    private function scopeError($scopes): string
+    {
+        if (!is_array($scopes)) {
+            return 'محدوده‌های پشتیبانی باید آرایه باشند';
+        }
+
+        foreach ($scopes as $scope) {
+            if (!is_array($scope)) {
+                return 'ساختار محدوده پشتیبانی معتبر نیست';
+            }
+            $field = trim((string) ($scope['field'] ?? ''));
+            if ($field === '') {
+                return 'رشته تحصیلی محدوده پشتیبانی معتبر نیست';
+            }
+            if (!in_array((int) ($scope['grade'] ?? 0), $this->validGrades, true)) {
+                return 'پایه تحصیلی محدوده پشتیبانی معتبر نیست';
+            }
+        }
+
+        return '';
+    }
+
     public function list(Request $request, Response $response): Response
     {
         $params = $request->getQueryParams();
@@ -54,16 +79,26 @@ class SupporterController
     {
         $body = $request->getParsedBody() ?? [];
 
-        $validator = new Validator();
-        $validator
-            ->required('name', 'نام و نام خانوادگی', $body['name'] ?? null)
-            ->required('grade', 'پایه تحصیلی', $body['grade'] ?? null)
-            ->inArray('grade', 'پایه تحصیلی', $body['grade'] ?? null, $this->validGrades)
-            ->required('field', 'رشته تحصیلی', $body['field'] ?? null)
-            ->inArray('field', 'رشته تحصیلی', $body['field'] ?? null, $this->validFields)
-            ->required('phone', 'شماره تلفن', $body['phone'] ?? null);
+        $hasScopes = isset($body['scopes']) && is_array($body['scopes']) && $body['scopes'] !== [];
 
-        $message = $validator->firstError();
+        $validator = new Validator();
+        $validator->required('name', 'نام و نام خانوادگی', $body['name'] ?? null);
+
+        if ($hasScopes) {
+            $message = $this->scopeError($body['scopes']);
+        } else {
+            $validator
+                ->required('grade', 'پایه تحصیلی', $body['grade'] ?? null)
+                ->inArray('grade', 'پایه تحصیلی', $body['grade'] ?? null, $this->validGrades)
+                ->required('field', 'رشته تحصیلی', $body['field'] ?? null)
+                ->inArray('field', 'رشته تحصیلی', $body['field'] ?? null, $this->validFields);
+            $message = $validator->firstError();
+        }
+
+        $validator->required('phone', 'شماره تلفن', $body['phone'] ?? null);
+        if ($message === '') {
+            $message = $validator->firstError();
+        }
         if ($message === '' && PhoneNormalizer::normalize((string) ($body['phone'] ?? '')) === null) {
             $message = 'شماره تلفن پشتیبان معتبر نیست';
         }
@@ -82,14 +117,19 @@ class SupporterController
         }
 
         try {
-            $result = $this->service->create([
+            $data = [
                 'name'      => $body['name'],
-                'grade'     => $body['grade'],
-                'field'     => $body['field'],
+                'grade'     => $body['grade'] ?? null,
+                'field'     => $body['field'] ?? null,
                 'phone'     => $body['phone'],
                 'chat_id'   => $body['chat_id'] ?? null,
                 'is_active' => $body['is_active'] ?? 1,
-            ]);
+            ];
+            if (array_key_exists('scopes', $body)) {
+                $data['scopes'] = $body['scopes'];
+            }
+
+            $result = $this->service->create($data);
         } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
@@ -150,6 +190,22 @@ class SupporterController
         if (isset($body['chat_id'])) $data['chat_id'] = $body['chat_id'];
         if (array_key_exists('is_active', $body)) $data['is_active'] = (int) $body['is_active'];
         if (isset($body['password'])) $data['password'] = $body['password'];
+        if (array_key_exists('scopes', $body)) {
+            $scopeError = $this->scopeError($body['scopes']);
+            if ($scopeError !== '') {
+                $response->getBody()->write(json_encode([
+                    'success'    => false,
+                    'data'       => null,
+                    'pagination' => null,
+                    'error'      => [
+                        'code'    => 'VALIDATION_ERROR',
+                        'message' => $scopeError,
+                    ],
+                ], JSON_UNESCAPED_UNICODE));
+                return $response->withStatus(422)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            }
+            $data['scopes'] = $body['scopes'];
+        }
 
         try {
             $result = $this->service->update((int) $args['id'], $data);

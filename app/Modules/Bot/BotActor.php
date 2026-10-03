@@ -3,6 +3,7 @@
 namespace App\Modules\Bot;
 
 use App\Core\ApiException;
+use App\Modules\Admins\Admin;
 use App\Modules\Students\Student;
 use App\Modules\Supporters\Supporter;
 
@@ -13,7 +14,7 @@ use App\Modules\Supporters\Supporter;
  */
 final class BotActor
 {
-    public const ROLES = ['student', 'supporter'];
+    public const ROLES = ['student', 'supporter', 'admin'];
 
     /**
      * @return array{link:array,role:string,account:array,account_id:int,name:string}
@@ -45,9 +46,14 @@ final class BotActor
             if (!$account || (int) ($account['is_active'] ?? 0) !== 1) {
                 throw new ApiException('حساب کاربری فعال نیست', 403, 'ACCOUNT_INACTIVE');
             }
-        } else {
+        } elseif ($role === 'supporter') {
             $account = Supporter::findById($accountId);
             if (!$account || !Supporter::isAccountActive($accountId)) {
+                throw new ApiException('حساب کاربری فعال نیست', 403, 'ACCOUNT_INACTIVE');
+            }
+        } else {
+            $account = Admin::findById($accountId);
+            if (!$account || !Admin::isAccountActive($accountId)) {
                 throw new ApiException('حساب کاربری فعال نیست', 403, 'ACCOUNT_INACTIVE');
             }
         }

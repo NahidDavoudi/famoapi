@@ -3,6 +3,8 @@
 namespace App\Modules\Linking;
 
 use App\Core\ApiException;
+use App\Modules\Admins\Admin;
+use App\Modules\Assignments\AutoAssignmentService;
 use App\Modules\Bot\BotActor;
 use App\Modules\Bot\PhoneNormalizer;
 use App\Modules\Bot\TelegramLink;
@@ -105,6 +107,10 @@ class LinkService
             $linkId = (int) $existingByTelegram['id'];
         } else {
             $linkId = TelegramLink::create($telegramUserId, $chatId, $role, $accountId);
+        }
+
+        if ($role === 'supporter' || $role === 'student') {
+            (new AutoAssignmentService())->autoAssignOnLink($role, $accountId);
         }
 
         return $this->linkPayload($linkId);
@@ -213,6 +219,15 @@ class LinkService
             }
 
             return ['account' => $account, 'is_active' => (int) ($account['is_active'] ?? 0) === 1];
+        }
+
+        if ($role === 'admin') {
+            $account = Admin::findById($accountId);
+            if (!$account) {
+                throw new ApiException('مدیر یافت نشد', 404, 'ACCOUNT_NOT_FOUND');
+            }
+
+            return ['account' => $account, 'is_active' => Admin::isAccountActive($accountId)];
         }
 
         $account = Supporter::findById($accountId);

@@ -120,7 +120,110 @@ class Supporter
             }));
         }
 
+        $scopesBySupporter = self::scopesBySupporterIds(array_map(
+            static fn (array $row): int => (int) $row['id'],
+            $rows
+        ));
+
+        foreach ($rows as &$row) {
+            $scopes = $scopesBySupporter[(int) $row['id']] ?? [];
+            if ($scopes === [] && $row['field'] !== null && $row['grade'] !== null && $row['field'] !== '') {
+                $scopes = [['field' => (string) $row['field'], 'grade' => (int) $row['grade']]];
+            }
+            $row['scopes'] = $scopes;
+        }
+        unset($row);
+
         return $rows;
+    }
+
+    /**
+     * @return array<int,array{field:string,grade:int}>
+     */
+    public static function findScopes(int $id): array
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT field, grade FROM supporter_scopes
+             WHERE supporter_id = :id ORDER BY field ASC, grade ASC'
+        );
+        $stmt->execute(['id' => $id]);
+
+        $scopes = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $scopes[] = ['field' => (string) $row['field'], 'grade' => (int) $row['grade']];
+        }
+
+        return $scopes;
+    }
+
+    /**
+     * @param array<int,array{field:string,grade:int}> $scopes
+     */
+    public static function replaceScopes(int $id, array $scopes): void
+    {
+        $db = Database::getConnection();
+        $startedTransaction = !$db->inTransaction();
+        if ($startedTransaction) {
+            $db->beginTransaction();
+        }
+
+        try {
+            $db->prepare('DELETE FROM supporter_scopes WHERE supporter_id = :id')->execute(['id' => $id]);
+
+            $insert = $db->prepare(
+                'INSERT INTO supporter_scopes (supporter_id, field, grade)
+                 VALUES (:supporter_id, :field, :grade)'
+            );
+            foreach ($scopes as $scope) {
+                $insert->execute([
+                    'supporter_id' => $id,
+                    'field'        => (string) $scope['field'],
+                    'grade'        => (int) $scope['grade'],
+                ]);
+            }
+
+            if ($startedTransaction) {
+                $db->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($startedTransaction && $db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @param int[] $supporterIds
+     * @return array<int,array<int,array{field:string,grade:int}>>
+     */
+    public static function scopesBySupporterIds(array $supporterIds): array
+    {
+        $supporterIds = array_values(array_unique(array_filter(
+            array_map('intval', $supporterIds),
+            static fn (int $id): bool => $id > 0
+        )));
+        if ($supporterIds === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($supporterIds), '?'));
+        $stmt = Database::getConnection()->prepare(
+            "SELECT supporter_id, field, grade FROM supporter_scopes
+             WHERE supporter_id IN ({$placeholders})
+             ORDER BY field ASC, grade ASC"
+        );
+        $stmt->execute($supporterIds);
+
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(int) $row['supporter_id']][] = [
+                'field' => (string) $row['field'],
+                'grade' => (int) $row['grade'],
+            ];
+        }
+
+        return $out;
     }
 
     /**
