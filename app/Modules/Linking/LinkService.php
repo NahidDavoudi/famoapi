@@ -238,7 +238,6 @@ class LinkService
             return ['account' => $account, 'is_active' => Supporter::isAccountActive($accountId)];
         }
         
-        return ['account' => $account, 'is_active' => Supporter::isAccountActive($accountId)];
     }
 
     private function identity(string $role, int $accountId, string $name, bool $isActive, ?int $telegramUserId): array
