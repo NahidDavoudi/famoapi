@@ -15,7 +15,7 @@ class Admin
     public static function findById(int $id): ?array
     {
         $stmt = Database::getConnection()->prepare(
-            'SELECT * FROM admins WHERE id = :id LIMIT 1'
+            'SELECT * FROM users WHERE id = :id LIMIT 1'
         );
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch();
