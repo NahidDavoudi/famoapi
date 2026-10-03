@@ -26,6 +26,81 @@ class User
         return $result ?: null;
     }
 
+    public static function findActiveByChatId(string $chatId): ?array
+    {
+        $stmt = Database::getConnection()->prepare(
+            "SELECT u.id, u.role,
+                    COALESCE(NULLIF(u.full_name, ''), s.name, sp.name) AS full_name,
+                    u.username, u.chat_id, u.supporter_id, u.linked_id
+             FROM users u
+             LEFT JOIN students s ON u.role = 'student' AND s.id = u.linked_id
+             LEFT JOIN supporters sp ON u.role = 'supporter' AND sp.id = u.linked_id
+             WHERE u.chat_id = :chat_id
+               AND (
+                   (u.role = 'student' AND EXISTS (
+                       SELECT 1 FROM students s WHERE s.id = u.linked_id AND s.is_active = 1
+                   ))
+                   OR (u.role = 'supporter' AND EXISTS (
+                       SELECT 1 FROM supporters sp WHERE sp.id = u.linked_id AND sp.is_active = 1
+                   ))
+                   OR u.role = 'admin'
+               )
+             LIMIT 1"
+        );
+        $stmt->execute(['chat_id' => $chatId]);
+        $result = $stmt->fetch();
+
+        return $result ?: null;
+    }
+
+    public static function findAnyByChatId(string $chatId): ?array
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT * FROM users WHERE chat_id = :chat_id LIMIT 1'
+        );
+        $stmt->execute(['chat_id' => $chatId]);
+        $result = $stmt->fetch();
+
+        return $result ?: null;
+    }
+
+    public static function findActiveByUsername(string $username): ?array
+    {
+        $stmt = Database::getConnection()->prepare(
+            "SELECT u.id, u.role,
+                    COALESCE(NULLIF(u.full_name, ''), s.name, sp.name) AS full_name,
+                    u.username, u.chat_id, u.supporter_id, u.linked_id
+             FROM users u
+             LEFT JOIN students s ON u.role = 'student' AND s.id = u.linked_id
+             LEFT JOIN supporters sp ON u.role = 'supporter' AND sp.id = u.linked_id
+             WHERE u.username = :username
+               AND (
+                   (u.role = 'student' AND EXISTS (
+                       SELECT 1 FROM students s WHERE s.id = u.linked_id AND s.is_active = 1
+                   ))
+                   OR (u.role = 'supporter' AND EXISTS (
+                       SELECT 1 FROM supporters sp WHERE sp.id = u.linked_id AND sp.is_active = 1
+                   ))
+                   OR u.role = 'admin'
+               )
+             LIMIT 1"
+        );
+        $stmt->execute(['username' => $username]);
+        $result = $stmt->fetch();
+
+        return $result ?: null;
+    }
+
+    public static function linkChatId(int $id, string $chatId): int
+    {
+        $stmt = Database::getConnection()->prepare(
+            'UPDATE users SET chat_id = :chat_id WHERE id = :id'
+        );
+        $stmt->execute(['chat_id' => $chatId, 'id' => $id]);
+
+        return $stmt->rowCount();
+    }
+
     public static function findByEmail(string $email): ?array
     {
         $stmt = Database::getConnection()->prepare(

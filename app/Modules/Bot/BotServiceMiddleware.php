@@ -27,7 +27,12 @@ final class BotServiceMiddleware implements MiddlewareInterface
 
         $providedKey = $request->getHeaderLine('X-Bot-Key');
         if ($providedKey === '' || !hash_equals($configuredKey, $providedKey)) {
-            return $this->fail('BOT_UNAUTHORIZED', 'کلید سرویس ربات نامعتبر است', 401);
+            $status = in_array($request->getUri()->getPath(), [
+                '/api/v1/bot/resolve',
+                '/api/v1/bot/link-phone',
+                '/api/v1/bot/register',
+            ], true) ? 403 : 401;
+            return $this->fail('BOT_UNAUTHORIZED', 'کلید سرویس ربات نامعتبر است', $status);
         }
 
         $allowList = trim((string) ($_ENV['BOT_IP_ALLOWLIST'] ?? ''));

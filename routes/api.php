@@ -82,7 +82,7 @@ return function (App $app) {
     $tutoringController = new TutoringController(new TutoringService());
     $parentContactController = new ParentContactController(new ParentContactService());
     $assignmentController = new AssignmentController(new AssignmentService());
-    $botController = new BotController();
+    $botController = new BotController(new StudentService());
     $linkController = new LinkController(new LinkService());
     $threadController = new ThreadController(new ThreadService());
     $supporterThreadController = new SupporterThreadController(new ThreadService());
@@ -197,6 +197,10 @@ return function (App $app) {
         $broadcastController,
         $botActorMiddleware
     ) {
+        $group->post('/resolve', [$botController, 'resolve']);
+        $group->post('/link-phone', [$botController, 'linkPhone']);
+        $group->post('/register', [$botController, 'register']);
+
         $group->get('/ping', [$botController, 'ping']);
         $group->get('/me', [$botController, 'me'])->add($botActorMiddleware);
 

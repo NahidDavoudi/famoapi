@@ -3615,6 +3615,193 @@ paths:
           $ref: "#/components/responses/Forbidden"
 
   # ───────────────────── Bot Gateway ─────────────────────
+  /api/v1/bot/resolve:
+    post:
+      tags: [Bot]
+      summary: Find an active account by its linked Telegram chat ID
+      operationId: botResolveByChatId
+      security:
+        - botKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                  pattern: '^-?\d{1,20}$'
+                  description: Telegram chat ID; string preserves 64-bit precision
+              required: [chat_id]
+      responses:
+        "200":
+          description: Active account, or null when none is linked to this chat
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            oneOf:
+                              - $ref: "#/components/schemas/BotLinkedUser"
+                              - type: "null"
+        "403":
+          $ref: "#/components/responses/BotUnauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/bot/link-phone:
+    post:
+      tags: [Bot]
+      summary: Link an active account to a Telegram chat by phone number
+      operationId: botLinkPhone
+      security:
+        - botKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                  pattern: '^-?\d{1,20}$'
+                  description: Telegram chat ID; string preserves 64-bit precision
+                phone:
+                  type: string
+                  description: Iranian mobile number in 09, 9, 98, +98, or 0098 form; Persian and Arabic digits are accepted
+              required: [chat_id, phone]
+      responses:
+        "200":
+          description: Linked account, or null when no active account matches the phone
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            oneOf:
+                              - $ref: "#/components/schemas/BotLinkedUser"
+                              - type: "null"
+        "403":
+          $ref: "#/components/responses/BotUnauthorized"
+        "409":
+          description: Chat ID or account is already linked elsewhere
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                chatAlreadyLinked:
+                  value:
+                    success: false
+                    data: null
+                    pagination: null
+                    error:
+                      code: CHAT_ALREADY_LINKED
+                      message: این چت‌آیدی قبلاً به حساب دیگری متصل شده است
+                userAlreadyLinked:
+                  value:
+                    success: false
+                    data: null
+                    pagination: null
+                    error:
+                      code: USER_ALREADY_LINKED
+                      message: این حساب قبلاً به چت‌آیدی دیگری متصل شده است
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/bot/register:
+    post:
+      tags: [Bot]
+      summary: Register a student account from the bot
+      operationId: botRegisterStudent
+      security:
+        - botKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: string
+                  pattern: '^-?\d{1,20}$'
+                  description: Telegram chat ID; string preserves 64-bit precision
+                phone:
+                  type: string
+                  description: Iranian mobile number in 09, 9, 98, +98, or 0098 form; Persian and Arabic digits are accepted
+                full_name:
+                  type: string
+                  minLength: 1
+                grade:
+                  type: integer
+                  minimum: 7
+                  maximum: 12
+                major:
+                  type: string
+                  enum: [tajrobi, riazi, ensani, rahnamayi]
+                  description: For grades 7–9, the stored field is always rahnamayi
+              required: [chat_id, phone, full_name, grade, major]
+      responses:
+        "201":
+          description: Student account created and linked to the Telegram chat
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: "#/components/schemas/BotLinkedUser"
+        "403":
+          $ref: "#/components/responses/BotUnauthorized"
+        "409":
+          description: Phone or chat ID is already registered/linked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                phoneAlreadyRegistered:
+                  value:
+                    success: false
+                    data: null
+                    pagination: null
+                    error:
+                      code: PHONE_ALREADY_REGISTERED
+                      message: این شماره تلفن قبلاً ثبت شده است
+                chatAlreadyLinked:
+                  value:
+                    success: false
+                    data: null
+                    pagination: null
+                    error:
+                      code: CHAT_ALREADY_LINKED
+                      message: این چت‌آیدی قبلاً به حساب دیگری متصل شده است
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
   /api/v1/bot/ping:
     get:
       tags: [Bot]
@@ -6157,6 +6344,17 @@ components:
         is_linked: {type: boolean}
         linked_to_this_telegram: {type: boolean}
         linked_to_other_telegram: {type: boolean}
+
+    BotLinkedUser:
+      type: object
+      properties:
+        id: {type: integer}
+        role: {type: string, enum: [student, supporter, admin]}
+        full_name: {type: string, nullable: true}
+        username: {type: string, description: Normalized mobile phone number}
+        chat_id: {type: string, nullable: true, description: Telegram chat ID}
+        supporter_id: {type: integer, nullable: true, description: Supporters table row ID; null when no active supporter is assigned}
+        linked_id: {type: integer, nullable: true, description: Related student/supporter row ID}
 
     TelegramLink:
       type: object

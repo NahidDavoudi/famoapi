@@ -4,6 +4,8 @@ namespace App\Modules\Students;
 
 use App\Core\Database;
 use App\Core\Pagination;
+use App\Core\ApiException;
+use App\Modules\Bot\PhoneNormalizer;
 
 class StudentService
 {
@@ -22,26 +24,40 @@ class StudentService
 
     public function create(array $data): array
     {
+        $data['phone'] = $this->normalizePhone((string) ($data['phone'] ?? ''));
+        $data['supporter_id'] = $this->supporterIdForField((string) ($data['field'] ?? ''));
+        if ($this->phoneIsRegistered($data['phone'])) {
+            throw new ApiException('این شماره تلفن قبلاً ثبت شده است', 409, 'PHONE_ALREADY_REGISTERED');
+        }
         $db = Database::getConnection();
-        $db->beginTransaction();
+        $startedTransaction = !$db->inTransaction();
+        if ($startedTransaction) {
+            $db->beginTransaction();
+        }
 
         try {
             $studentId = Student::create($data);
 
             $stmt = $db->prepare(
-                'INSERT INTO users (username, password_hash, role, linked_id)
-                 VALUES (:username, :password_hash, :role, :linked_id)'
+                'INSERT INTO users (full_name, username, password_hash, role, linked_id, chat_id, supporter_id)
+                 VALUES (:full_name, :username, :password_hash, :role, :linked_id, :chat_id, :supporter_id)'
             );
             $stmt->execute([
+                'full_name'     => $data['full_name'] ?? $data['name'],
                 'username'      => $data['phone'],
-                'password_hash' => password_hash('1234', PASSWORD_DEFAULT),
+                'password_hash' => password_hash($data['password'] ?? '1234', PASSWORD_DEFAULT),
                 'role'          => 'student',
                 'linked_id'     => $studentId,
+                'chat_id'       => $data['chat_id'] ?? null,
+                'supporter_id'  => $data['supporter_id'],
             ]);
-
-            $db->commit();
-        } catch (\Exception $e) {
-            $db->rollBack();
+            if ($startedTransaction) {
+                $db->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($startedTransaction && $db->inTransaction()) {
+                $db->rollBack();
+            }
             throw $e;
         }
 
@@ -102,18 +118,70 @@ class StudentService
         }
 
         $db = Database::getConnection();
+        $phone = $this->normalizePhone((string) ($student['phone'] ?? ''));
+        if ($this->phoneIsRegistered($phone, $studentId)) {
+            throw new ApiException('این شماره تلفن قبلاً ثبت شده است', 409, 'PHONE_ALREADY_REGISTERED');
+        }
         $stmt = $db->prepare(
-            'INSERT INTO users (username, password_hash, role, linked_id)
-             VALUES (:username, :password_hash, :role, :linked_id)'
+            'INSERT INTO users (full_name, username, password_hash, role, linked_id, supporter_id)
+             VALUES (:full_name, :username, :password_hash, :role, :linked_id, :supporter_id)'
         );
         $stmt->execute([
-            'username'      => $student['phone'],
+            'full_name'     => $student['name'],
+            'username'      => $phone,
             'password_hash' => password_hash('1234', PASSWORD_DEFAULT),
             'role'          => 'student',
             'linked_id'     => $studentId,
+            'supporter_id'  => $this->supporterIdForField((string) $student['field']),
         ]);
 
         return $this->get($studentId);
+    }
+
+    public function normalizePhone(string $phone): string
+    {
+        $normalized = PhoneNormalizer::normalize($phone);
+        if ($normalized === null) {
+            throw new ApiException('شماره تلفن معتبر نیست', 422, 'VALIDATION_ERROR');
+        }
+
+        return $normalized;
+    }
+
+    public function phoneIsRegistered(string $phone, ?int $exceptStudentId = null): bool
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT 1 FROM users WHERE username = :phone LIMIT 1'
+        );
+        $stmt->execute(['phone' => $phone]);
+        if ($stmt->fetchColumn() !== false) {
+            return true;
+        }
+
+        $sql = 'SELECT 1 FROM students WHERE phone = :phone';
+        $params = ['phone' => $phone];
+        if ($exceptStudentId !== null) {
+            $sql .= ' AND id <> :except_student_id';
+            $params['except_student_id'] = $exceptStudentId;
+        }
+        $stmt = Database::getConnection()->prepare($sql . ' LIMIT 1');
+        $stmt->execute($params);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
+    public function supporterIdForField(string $field): ?int
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT id FROM supporters
+             WHERE field = :field AND is_active = 1 AND id > 0
+             ORDER BY id ASC
+             LIMIT 1'
+        );
+        $stmt->execute(['field' => $field]);
+        $id = $stmt->fetchColumn();
+
+        return $id === false ? null : (int) $id;
     }
 
     public function resetPassword(int $studentId): array
