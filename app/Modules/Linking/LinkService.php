@@ -229,12 +229,15 @@ class LinkService
 
             return ['account' => $account, 'is_active' => Admin::isAccountActive($accountId)];
         }
+        if( $role === 'supporter') {
+            $account = Supporter::findById($accountId);
+            if (!$account) {
+                throw new ApiException('پشتیبان یافت نشد', 404, 'ACCOUNT_NOT_FOUND');
+            }
 
-        $account = Supporter::findById($accountId);
-        if (!$account) {
-            throw new ApiException('پشتیبان یافت نشد', 404, 'ACCOUNT_NOT_FOUND');
+            return ['account' => $account, 'is_active' => Supporter::isAccountActive($accountId)];
         }
-
+        
         return ['account' => $account, 'is_active' => Supporter::isAccountActive($accountId)];
     }
 
