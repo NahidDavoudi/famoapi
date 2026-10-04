@@ -1,10 +1,11 @@
 <?php
 // در TelegramLink.php این دو متد را جایگزین findByChatId و create کن.
 
-    /**
-     * همهٔ حساب‌های وصل‌شده به این چت (نام دانش‌آموز از جدول students می‌آید).
-     * @return array<int,array>
-     */
+namespace App\Modules\Bot;
+use App\Core\Database;
+
+class TelegramLink{
+
     public static function findByChatId(int $chatId): array
     {
         $stmt = Database::getConnection()->prepare(
@@ -30,3 +31,4 @@
 
         return $stmt->rowCount();
     }
+}
