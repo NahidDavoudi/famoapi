@@ -200,13 +200,19 @@ return function (App $app) {
         $group->get('/ping', [$botController, 'ping']);
         $group->get('/me', [$botController, 'me'])->add($botActorMiddleware);
 
+        // ورود/ثبت‌نام از طریق ربات (کنترلر جدید)
+        $group->post('/resolve', [$botController, 'resolve']);
+        $group->post('/link-phone', [$botController, 'linkPhone']);
+        $group->post('/register', [$botController, 'register']);
+
+        // مدیریت هویت
         $group->post('/identity/lookup', [$linkController, 'lookup']);
         $group->post('/identity/link', [$linkController, 'link']);
         $group->get('/identity/resolve', [$linkController, 'resolve']);
         $group->post('/identity/unlink', [$linkController, 'unlink']);
         $group->post('/identity/block', [$linkController, 'block']);
         $group->post('/identity/unblock', [$linkController, 'unblock']);
-
+        
         // Threads & messages (acting on behalf of a linked account)
         $group->post('/threads/messages', [$threadController, 'sendMessage'])->add($botActorMiddleware);
         $group->get('/threads/day', [$threadController, 'getDay'])->add($botActorMiddleware);
