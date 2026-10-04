@@ -9,6 +9,7 @@ use App\Modules\Students\Student;
 use App\Modules\Students\StudentService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Core\Logger;
 
 /**
  * Module 1 (Bot Gateway) endpoints. Service-key protected; `me` also requires
@@ -119,13 +120,15 @@ class BotController
         }
 
         // Creates the student AND its users row (username = phone) in one transaction.
-        (new StudentService())->create([
+        try{(new StudentService())->create([
             'name'        => $fullName,
             'grade'       => $grade,
             'field'       => $major,
             'phone'       => $phone,
             'national_id' => null,
-        ]);
+        ]);} catch (\Throwable $e){
+            Logger::error('service Error' , $e);
+        }
 
         $user = User::findByUsername($phone);
         if (!$user) {
@@ -136,7 +139,7 @@ class BotController
 
         return ResponseHelper::json($response, [
             'user' => $this->userPayload($user, $chatId),
-        ], 201);
+        ]);
     }
 
     // ---------------------------------------------------------------- helpers
