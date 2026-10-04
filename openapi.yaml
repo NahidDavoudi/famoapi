@@ -3253,7 +3253,8 @@ paths:
               properties:
                 field:
                   type: string
-                  enum: [arrived_at, exam_started_at, exam_ended_at, departed_at]
+                  enum:
+                    [arrived_at, exam_started_at, exam_ended_at, departed_at]
                 value:
                   type: string
                   nullable: true
@@ -3754,7 +3755,8 @@ paths:
                 contact_verified:
                   type: boolean
                   description: Must be true; the bot host proves contact ownership
-              required: [telegram_user_id, chat_id, role, account_id, contact_verified]
+              required:
+                [telegram_user_id, chat_id, role, account_id, contact_verified]
       responses:
         "200":
           description: Link created or refreshed
@@ -5722,7 +5724,7 @@ components:
             - type: string
         major:
           type: string
-          description: کلید رشته (math/tajrobi/humanities)
+          description: کلید رشته (math/تجربی/humanities)
         field:
           type: string
           description: نام فارسی رشته (جایگزین major)
@@ -6076,19 +6078,19 @@ components:
     TelegramAttachment:
       type: object
       properties:
-        id: {type: integer}
-        kind: {type: string, enum: [photo, document, voice, video, audio]}
-        tg_file_id: {type: string}
-        file_name: {type: string, nullable: true}
-        mime_type: {type: string, nullable: true}
-        file_size: {type: integer, nullable: true}
+        id: { type: integer }
+        kind: { type: string, enum: [photo, document, voice, video, audio] }
+        tg_file_id: { type: string }
+        file_name: { type: string, nullable: true }
+        mime_type: { type: string, nullable: true }
+        file_size: { type: integer, nullable: true }
       required: [kind, tg_file_id]
 
     MessageInput:
       type: object
       properties:
-        text: {type: string, nullable: true}
-        media_group_id: {type: string, nullable: true}
+        text: { type: string, nullable: true }
+        media_group_id: { type: string, nullable: true }
         attachments:
           type: array
           maxItems: 10
@@ -6098,18 +6100,18 @@ components:
     ReportMessage:
       type: object
       properties:
-        id: {type: integer}
-        thread_id: {type: integer}
-        day: {type: string, format: date, nullable: true}
-        day_jalali: {type: string, nullable: true}
-        sender_role: {type: string, enum: [student, supporter, broadcast]}
-        sender_account_id: {type: integer, nullable: true}
-        body: {type: string, nullable: true}
-        media_group_id: {type: string, nullable: true}
-        is_broadcast: {type: boolean}
-        read_by_student: {type: boolean}
-        read_by_supporter: {type: boolean}
-        created_at: {type: string, format: date-time}
+        id: { type: integer }
+        thread_id: { type: integer }
+        day: { type: string, format: date, nullable: true }
+        day_jalali: { type: string, nullable: true }
+        sender_role: { type: string, enum: [student, supporter, broadcast] }
+        sender_account_id: { type: integer, nullable: true }
+        body: { type: string, nullable: true }
+        media_group_id: { type: string, nullable: true }
+        is_broadcast: { type: boolean }
+        read_by_student: { type: boolean }
+        read_by_supporter: { type: boolean }
+        created_at: { type: string, format: date-time }
         attachments:
           type: array
           items:
@@ -6118,15 +6120,15 @@ components:
     ReportThreadDay:
       type: object
       properties:
-        student_id: {type: integer}
-        day: {type: string, format: date}
-        day_jalali: {type: string}
-        weekday: {type: string}
-        thread_id: {type: integer, nullable: true}
-        supporter_id: {type: integer, nullable: true}
-        report_submitted: {type: boolean}
-        unread_replies: {type: integer}
-        unread_by_supporter: {type: integer}
+        student_id: { type: integer }
+        day: { type: string, format: date }
+        day_jalali: { type: string }
+        weekday: { type: string }
+        thread_id: { type: integer, nullable: true }
+        supporter_id: { type: integer, nullable: true }
+        report_submitted: { type: boolean }
+        unread_replies: { type: integer }
+        unread_by_supporter: { type: integer }
         messages:
           type: array
           items:
@@ -6137,56 +6139,57 @@ components:
     WeeklyDay:
       type: object
       properties:
-        day: {type: string, format: date}
-        day_jalali: {type: string}
-        weekday: {type: string}
-        state: {type: string, enum: [sent, missed, pending]}
-        report_submitted: {type: boolean}
-        has_reply: {type: boolean}
-        reply_unread: {type: boolean}
-        unread_replies: {type: integer}
-        supporter_id: {type: integer, nullable: true}
+        day: { type: string, format: date }
+        day_jalali: { type: string }
+        weekday: { type: string }
+        state: { type: string, enum: [sent, missed, pending] }
+        report_submitted: { type: boolean }
+        has_reply: { type: boolean }
+        reply_unread: { type: boolean }
+        unread_replies: { type: integer }
+        supporter_id: { type: integer, nullable: true }
 
     BotIdentity:
       type: object
       properties:
-        role: {type: string, enum: [student, supporter]}
-        account_id: {type: integer}
-        name: {type: string}
-        is_active: {type: boolean}
-        is_linked: {type: boolean}
-        linked_to_this_telegram: {type: boolean}
-        linked_to_other_telegram: {type: boolean}
+        role: { type: string, enum: [student, supporter] }
+        account_id: { type: integer }
+        name: { type: string }
+        is_active: { type: boolean }
+        is_linked: { type: boolean }
+        linked_to_this_telegram: { type: boolean }
+        linked_to_other_telegram: { type: boolean }
 
     TelegramLink:
       type: object
       properties:
-        link_id: {type: integer}
-        role: {type: string, enum: [student, supporter]}
-        account_id: {type: integer}
-        name: {type: string}
-        is_active: {type: boolean}
-        is_blocked: {type: boolean}
-        telegram_user_id: {type: integer, format: int64}
-        chat_id: {type: integer, format: int64}
-        linked_at: {type: string, format: date-time}
+        link_id: { type: integer }
+        role: { type: string, enum: [student, supporter] }
+        account_id: { type: integer }
+        name: { type: string }
+        is_active: { type: boolean }
+        is_blocked: { type: boolean }
+        telegram_user_id: { type: integer, format: int64 }
+        chat_id: { type: integer, format: int64 }
+        linked_at: { type: string, format: date-time }
 
     OutboxItem:
       type: object
       properties:
-        id: {type: integer}
-        kind: {type: string, enum: [student_report, supporter_reply, broadcast]}
-        recipient_role: {type: string, enum: [student, supporter]}
-        recipient_account_id: {type: integer}
-        telegram_user_id: {type: integer, format: int64, nullable: true}
-        chat_id: {type: integer, format: int64, nullable: true}
-        attempts: {type: integer}
-        max_attempts: {type: integer}
+        id: { type: integer }
+        kind:
+          { type: string, enum: [student_report, supporter_reply, broadcast] }
+        recipient_role: { type: string, enum: [student, supporter] }
+        recipient_account_id: { type: integer }
+        telegram_user_id: { type: integer, format: int64, nullable: true }
+        chat_id: { type: integer, format: int64, nullable: true }
+        attempts: { type: integer }
+        max_attempts: { type: integer }
         payload:
           type: object
           properties:
-            kind: {type: string}
-            text: {type: string, nullable: true}
+            kind: { type: string }
+            text: { type: string, nullable: true }
             attachments:
               type: array
               items:
@@ -6194,70 +6197,75 @@ components:
             meta:
               type: object
               additionalProperties: true
-        created_at: {type: string, format: date-time}
+        created_at: { type: string, format: date-time }
 
     BroadcastInput:
       type: object
       properties:
-        audience: {type: string, enum: [no_report_today, all_students]}
-        day: {type: string, format: date, nullable: true}
+        audience: { type: string, enum: [no_report_today, all_students] }
+        day: { type: string, format: date, nullable: true }
       required: [audience]
 
     BroadcastRecipient:
       type: object
       properties:
-        student_id: {type: integer}
-        name: {type: string, nullable: true}
-        student_name: {type: string, nullable: true}
-        grade: {type: integer, nullable: true}
-        field: {type: string, nullable: true}
-        status: {type: string, enum: [pending, sent, failed, blocked], nullable: true}
-        telegram_message_id: {type: string, nullable: true}
-        error: {type: string, nullable: true}
+        student_id: { type: integer }
+        name: { type: string, nullable: true }
+        student_name: { type: string, nullable: true }
+        grade: { type: integer, nullable: true }
+        field: { type: string, nullable: true }
+        status:
+          {
+            type: string,
+            enum: [pending, sent, failed, blocked],
+            nullable: true,
+          }
+        telegram_message_id: { type: string, nullable: true }
+        error: { type: string, nullable: true }
 
     BroadcastSummary:
       type: object
       properties:
-        pending: {type: integer}
-        sent: {type: integer}
-        failed: {type: integer}
-        blocked: {type: integer}
+        pending: { type: integer }
+        sent: { type: integer }
+        failed: { type: integer }
+        blocked: { type: integer }
 
     SupportAssignment:
       type: object
       properties:
-        student_id: {type: integer}
-        supporter_id: {type: integer, nullable: true}
-        supporter_name: {type: string, nullable: true}
-        assigned_at: {type: string, format: date-time, nullable: true}
+        student_id: { type: integer }
+        supporter_id: { type: integer, nullable: true }
+        supporter_name: { type: string, nullable: true }
+        assigned_at: { type: string, format: date-time, nullable: true }
 
     AdminReportDay:
       type: object
       properties:
-        day: {type: string, format: date}
-        day_jalali: {type: string}
-        weekday: {type: string}
-        report_count: {type: integer}
-        active_students: {type: integer}
-        rate: {type: number}
+        day: { type: string, format: date }
+        day_jalali: { type: string }
+        weekday: { type: string }
+        report_count: { type: integer }
+        active_students: { type: integer }
+        rate: { type: number }
 
     AdminSupporterPerformance:
       type: object
       properties:
-        supporter_id: {type: integer}
-        supporter_name: {type: string, nullable: true}
-        assigned_students: {type: integer}
-        report_count: {type: integer}
-        threads_with_reports: {type: integer}
-        threads_with_reply: {type: integer}
-        reply_rate: {type: number}
-        unanswered_threads: {type: integer}
-        oldest_unanswered_day: {type: string, format: date, nullable: true}
-        avg_first_reply_seconds: {type: integer, nullable: true}
-        median_first_reply_seconds: {type: integer, nullable: true}
-        messages_sent: {type: integer}
-        broadcasts_sent: {type: integer}
-        unread_backlog: {type: integer}
+        supporter_id: { type: integer }
+        supporter_name: { type: string, nullable: true }
+        assigned_students: { type: integer }
+        report_count: { type: integer }
+        threads_with_reports: { type: integer }
+        threads_with_reply: { type: integer }
+        reply_rate: { type: number }
+        unanswered_threads: { type: integer }
+        oldest_unanswered_day: { type: string, format: date, nullable: true }
+        avg_first_reply_seconds: { type: integer, nullable: true }
+        median_first_reply_seconds: { type: integer, nullable: true }
+        messages_sent: { type: integer }
+        broadcasts_sent: { type: integer }
+        unread_backlog: { type: integer }
 
     # ──── Telegram Login (public) ────
     TelegramVerifyRequest:

@@ -18,10 +18,11 @@ class ThreadController
 
     public function sendMessage(Request $request, Response $response): Response
     {
+        
         $actor = $request->getAttribute('bot_actor');
         $body = $request->getParsedBody() ?? [];
-
         return ResponseHelper::json($response, $this->service->sendStudentMessage($actor, $body), null, 201);
+        
     }
 
     public function getDay(Request $request, Response $response): Response

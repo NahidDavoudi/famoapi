@@ -1,0 +1,5 @@
+ALTER TABLE `users` 
+	CHANGE `id` `id` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `supporters` 
+	CHANGE `id` `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT;

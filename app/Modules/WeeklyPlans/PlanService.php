@@ -12,7 +12,7 @@ class PlanService
 
     private const FIELD_MAP = [
         'math'       => 'ریاضی',
-        'tajrobi'    => 'تجربی',
+        'تجربی'    => 'تجربی',
         'humanities' => 'انسانی',
         'middle'     => 'راهنمایی',
     ];

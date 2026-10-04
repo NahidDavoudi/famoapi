@@ -138,9 +138,9 @@ class StatsTest extends TestCase
         $this->assertNotNull($riazi);
         $this->assertGreaterThanOrEqual(3, $riazi['report_count']);
 
-        $tajrobi = $this->findItem($data['data']['items'], 'field', 'تجربی');
-        $this->assertNotNull($tajrobi);
-        $this->assertGreaterThanOrEqual(1, $tajrobi['report_count']);
+        $تجربی = $this->findItem($data['data']['items'], 'field', 'تجربی');
+        $this->assertNotNull($تجربی);
+        $this->assertGreaterThanOrEqual(1, $تجربی['report_count']);
     }
 
     public function testReportsBySupporter(): void

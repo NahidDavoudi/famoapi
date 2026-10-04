@@ -49,6 +49,17 @@ class Supporter
         return $result ?: null;
     }
 
+ public static function findByField(string $field): ?int
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT id FROM supporters WHERE field = :field LIMIT 1'
+        );
+        $stmt->execute(['field' => $field]);
+        $id = $stmt->fetchColumn();
+
+        return $id === false ? null : (int) $id;
+    }
+
     /**
      * Lookup supporters by equivalent raw phone representations.
      *

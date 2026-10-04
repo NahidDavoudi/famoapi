@@ -11,19 +11,9 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Core\Logger;
 
-/**
- * Module 1 (Bot Gateway) endpoints. Service-key protected; `me` also requires
- * a resolved acting account.
- *
- * Contract used by the Telegram bot (FamoApi.php):
- *   POST /bot/resolve    {chat_id}                                   -> data.user | 404
- *   POST /bot/link-phone {chat_id, phone}                            -> data.user (null if phone unknown)
- *   POST /bot/register   {chat_id, phone, full_name, grade, major}   -> data.user (201)
- * Error codes: VALIDATION_ERROR, CHAT_ALREADY_LINKED, USER_ALREADY_LINKED, PHONE_ALREADY_REGISTERED
- */
 class BotController
 {
-    private const MAJORS = ['rahnamayi', 'tajrobi', 'riazi', 'ensani'];
+    private const MAJORS = ['راهنمایی', 'تجربی', 'ریاضی', 'انسانی'];
 
     public function ping(Request $request, Response $response): Response
     {
@@ -75,7 +65,6 @@ class BotController
 
         $user = User::findByUsername($phone);
         if (!$user) {
-            // Not an error: the bot continues with the signup flow.
             return ResponseHelper::json($response, ['user' => null]);
         }
 
@@ -104,12 +93,13 @@ class BotController
         $fullName = trim((string) ($body['full_name'] ?? ''));
         $grade    = (int) ($body['grade'] ?? 0);
         $major    = (string) ($body['major'] ?? '');
+        $national_id = $body['national_id'] ?? null;   // ← اصلاح شد
 
         if (mb_strlen($fullName) < 2 || $grade < 7 || $grade > 12 || !in_array($major, self::MAJORS, true)) {
             throw new ApiException('اطلاعات ثبت‌نام نامعتبر است', 422, 'VALIDATION_ERROR');
         }
         if ($grade <= 9) {
-            $major = 'rahnamayi';
+            $major = 'راهنمایی';
         }
 
         if (User::findByUsername($phone)) {
@@ -120,14 +110,18 @@ class BotController
         }
 
         // Creates the student AND its users row (username = phone) in one transaction.
-        try{(new StudentService())->create([
-            'name'        => $fullName,
-            'grade'       => $grade,
-            'field'       => $major,
-            'phone'       => $phone,
-            'national_id' => null,
-        ]);} catch (\Throwable $e){
-            Logger::error('service Error' , $e);
+        try {
+            (new StudentService())->create([
+                'name'        => $fullName,
+                'grade'       => $grade,
+                'field'       => $major,
+                'phone'       => $phone,
+                'national_id' => $national_id,
+                'chat_id'     => $chatId,
+            ]);
+        } catch (\Throwable $e) {
+            Logger::error('Student registration failed: ' . $e->getMessage(), $e);
+            throw new ApiException($e->getMessage(), 500, 'REGISTER_FAILED'); // موقتاً پیام واقعی
         }
 
         $user = User::findByUsername($phone);
@@ -167,6 +161,7 @@ class BotController
         }
         return $phone;
     }
+
 
     /** Persian/Arabic digits -> Latin; +98 / 0098 / 98 / 9xxxxxxxxx -> 09xxxxxxxxx */
     private function normalizePhone(string $raw): string

@@ -2,14 +2,16 @@
 
 namespace App\Modules\Students;
 
+use App\Core\ApiException;
 use App\Core\Database;
 use App\Core\Pagination;
+use App\Modules\Supporters\Supporter;
 
 class StudentService
 {
     public function list(array $filters, int $page, int $perPage): array
     {
-        $total = Student::countAll($filters);
+        $total      = Student::countAll($filters);
         $pagination = Pagination::build($page, $perPage, $total);
 
         $items = Student::findAll($filters, $pagination['page'], $pagination['per_page']);
@@ -22,27 +24,32 @@ class StudentService
 
     public function create(array $data): array
     {
+        $supporterId = Supporter::findByField($data['field']);
+
         $db = Database::getConnection();
         $db->beginTransaction();
 
         try {
+        $data['supporter_id'] = $supporterId;
+
             $studentId = Student::create($data);
 
             $stmt = $db->prepare(
-                'INSERT INTO users (username, password_hash, role, linked_id)
-                 VALUES (:username, :password_hash, :role, :linked_id)'
+                'INSERT INTO users (username, full_name, password_hash, role, linked_id)
+                 VALUES (:username, :full_name, :password_hash, :role, :linked_id)'
             );
             $stmt->execute([
                 'username'      => $data['phone'],
+                'full_name'     => $data['name'],
                 'password_hash' => password_hash('1234', PASSWORD_DEFAULT),
                 'role'          => 'student',
                 'linked_id'     => $studentId,
             ]);
 
             $db->commit();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $db->rollBack();
-            throw $e;
+            throw new ApiException($e->getMessage(), 500, 'REGISTER_FAILED'); // موقتاً پیام واقعی
         }
 
         return $this->get($studentId);
@@ -52,7 +59,7 @@ class StudentService
     {
         $student = Student::findById($id);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
         return $student;
     }
@@ -61,7 +68,7 @@ class StudentService
     {
         $student = Student::findById($id);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         Student::update($id, $data);
@@ -84,7 +91,7 @@ class StudentService
     {
         $student = Student::findById($id);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         Student::delete($id);
@@ -94,20 +101,21 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         if (!empty($student['user_id'])) {
-            throw new \App\Core\ApiException('این دانش‌آموز قبلاً حساب کاربری دارد', 409, 'ACCOUNT_ERROR');
+            throw new ApiException('این دانش‌آموز قبلاً حساب کاربری دارد', 409, 'ACCOUNT_ERROR');
         }
 
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO users (username, password_hash, role, linked_id)
-             VALUES (:username, :password_hash, :role, :linked_id)'
+            'INSERT INTO users (username, full_name, password_hash, role, linked_id)
+             VALUES (:username, :full_name, :password_hash, :role, :linked_id)'
         );
         $stmt->execute([
             'username'      => $student['phone'],
+            'full_name'     => $student['name'],
             'password_hash' => password_hash('1234', PASSWORD_DEFAULT),
             'role'          => 'student',
             'linked_id'     => $studentId,
@@ -120,11 +128,11 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         if (empty($student['user_id'])) {
-            throw new \App\Core\ApiException('این دانش‌آموز حساب کاربری ندارد', 400, 'RESET_ERROR');
+            throw new ApiException('این دانش‌آموز حساب کاربری ندارد', 400, 'RESET_ERROR');
         }
 
         $stmt = Database::getConnection()->prepare(
@@ -152,7 +160,7 @@ class StudentService
     {
         $student = Student::findById($id);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         Student::toggleStatus($id);
@@ -164,7 +172,7 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         $db = Database::getConnection();
@@ -215,17 +223,17 @@ class StudentService
         $strongest = $stmt->fetch();
 
         return [
-            'student'          => [
+            'student' => [
                 'id'    => $student['id'],
                 'name'  => $student['name'],
                 'grade' => $student['grade'],
                 'field' => $student['field'],
             ],
-            'plan_count'       => $planCount,
-            'exam_count'       => $examCount,
-            'avg_percentage'   => $avgPercentage,
-            'recent_exams'     => $recentExams,
-            'weakest_subject'  => $weakest ?: null,
+            'plan_count'        => $planCount,
+            'exam_count'        => $examCount,
+            'avg_percentage'    => $avgPercentage,
+            'recent_exams'      => $recentExams,
+            'weakest_subject'   => $weakest ?: null,
             'strongest_subject' => $strongest ?: null,
         ];
     }
@@ -234,7 +242,7 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         $db = Database::getConnection();
@@ -275,7 +283,7 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         $db = Database::getConnection();
@@ -299,7 +307,7 @@ class StudentService
     {
         $student = Student::findById($studentId);
         if (!$student) {
-            throw new \App\Core\ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
+            throw new ApiException('دانش‌آموز یافت نشد', 404, 'NOT_FOUND');
         }
 
         $db = Database::getConnection();

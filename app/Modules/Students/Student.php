@@ -24,7 +24,7 @@ class Student
         if (!empty($filters['search'])) {
             $conditions[] = '(s.name LIKE :search_name OR s.phone LIKE :search_phone)';
             $search = '%' . $filters['search'] . '%';
-            $params['search_name'] = $search;
+            $params['search_name']  = $search;
             $params['search_phone'] = $search;
         }
         if (!empty($filters['field'])) {
@@ -36,10 +36,10 @@ class Student
             $params['grade'] = (int) $filters['grade'];
         }
 
-        $where = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $where   = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
         $perPage = max(1, min(100, $perPage));
-        $page = max(1, $page);
-        $offset = ($page - 1) * $perPage;
+        $page    = max(1, $page);
+        $offset  = ($page - 1) * $perPage;
 
         $stmt = Database::getConnection()->prepare(
             "SELECT s.*, u.id AS user_id
@@ -50,8 +50,8 @@ class Student
         foreach ($params as $key => $value) {
             $stmt->bindValue(':' . $key, $value);
         }
-        $stmt->bindValue(':limit', $perPage, \PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->bindValue(':limit',  $perPage, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset,  \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -73,7 +73,7 @@ class Student
 
         if (!empty($filters['search'])) {
             $conditions[] = '(s.name LIKE :search_name OR s.phone LIKE :search_phone)';
-            $params['search_name'] = '%' . $filters['search'] . '%';
+            $params['search_name']  = '%' . $filters['search'] . '%';
             $params['search_phone'] = '%' . $filters['search'] . '%';
         }
         if (!empty($filters['field'])) {
@@ -86,7 +86,7 @@ class Student
         }
 
         $where = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
-        $stmt = Database::getConnection()->prepare("SELECT COUNT(*) FROM students s {$where}");
+        $stmt  = Database::getConnection()->prepare("SELECT COUNT(*) FROM students s {$where}");
         foreach ($params as $key => $value) {
             $stmt->bindValue(':' . $key, $value);
         }
@@ -118,10 +118,6 @@ class Student
     }
 
     /**
-     * Lookup students by a set of equivalent raw phone representations.
-     * Callers must confirm the normalized match (stored numbers may be in
-     * Persian/Arabic digit forms).
-     *
      * @param string[] $forms
      * @return array<int,array>
      */
@@ -146,15 +142,19 @@ class Student
     {
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO students (name, grade, field, phone, national_id, is_active, created_at)
-             VALUES (:name, :grade, :field, :phone, :national_id, 1, NOW())'
+            'INSERT INTO students
+                (name, grade, field, phone, national_id, is_active, created_at, chat_id, supporter_id)
+             VALUES
+                (:name, :grade, :field, :phone, :national_id, 1, NOW(), :chat_id, :supporter_id)'
         );
         $stmt->execute([
-            'name'        => $data['name'],
-            'grade'       => $data['grade'],
-            'field'       => $data['field'],
-            'phone'       => $data['phone'],
-            'national_id' => $data['national_id'],
+            'name'         => $data['name'],
+            'grade'        => $data['grade'],
+            'field'        => $data['field'],
+            'phone'        => $data['phone'],
+            'national_id'  => $data['national_id'] ?? null,
+            'chat_id'      => $data['chat_id']      ?? null,
+            'supporter_id' => $data['supporter_id'] ?? null,
         ]);
         return (int) $db->lastInsertId();
     }
@@ -163,7 +163,7 @@ class Student
     {
         $sets = [];
         $params = ['id' => $id];
-        $allowed = ['name', 'grade', 'field', 'phone', 'national_id', 'is_active'];
+        $allowed = ['name', 'grade', 'field', 'phone', 'national_id', 'is_active', 'supporter_id'];
 
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {
@@ -172,7 +172,9 @@ class Student
             }
         }
 
-        if (empty($sets)) return 0;
+        if (empty($sets)) {
+            return 0;
+        }
 
         $stmt = Database::getConnection()->prepare(
             'UPDATE students SET ' . implode(', ', $sets) . ' WHERE id = :id'
@@ -207,8 +209,8 @@ class Student
             "SELECT s.id, s.name, s.grade, s.field, s.phone, s.national_id,
                     COUNT(DISTINCT p.id) AS plan_count,
                     COUNT(DISTINCT e.id) AS total_events,
-                    MAX(p.week_date)    AS last_week_date,
-                    MAX(p.created_at)   AS last_plan_at
+                    MAX(p.week_date)     AS last_week_date,
+                    MAX(p.created_at)    AS last_plan_at
              FROM students s
              LEFT JOIN weekly_plans p ON p.student_id = s.id
              LEFT JOIN events e       ON e.student_id = s.id
@@ -226,5 +228,24 @@ class Student
             'UPDATE students SET is_active = NOT is_active WHERE id = :id'
         );
         return $stmt->execute(['id' => $id]);
+    }
+
+    /**
+     * Auto-assign the matching supporter based on the student's field.
+     * Safe to call inside an open transaction.
+     */
+    public static function assignSupporterByField(int $id): void
+    {
+        $stmt = Database::getConnection()->prepare(
+            'UPDATE students s
+             SET supporter_id = (
+                 SELECT sup.id FROM supporters sup
+                 WHERE sup.field = s.field
+                 LIMIT 1
+             )
+             WHERE s.id = :id
+               AND s.supporter_id IS NULL'
+        );
+        $stmt->execute(['id' => $id]);
     }
 }

@@ -33,7 +33,6 @@ class ThreadService
         if (!$assignment) {
             throw new ApiException('هنوز پشتیبانی برای شما تعیین نشده است', 409, 'NO_SUPPORTER_ASSIGNED');
         }
-
         $day = IranDay::today();
         $threadId = Thread::ensure($studentId, $day, (int) $assignment['supporter_id']);
         $messageId = Message::create(
