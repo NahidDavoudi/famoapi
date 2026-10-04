@@ -3,6 +3,7 @@
 namespace App\Modules\Threads;
 
 use App\Core\ApiException;
+use App\Core\Logger;
 use App\Core\Pagination;
 use App\Modules\Assignments\Assignment;
 use App\Modules\Bot\IranDay;
@@ -323,7 +324,12 @@ class ThreadService
         try {
             $enqueue();
         } catch (\Throwable $e) {
-            error_log('[' . date('Y-m-d H:i:s') . '] outbox enqueue failed: ' . $e->getMessage() . PHP_EOL, 3, __DIR__ . '/../../../storage/logs/app.log');
+            Logger::error('Threads: outbox enqueue failed', [
+                'error'   => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'trace'   => $e->getTrace() ?? [],
+            ]);
         }
     }
 

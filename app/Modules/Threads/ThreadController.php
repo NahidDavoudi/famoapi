@@ -2,6 +2,8 @@
 
 namespace App\Modules\Threads;
 
+use App\Core\ApiException;
+use App\Core\Logger;
 use App\Core\ResponseHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -18,11 +20,14 @@ class ThreadController
 
     public function sendMessage(Request $request, Response $response): Response
     {
-        
         $actor = $request->getAttribute('bot_actor');
         $body = $request->getParsedBody() ?? [];
+
+        if ($body === [] || !isset($body['text']) && !isset($body['attachments'])) {
+            throw new ApiException('متن پیام یا پیوست الزامی است', 422, 'VALIDATION_ERROR');
+        }
+
         return ResponseHelper::json($response, $this->service->sendStudentMessage($actor, $body), null, 201);
-        
     }
 
     public function getDay(Request $request, Response $response): Response
@@ -35,6 +40,10 @@ class ThreadController
         $page = (int) ($query['page'] ?? 1);
         $perPage = (int) ($query['perPage'] ?? 50);
 
+        if ($studentId === null) {
+            throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
+        }
+
         return ResponseHelper::json($response, $this->service->getDay($actor, $studentId, $day, $page, $perPage));
     }
 
@@ -46,6 +55,10 @@ class ThreadController
         $studentId = isset($query['student_id']) ? (int) $query['student_id'] : null;
         $weekStart = isset($query['week_start']) ? (string) $query['week_start'] : null;
 
+        if ($studentId === null) {
+            throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
+        }
+
         return ResponseHelper::json($response, $this->service->weekly($actor, $studentId, $weekStart));
     }
 
@@ -56,6 +69,10 @@ class ThreadController
 
         $studentId = isset($body['student_id']) ? (int) $body['student_id'] : null;
         $day = isset($body['day']) ? (string) $body['day'] : null;
+
+        if ($studentId === null) {
+            throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
+        }
 
         return ResponseHelper::json($response, $this->service->markRead($actor, $studentId, $day));
     }

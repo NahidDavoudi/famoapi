@@ -2,6 +2,8 @@
 
 namespace App\Modules\Threads;
 
+use App\Core\ApiException;
+use App\Core\Logger;
 use App\Core\ResponseHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -20,8 +22,8 @@ class SupporterThreadController
     {
         $actor = $request->getAttribute('bot_actor');
         $query = $request->getQueryParams();
-        $page = (int) ($query['page'] ?? 1);
-        $perPage = (int) ($query['perPage'] ?? 20);
+        $page = max(1, (int) ($query['page'] ?? 1));
+        $perPage = max(1, min(100, (int) ($query['perPage'] ?? 20)));
 
         return ResponseHelper::json($response, $this->service->inbox($actor, $page, $perPage));
     }
@@ -37,16 +39,24 @@ class SupporterThreadController
     {
         $actor = $request->getAttribute('bot_actor');
         $query = $request->getQueryParams();
-        $limit = (int) ($query['limit'] ?? 200);
-        $limit = max(1, min(500, $limit));
+        $limit = max(1, min(500, (int) ($query['limit'] ?? 200)));
 
-        return ResponseHelper::json($response, $this->service->unreadForStudent($actor, (int) $args['studentId'], $limit));
+        $studentId = (int) ($args['studentId'] ?? 0);
+        if ($studentId <= 0) {
+            throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
+        }
+
+        return ResponseHelper::json($response, $this->service->unreadForStudent($actor, $studentId, $limit));
     }
 
     public function reply(Request $request, Response $response): Response
     {
         $actor = $request->getAttribute('bot_actor');
         $body = $request->getParsedBody() ?? [];
+
+        if (!isset($body['student_id'])) {
+            throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
+        }
 
         return ResponseHelper::json($response, $this->service->reply($actor, $body), null, 201);
     }

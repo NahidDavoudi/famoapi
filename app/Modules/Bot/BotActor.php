@@ -9,8 +9,8 @@ use App\Modules\Supporters\Supporter;
 
 /**
  * Resolves the account a bot request acts on behalf of, starting from the
- * stored Telegram link. All role and active-status decisions are made here
- * server-side; the bot's headers are only used to identify the link.
+ * stored Telegram chat link. All role and active-status decisions are made
+ * here server-side; the bot's headers are only used to identify the link.
  */
 final class BotActor
 {
@@ -26,16 +26,14 @@ final class BotActor
             throw new ApiException('نقش ربات نامعتبر است', 400, 'BOT_ROLE_INVALID');
         }
 
-        $link = TelegramLink::findByTelegramUserAndRole($telegramUserId, $role);
+        // چت خصوصی: chat_id و telegram_user_id یکی هستن، ولی تو DB فقط chat_id ذخیره می‌شه.
+        $link = TelegramLink::findByChatIdAndRole($chatId, $role);
         if (!$link) {
             throw new ApiException('این حساب تلگرام به کاربری متصل نیست', 401, 'BOT_NOT_LINKED');
         }
 
-        if ((int) $link['is_blocked'] === 1) {
-            throw new ApiException('کاربر ربات را مسدود کرده است', 403, 'BOT_ACCOUNT_BLOCKED');
-        }
-
-        if ((int) $link['chat_id'] !== $chatId) {
+        // چک تطابق (احتیاطی؛ چون دقیقاً با chat_id جست‌وجو کردیم معمولاً همیشه پاس می‌شه)
+        if ((string) $link['chat_id'] !== (string) $chatId) {
             throw new ApiException('شناسه گفتگو با اتصال ثبت‌شده مطابقت ندارد', 401, 'BOT_CHAT_MISMATCH');
         }
 
@@ -58,12 +56,17 @@ final class BotActor
             }
         }
 
+        // یکدست‌سازی کلیدهای مورد نیاز بقیه کد
+        $link['telegram_user_id'] = $telegramUserId;
+        $link['is_blocked'] = 0;
+        $link['linked_at'] = null;
+
         return [
             'link'       => $link,
             'role'       => $role,
             'account'    => $account,
             'account_id' => $accountId,
-            'name'       => (string) ($account['name'] ?? ''),
+            'name'       => (string) ($account['name'] ?? $link['name'] ?? ''),
         ];
     }
 }

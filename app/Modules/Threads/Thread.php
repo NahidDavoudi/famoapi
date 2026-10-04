@@ -3,6 +3,7 @@
 namespace App\Modules\Threads;
 
 use App\Core\Database;
+use App\Core\Logger;
 
 /**
  * Model for `report_threads`: exactly one thread per (student, Tehran day).
@@ -63,6 +64,12 @@ class Thread
                     return (int) $existing['id'];
                 }
             }
+            Logger::error('Thread::ensure failed', [
+                'student_id' => $studentId,
+                'day'        => $day,
+                'error'      => $e->getMessage(),
+                'sql_state'  => $e->getCode(),
+            ]);
             throw $e;
         }
     }
