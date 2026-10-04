@@ -248,4 +248,30 @@ class Student
         );
         $stmt->execute(['id' => $id]);
     }
+
+    /** @return ?int supporter_id directly from the students table. */
+    public static function findSupporterId(int $studentId): ?int
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT supporter_id FROM students WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute(['id' => $studentId]);
+        $id = $stmt->fetchColumn();
+        return $id !== false ? (int) $id : null;
+    }
+
+    /**
+     * @return array<int,array>
+     */
+    public static function findBySupporter(int $supporterId): array
+    {
+        $stmt = Database::getConnection()->prepare(
+            'SELECT id, name, grade, field, phone, is_active
+             FROM students
+             WHERE supporter_id = :supporter_id AND is_active = 1
+             ORDER BY name ASC'
+        );
+        $stmt->execute(['supporter_id' => $supporterId]);
+        return $stmt->fetchAll();
+    }
 }

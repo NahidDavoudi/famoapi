@@ -5,9 +5,9 @@ namespace App\Modules\Threads;
 use App\Core\ApiException;
 use App\Core\Logger;
 use App\Core\Pagination;
-use App\Modules\Assignments\Assignment;
 use App\Modules\Bot\IranDay;
 use App\Modules\Outbox\OutboxService;
+use App\Modules\Students\Student;
 
 /**
  * Module 3: daily threads and messages.
@@ -30,12 +30,12 @@ class ThreadService
         $studentId = $this->requireStudent($actor);
         [$body, $attachments, $mediaGroupId] = MessageContent::parse($data);
 
-        $assignment = Assignment::findActiveByStudent($studentId);
-        if (!$assignment) {
+        $supporterId = Student::findSupporterId($studentId);
+        if (!$supporterId) {
             throw new ApiException('هنوز پشتیبانی برای شما تعیین نشده است', 409, 'NO_SUPPORTER_ASSIGNED');
         }
         $day = IranDay::today();
-        $threadId = Thread::ensure($studentId, $day, (int) $assignment['supporter_id']);
+        $threadId = Thread::ensure($studentId, $day, $supporterId);
         $messageId = Message::create(
             $threadId,
             $studentId,
@@ -51,7 +51,7 @@ class ThreadService
 
         $this->safeEnqueue(fn () => $this->outbox->enqueueReportNotification(
             $studentId,
-            (int) $assignment['supporter_id'],
+            $supporterId,
             $messageId,
             $day,
             $body,
@@ -210,7 +210,7 @@ class ThreadService
     public function students(array $actor): array
     {
         $supporterId = $this->requireSupporter($actor);
-        $rows = Assignment::activeStudentsForSupporter($supporterId);
+        $rows = Student::findBySupporter($supporterId);
         $ids = array_map(static fn (array $row) => (int) $row['id'], $rows);
 
         $today = IranDay::today();
@@ -288,8 +288,8 @@ class ThreadService
             ? $this->resolveDay($data['day'])
             : (Message::latestUnreadReportDay($studentId, $supporterId) ?? IranDay::today());
 
-        $active = Assignment::findActiveByStudent($studentId);
-        $snapshot = $active ? (int) $active['supporter_id'] : $supporterId;
+        $activeSupporterId = Student::findSupporterId($studentId);
+        $snapshot = $activeSupporterId ?? $supporterId;
         $threadId = Thread::ensure($studentId, $day, $snapshot);
 
         $messageId = Message::create(
@@ -373,8 +373,8 @@ class ThreadService
 
     private function assertSupporterAccess(int $supporterId, int $studentId, bool $allowSnapshot): void
     {
-        $active = Assignment::findActiveByStudent($studentId);
-        if ($active && (int) $active['supporter_id'] === $supporterId) {
+        $assigned = Student::findSupporterId($studentId);
+        if ($assigned !== null && $assigned === $supporterId) {
             return;
         }
 

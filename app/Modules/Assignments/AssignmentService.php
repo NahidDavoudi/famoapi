@@ -102,7 +102,7 @@ class AssignmentService
 
         return [
             'supporter' => ['id' => (int) $supporter['id'], 'name' => $supporter['name']],
-            'students'  => Assignment::activeStudentsForSupporter($supporterId),
+            'students'  => Student::findBySupporter($supporterId),
         ];
     }
 

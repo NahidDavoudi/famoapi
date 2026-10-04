@@ -41,8 +41,8 @@ class Stats
     {
         $stmt = Database::getConnection()->query(
             'SELECT supporter_id, COUNT(*) AS total
-             FROM student_supporter_assignments
-             WHERE is_active = 1
+             FROM students
+             WHERE supporter_id IS NOT NULL AND is_active = 1
              GROUP BY supporter_id'
         );
 

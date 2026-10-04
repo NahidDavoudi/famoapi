@@ -127,9 +127,9 @@ class Message
              WHERE m.student_id = :student_id
                AND m.sender_role = 'student'
                AND m.read_by_supporter = 0
-               AND (t.supporter_id = :supporter_a OR EXISTS (
-                     SELECT 1 FROM student_supporter_assignments a
-                     WHERE a.student_id = m.student_id AND a.supporter_id = :supporter_b AND a.is_active = 1))
+AND (t.supporter_id = :supporter_a OR EXISTS (
+                      SELECT 1 FROM students s
+                      WHERE s.id = m.student_id AND s.supporter_id = :supporter_b))
              ORDER BY m.created_at DESC, m.id DESC
              LIMIT 1"
         );
@@ -157,9 +157,9 @@ class Message
              WHERE m.student_id = :student_id
                AND m.sender_role = 'student'
                AND m.read_by_supporter = 0
-               AND (t.supporter_id = :supporter_a OR EXISTS (
-                     SELECT 1 FROM student_supporter_assignments a
-                     WHERE a.student_id = m.student_id AND a.supporter_id = :supporter_b AND a.is_active = 1))
+AND (t.supporter_id = :supporter_a OR EXISTS (
+                      SELECT 1 FROM students s
+                      WHERE s.id = m.student_id AND s.supporter_id = :supporter_b))
              ORDER BY m.created_at ASC, m.id ASC
              LIMIT :limit"
         );
@@ -220,9 +220,9 @@ class Message
              JOIN students s ON s.id = m.student_id
              WHERE m.sender_role = 'student'
                AND m.read_by_supporter = 0
-               AND (t.supporter_id = :supporter_a OR EXISTS (
-                     SELECT 1 FROM student_supporter_assignments a
-                     WHERE a.student_id = m.student_id AND a.supporter_id = :supporter_b AND a.is_active = 1))
+AND (t.supporter_id = :supporter_a OR EXISTS (
+                      SELECT 1 FROM students s
+                      WHERE s.id = m.student_id AND s.supporter_id = :supporter_b))
              GROUP BY m.student_id, s.name, s.grade, s.field
              ORDER BY last_message_at DESC
              LIMIT :limit OFFSET :offset"
@@ -244,9 +244,9 @@ class Message
              JOIN report_threads t ON t.id = m.thread_id
              WHERE m.sender_role = 'student'
                AND m.read_by_supporter = 0
-               AND (t.supporter_id = :supporter_a OR EXISTS (
-                     SELECT 1 FROM student_supporter_assignments a
-                     WHERE a.student_id = m.student_id AND a.supporter_id = :supporter_b AND a.is_active = 1))"
+AND (t.supporter_id = :supporter_a OR EXISTS (
+                      SELECT 1 FROM students s
+                      WHERE s.id = m.student_id AND s.supporter_id = :supporter_b))"
         );
         $stmt->execute(['supporter_a' => $supporterId, 'supporter_b' => $supporterId]);
 

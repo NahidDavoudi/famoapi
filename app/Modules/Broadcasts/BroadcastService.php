@@ -5,9 +5,9 @@ namespace App\Modules\Broadcasts;
 use App\Core\ApiException;
 use App\Core\Database;
 use App\Core\Pagination;
-use App\Modules\Assignments\Assignment;
 use App\Modules\Bot\IranDay;
 use App\Modules\Outbox\OutboxService;
+use App\Modules\Students\Student;
 use App\Modules\Threads\Message;
 use App\Modules\Threads\MessageAttachment;
 use App\Modules\Threads\MessageContent;
@@ -201,7 +201,7 @@ class BroadcastService
      */
     private function recipients(int $supporterId, string $audience, string $day): array
     {
-        $students = Assignment::activeStudentsForSupporter($supporterId);
+        $students = Student::findBySupporter($supporterId);
         if ($audience === 'all_students') {
             return $students;
         }

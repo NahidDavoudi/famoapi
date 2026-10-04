@@ -55,9 +55,9 @@ class ThreadController
         $studentId = isset($query['student_id']) ? (int) $query['student_id'] : null;
         $weekStart = isset($query['week_start']) ? (string) $query['week_start'] : null;
 
-        if ($studentId === null) {
-            throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
-        }
+        // if ($studentId === null) {
+        //     throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
+        // }
 
         return ResponseHelper::json($response, $this->service->weekly($actor, $studentId, $weekStart));
     }
