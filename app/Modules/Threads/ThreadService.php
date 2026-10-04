@@ -89,17 +89,19 @@ class ThreadService
         }
 
         return [
-            'student_id'       => $studentId,
-            'day'              => $day,
-            'day_jalali'       => IranDay::jalali($day),
-            'weekday'          => IranDay::weekdayName($day),
-            'thread_id'        => $thread ? (int) $thread['id'] : null,
-            'supporter_id'     => $thread['supporter_id'] !== null ? (int) $thread['supporter_id'] : null,
-            'report_submitted' => $reportSubmitted,
-            'unread_replies'   => $replyUnread,
+            'student_id'          => $studentId,
+            'day'                 => $day,
+            'day_jalali'          => IranDay::jalali($day),
+            'weekday'             => IranDay::weekdayName($day),
+            'thread_id'           => $thread ? (int) $thread['id'] : null,
+            'supporter_id'        => $thread !== null && $thread['supporter_id'] !== null
+                ? (int) $thread['supporter_id']
+                : null,
+            'report_submitted'    => $reportSubmitted,
+            'unread_replies'      => $replyUnread,
             'unread_by_supporter' => $studentUnread,
-            'messages'         => $messages,
-            'pagination'       => $pagination,
+            'messages'            => $messages,
+            'pagination'          => $pagination,
         ];
     }
 
@@ -138,10 +140,10 @@ class ThreadService
         }
 
         return [
-            'student_id'       => $studentId,
-            'week_start'       => $days[0],
+            'student_id'        => $studentId,
+            'week_start'        => $days[0],
             'week_start_jalali' => IranDay::jalali($days[0]),
-            'days'             => $result,
+            'days'              => $result,
         ];
     }
 
@@ -245,12 +247,11 @@ class ThreadService
 
         $rows = Message::unreadForStudent($studentId, $supporterId, $limit);
         $messages = array_map(function (array $row) {
-            $payload = $this->messagePayload(
+            return $this->messagePayload(
                 $row,
                 [],
                 $row['day'] ?? null
             );
-            return $payload;
         }, $rows);
 
         // Attach media in one batch.
