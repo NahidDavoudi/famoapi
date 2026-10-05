@@ -32,7 +32,11 @@ final class Logger
             @mkdir($dir, 0770, true);
         }
 
-        $handler = new RotatingFileHandler($path, 14, Level::Debug);
+        // debug توی production خیلی حرف می‌زنه؛ فقط local
+        $isLocal = (($_ENV['APP_ENV'] ?? 'prod') === 'local');
+        $level = $isLocal ? Level::Debug : Level::Warning;
+
+        $handler = new RotatingFileHandler($path, 14, $level);
         $handler->setFormatter(new LineFormatter(null, null, true, true));
 
         return self::$logger = new MonologLogger('bot', [$handler]);
@@ -64,7 +68,21 @@ final class Logger
 
     public static function redact(string $text): string
     {
-        return preg_replace('#bot\d+:[A-Za-z0-9_\-]+#', 'bot[REDACTED]', $text) ?? $text;
+        // توکن ربات تلگرام: <digits>:<35-char base64ish>
+        $text = preg_replace(
+            '#\b\d{6,12}:[A-Za-z0-9_\-]{30,}#',
+            '[TG_TOKEN_REDACTED]',
+            $text
+        ) ?? $text;
+
+        // کلید سرویس ربات
+        $text = preg_replace(
+            '#(X-Bot-Key[\s:]+)[A-Za-z0-9_\-]{20,}#i',
+            '$1[REDACTED]',
+            $text
+        ) ?? $text;
+
+        return $text;
     }
 
     private static function scrub(mixed $value): mixed
@@ -87,6 +105,6 @@ final class Logger
 
     private static function defaultPath(): string
     {
-        return dirname(__DIR__) . '/storage/logs/bot.log';
+        return dirname(__DIR__, 2) . '/storage/logs/bot.log';
     }
 }
