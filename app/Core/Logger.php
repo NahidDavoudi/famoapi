@@ -87,6 +87,6 @@ final class Logger
 
     private static function defaultPath(): string
     {
-        return dirname(__DIR__) . '/storage/logs/bot.log';
+        return dirname(__DIR__, 2) . '/storage/logs/bot.log';
     }
 }

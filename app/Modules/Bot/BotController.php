@@ -30,6 +30,18 @@ class BotController
         /** @var array $actor */
         $actor = $request->getAttribute('bot_actor');
 
+        $context = [
+            'chat_id'    => (int) $actor['link']['chat_id'],
+            'account_id' => (int) $actor['account_id'],
+            'role'       => (string) $actor['role'],
+        ];
+
+        if ((int) $actor['link']['is_blocked'] === 1) {
+            Logger::warning('Bot: me requested by blocked link', $context);
+        } else {
+            Logger::info('Bot: me', $context);
+        }
+
         return ResponseHelper::json($response, [
             'role'             => $actor['role'],
             'account_id'       => $actor['account_id'],
@@ -48,8 +60,15 @@ class BotController
 
         $accounts = TelegramLink::findByChatId($chatId);
         if (!$accounts) {
+            Logger::debug('Bot: resolve found no link', ['chat_id' => $chatId]);
             throw new ApiException('این چت به حسابی وصل نیست', 404, 'NOT_LINKED');
         }
+
+        Logger::info('Bot: resolve', [
+            'chat_id'    => $chatId,
+            'account_id' => (int) $accounts[0]['id'],
+            'role'       => (string) $accounts[0]['role'],
+        ]);
 
         return ResponseHelper::json($response, [
             'user' => $this->userPayload($accounts[0], $chatId),
@@ -65,19 +84,30 @@ class BotController
 
         $user = User::findByUsername($phone);
         if (!$user) {
+            Logger::debug('Bot: link-phone found no matching account', ['chat_id' => $chatId]);
             return ResponseHelper::json($response, ['user' => null]);
         }
 
+        $context = [
+            'chat_id'    => $chatId,
+            'account_id' => (int) $user['id'],
+            'role'       => (string) $user['role'],
+        ];
+
         $linkedHere = TelegramLink::findByChatId($chatId);
         if ($linkedHere && !$this->containsUsername($linkedHere, $phone)) {
+            Logger::warning('Bot: link-phone rejected, chat already linked to another account', $context);
             throw new ApiException('این چت قبلاً به حساب دیگری وصل شده است', 409, 'CHAT_ALREADY_LINKED');
         }
 
         if (!empty($user['chat_id']) && (int) $user['chat_id'] !== $chatId) {
+            Logger::warning('Bot: link-phone rejected, account already linked elsewhere', $context);
             throw new ApiException('این حساب قبلاً به تلگرام دیگری وصل شده است', 409, 'USER_ALREADY_LINKED');
         }
 
         TelegramLink::attachChatId((int) $user['id'], $chatId);
+
+        Logger::info('Bot: link-phone attached', $context);
 
         return ResponseHelper::json($response, [
             'user' => $this->userPayload($user, $chatId),
@@ -96,6 +126,11 @@ class BotController
         $national_id = $body['national_id'] ?? null;   // ← اصلاح شد
 
         if (mb_strlen($fullName) < 2 || $grade < 7 || $grade > 12 || !in_array($major, self::MAJORS, true)) {
+            Logger::debug('Bot: register validation failed', [
+                'chat_id' => $chatId,
+                'grade'   => $grade,
+                'major'   => $major,
+            ]);
             throw new ApiException('اطلاعات ثبت‌نام نامعتبر است', 422, 'VALIDATION_ERROR');
         }
         if ($grade <= 9) {
@@ -103,9 +138,11 @@ class BotController
         }
 
         if (User::findByUsername($phone)) {
+            Logger::warning('Bot: register rejected, phone already registered', ['chat_id' => $chatId]);
             throw new ApiException('این شماره قبلاً ثبت شده است', 409, 'PHONE_ALREADY_REGISTERED');
         }
         if (TelegramLink::findByChatId($chatId)) {
+            Logger::warning('Bot: register rejected, chat already linked', ['chat_id' => $chatId]);
             throw new ApiException('این چت قبلاً به حسابی وصل شده است', 409, 'CHAT_ALREADY_LINKED');
         }
 
@@ -120,16 +157,36 @@ class BotController
                 'chat_id'     => $chatId,
             ]);
         } catch (\Throwable $e) {
-            Logger::error('Student registration failed: ' . $e->getMessage(), $e);
+            Logger::error('Bot: register failed to create student', [
+                'chat_id'    => $chatId,
+                'grade'      => $grade,
+                'major'      => $major,
+                'error'      => $e->getMessage(),
+                'exception'  => $e::class,
+                'file'       => $e->getFile(),
+                'line'       => $e->getLine(),
+            ]);
             throw new ApiException($e->getMessage(), 500, 'REGISTER_FAILED'); // موقتاً پیام واقعی
         }
 
         $user = User::findByUsername($phone);
         if (!$user) {
+            Logger::error('Bot: register could not reload created account', [
+                'chat_id' => $chatId,
+                'grade'   => $grade,
+            ]);
             throw new ApiException('ساخت حساب ناموفق بود', 500, 'REGISTER_FAILED');
         }
 
         TelegramLink::attachChatId((int) $user['id'], $chatId);
+
+        Logger::info('Bot: register completed', [
+            'chat_id'    => $chatId,
+            'account_id' => (int) $user['id'],
+            'student_id' => (int) $user['linked_id'],
+            'grade'      => $grade,
+            'major'      => $major,
+        ]);
 
         return ResponseHelper::json($response, [
             'user' => $this->userPayload($user, $chatId),

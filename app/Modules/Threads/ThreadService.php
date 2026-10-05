@@ -32,6 +32,9 @@ class ThreadService
 
         $supporterId = Student::findSupporterId($studentId);
         if (!$supporterId) {
+            Logger::warning('Threads: student message rejected, no supporter assigned', [
+                'student_id' => $studentId,
+            ]);
             throw new ApiException('هنوز پشتیبانی برای شما تعیین نشده است', 409, 'NO_SUPPORTER_ASSIGNED');
         }
         $day = IranDay::today();
@@ -57,6 +60,17 @@ class ThreadService
             $body,
             $attachments
         ));
+
+        Logger::info('Threads: student message stored', [
+            'student_id'       => $studentId,
+            'supporter_id'     => $supporterId,
+            'thread_id'        => $threadId,
+            'message_id'       => $messageId,
+            'day'              => $day,
+            'has_body'         => $body !== null,
+            'attachment_count' => count($attachments),
+            'media_group_id'   => $mediaGroupId !== null,
+        ]);
 
         return $this->messageResponse($messageId);
     }
@@ -280,7 +294,17 @@ class ThreadService
         if ($studentId <= 0) {
             throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
         }
-        $this->assertSupporterAccess($supporterId, $studentId, true);
+
+        try {
+            $this->assertSupporterAccess($supporterId, $studentId, true);
+        } catch (ApiException $e) {
+            Logger::warning('Threads: supporter reply rejected, no access to student', [
+                'supporter_id' => $supporterId,
+                'student_id'   => $studentId,
+                'error_code'   => $e->getErrorCode(),
+            ]);
+            throw $e;
+        }
 
         [$body, $attachments, $mediaGroupId] = MessageContent::parse($data);
 
@@ -313,6 +337,18 @@ class ThreadService
             $body,
             $attachments
         ));
+
+        Logger::info('Threads: supporter reply stored', [
+            'supporter_id'       => $supporterId,
+            'student_id'         => $studentId,
+            'thread_id'          => $threadId,
+            'message_id'         => $messageId,
+            'day'                => $day,
+            'snapshot_fallback'  => $activeSupporterId === null,
+            'has_body'           => $body !== null,
+            'attachment_count'   => count($attachments),
+            'media_group_id'     => $mediaGroupId !== null,
+        ]);
 
         return $this->messageResponse($messageId);
     }
