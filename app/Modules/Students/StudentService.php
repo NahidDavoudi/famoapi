@@ -22,39 +22,42 @@ class StudentService
         ];
     }
 
-    public function create(array $data): array
-    {
-        $supporterId = Supporter::findByField($data['field']);
+public function create(array $data): array
+{
+    // پشتیبان رو بر اساس (رشته، پایه) از supporter_scopes پیدا کن
+    $supporterId = Supporter::findForStudent(
+        (string) ($data['field'] ?? ''),
+        (int) ($data['grade'] ?? 0)
+    );
 
-        $db = Database::getConnection();
-        $db->beginTransaction();
+    $db = Database::getConnection();
+    $db->beginTransaction();
 
-        try {
+    try {
         $data['supporter_id'] = $supporterId;
 
-            $studentId = Student::create($data);
+        $studentId = Student::create($data);
 
-            $stmt = $db->prepare(
-                'INSERT INTO users (username, full_name, password_hash, role, linked_id)
-                 VALUES (:username, :full_name, :password_hash, :role, :linked_id)'
-            );
-            $stmt->execute([
-                'username'      => $data['phone'],
-                'full_name'     => $data['name'],
-                'password_hash' => password_hash('1234', PASSWORD_DEFAULT),
-                'role'          => 'student',
-                'linked_id'     => $studentId,
-            ]);
+        $stmt = $db->prepare(
+            'INSERT INTO users (username, full_name, password_hash, role, linked_id)
+             VALUES (:username, :full_name, :password_hash, :role, :linked_id)'
+        );
+        $stmt->execute([
+            'username'      => $data['phone'],
+            'full_name'     => $data['name'],
+            'password_hash' => password_hash('1234', PASSWORD_DEFAULT),
+            'role'          => 'student',
+            'linked_id'     => $studentId,
+        ]);
 
-            $db->commit();
-        } catch (\Throwable $e) {
-            $db->rollBack();
-            throw new ApiException($e->getMessage(), 500, 'REGISTER_FAILED'); // موقتاً پیام واقعی
-        }
-
-        return $this->get($studentId);
+        $db->commit();
+    } catch (\Throwable $e) {
+        $db->rollBack();
+        throw new ApiException($e->getMessage(), 500, 'REGISTER_FAILED');
     }
 
+    return $this->get($studentId);
+}
     public function get(int $id): array
     {
         $student = Student::findById($id);

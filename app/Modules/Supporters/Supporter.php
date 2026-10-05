@@ -331,4 +331,19 @@ class Supporter
         $stmt = $db->prepare('DELETE FROM supporters WHERE id = :id');
         return $stmt->execute(['id' => $id]);
     }
+    /**
+ * پیدا کردن پشتیبان مناسب بر اساس (رشته، پایه) از supporter_scopes.
+ */
+public static function findForStudent(string $field, int $grade): ?int
+{
+    $stmt = Database::getConnection()->prepare(
+        'SELECT supporter_id FROM supporter_scopes
+         WHERE field = :field AND grade = :grade
+         LIMIT 1'
+    );
+    $stmt->execute(['field' => $field, 'grade' => $grade]);
+    $id = $stmt->fetchColumn();
+
+    return $id !== false ? (int) $id : null;
+}
 }

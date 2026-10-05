@@ -1,17 +1,13 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Modules\Threads;
 
 use App\Core\ApiException;
-use App\Core\Logger;
 use App\Core\ResponseHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-/**
- * Module 3: thread/message endpoints for the bot host. Service-key protected
- * and acting on behalf of the linked account (bot_actor attribute).
- */
 class ThreadController
 {
     public function __construct(private ThreadService $service)
@@ -23,7 +19,7 @@ class ThreadController
         $actor = $request->getAttribute('bot_actor');
         $body = $request->getParsedBody() ?? [];
 
-        if ($body === [] || !isset($body['text']) && !isset($body['attachments'])) {
+        if ($body === [] || (!isset($body['text']) && !isset($body['attachments']))) {
             throw new ApiException('متن پیام یا پیوست الزامی است', 422, 'VALIDATION_ERROR');
         }
 
@@ -36,15 +32,19 @@ class ThreadController
         $query = $request->getQueryParams();
 
         $studentId = isset($query['student_id']) ? (int) $query['student_id'] : null;
-        $day = isset($query['day']) ? (string) $query['day'] : null;
-        $page = (int) ($query['page'] ?? 1);
-        $perPage = (int) ($query['perPage'] ?? 50);
+        $day       = isset($query['day']) ? (string) $query['day'] : null;
+        $page      = (int) ($query['page'] ?? 1);
+        $perPage   = (int) ($query['perPage'] ?? 50);
 
-        if ($studentId === null) {
+        // دانشجو خودش رو از actor می‌شناسه؛ فقط پشتیبان/ادمین باید student_id بدن
+        if ($studentId === null && ($actor['role'] ?? '') !== 'student') {
             throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
         }
 
-        return ResponseHelper::json($response, $this->service->getDay($actor, $studentId, $day, $page, $perPage));
+        return ResponseHelper::json(
+            $response,
+            $this->service->getDay($actor, $studentId, $day, $page, $perPage)
+        );
     }
 
     public function weekly(Request $request, Response $response): Response
@@ -55,11 +55,10 @@ class ThreadController
         $studentId = isset($query['student_id']) ? (int) $query['student_id'] : null;
         $weekStart = isset($query['week_start']) ? (string) $query['week_start'] : null;
 
-        // if ($studentId === null) {
-        //     throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
-        // }
-
-        return ResponseHelper::json($response, $this->service->weekly($actor, $studentId, $weekStart));
+        return ResponseHelper::json(
+            $response,
+            $this->service->weekly($actor, $studentId, $weekStart)
+        );
     }
 
     public function markRead(Request $request, Response $response): Response
@@ -68,12 +67,16 @@ class ThreadController
         $body = $request->getParsedBody() ?? [];
 
         $studentId = isset($body['student_id']) ? (int) $body['student_id'] : null;
-        $day = isset($body['day']) ? (string) $body['day'] : null;
+        $day       = isset($body['day']) ? (string) $body['day'] : null;
 
-        if ($studentId === null) {
+        // دانشجو برای خودش student_id نمی‌فرسته
+        if ($studentId === null && ($actor['role'] ?? '') !== 'student') {
             throw new ApiException('شناسه دانش‌آموز الزامی است', 422, 'VALIDATION_ERROR');
         }
 
-        return ResponseHelper::json($response, $this->service->markRead($actor, $studentId, $day));
+        return ResponseHelper::json(
+            $response,
+            $this->service->markRead($actor, $studentId, $day)
+        );
     }
 }
