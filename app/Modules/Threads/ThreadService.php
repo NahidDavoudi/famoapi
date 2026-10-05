@@ -324,7 +324,7 @@ class ThreadService
         try {
             $enqueue();
         } catch (\Throwable $e) {
-            throw new ApiException($e->getMessage(), 500, 'INTERNAL_ERROR');
+            error_log('Threads: outbox enqueue failed: ' . $e->getMessage());
         }
     }
 
