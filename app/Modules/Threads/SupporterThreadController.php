@@ -3,7 +3,7 @@
 namespace App\Modules\Threads;
 
 use App\Core\ApiException;
-use App\Core\Logger;
+
 use App\Core\ResponseHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;

@@ -3,7 +3,7 @@
 namespace App\Modules\Threads;
 
 use App\Core\ApiException;
-use App\Core\Logger;
+
 use App\Core\Pagination;
 use App\Modules\Bot\IranDay;
 use App\Modules\Outbox\OutboxService;
@@ -324,12 +324,7 @@ class ThreadService
         try {
             $enqueue();
         } catch (\Throwable $e) {
-            Logger::error('Threads: outbox enqueue failed', [
-                'error'   => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-                'trace'   => $e->getTrace() ?? [],
-            ]);
+            throw new ApiException($e->getMessage(), 500, 'INTERNAL_ERROR');
         }
     }
 

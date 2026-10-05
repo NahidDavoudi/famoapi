@@ -9,7 +9,7 @@ use App\Modules\Students\Student;
 use App\Modules\Students\StudentService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use App\Core\Logger;
+
 
 class BotController
 {
@@ -120,7 +120,6 @@ class BotController
                 'chat_id'     => $chatId,
             ]);
         } catch (\Throwable $e) {
-            Logger::error('Student registration failed: ' . $e->getMessage(), $e);
             throw new ApiException($e->getMessage(), 500, 'REGISTER_FAILED'); // موقتاً پیام واقعی
         }
 
