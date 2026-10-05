@@ -37,9 +37,7 @@ use App\Modules\ParentContacts\ParentContactController;
 use App\Modules\ParentContacts\ParentContactService;
 use App\Modules\Assignments\AssignmentController;
 use App\Modules\Assignments\AssignmentService;
-use App\Modules\Bot\BotActorMiddleware;
 use App\Modules\Bot\BotController;
-use App\Modules\Bot\BotServiceMiddleware;
 use App\Modules\Linking\LinkController;
 use App\Modules\Linking\LinkService;
 use App\Modules\Broadcasts\BroadcastController;
@@ -90,8 +88,6 @@ return function (App $app) {
     $broadcastController = new BroadcastController(new BroadcastService());
     $statsController = new StatsController(new StatsService());
     $requireContentAccess = new ContentAccessMiddleware();
-    $botServiceMiddleware = new BotServiceMiddleware();
-    $botActorMiddleware = new BotActorMiddleware();
 
     // Health
     $app->get('/api/v1/health', function (Request $request, Response $response) {
@@ -195,10 +191,9 @@ return function (App $app) {
         $supporterThreadController,
         $outboxController,
         $broadcastController,
-        $botActorMiddleware
     ) {
         $group->get('/ping', [$botController, 'ping']);
-        $group->get('/me', [$botController, 'me'])->add($botActorMiddleware);
+        $group->get('/me', [$botController, 'me']);
 
         // ورود/ثبت‌نام از طریق ربات (کنترلر جدید)
         $group->post('/resolve', [$botController, 'resolve']);
@@ -214,26 +209,26 @@ return function (App $app) {
         $group->post('/identity/unblock', [$linkController, 'unblock']);
         
         // Threads & messages (acting on behalf of a linked account)
-        $group->post('/threads/messages', [$threadController, 'sendMessage'])->add($botActorMiddleware);
-        $group->get('/threads/day', [$threadController, 'getDay'])->add($botActorMiddleware);
-        $group->get('/threads/weekly', [$threadController, 'weekly'])->add($botActorMiddleware);
-        $group->post('/threads/read', [$threadController, 'markRead'])->add($botActorMiddleware);
+        $group->post('/threads/messages', [$threadController, 'sendMessage']);
+        $group->get('/threads/day', [$threadController, 'getDay']);
+        $group->get('/threads/weekly', [$threadController, 'weekly']);
+        $group->post('/threads/read', [$threadController, 'markRead']);
 
-        $group->get('/supporter/inbox', [$supporterThreadController, 'inbox'])->add($botActorMiddleware);
-        $group->get('/supporter/students', [$supporterThreadController, 'students'])->add($botActorMiddleware);
-        $group->get('/supporter/students/{studentId:[0-9]+}/unread', [$supporterThreadController, 'unread'])->add($botActorMiddleware);
-        $group->post('/supporter/reply', [$supporterThreadController, 'reply'])->add($botActorMiddleware);
+        $group->get('/supporter/inbox', [$supporterThreadController, 'inbox']);
+        $group->get('/supporter/students', [$supporterThreadController, 'students']);
+        $group->get('/supporter/students/{studentId:[0-9]+}/unread', [$supporterThreadController, 'unread']);
+        $group->post('/supporter/reply', [$supporterThreadController, 'reply']);
 
         // Broadcasts (supporter → own students)
-        $group->post('/broadcasts/preview', [$broadcastController, 'preview'])->add($botActorMiddleware);
-        $group->post('/broadcasts/confirm', [$broadcastController, 'confirm'])->add($botActorMiddleware);
-        $group->get('/broadcasts', [$broadcastController, 'list'])->add($botActorMiddleware);
-        $group->get('/broadcasts/{id:[0-9]+}', [$broadcastController, 'get'])->add($botActorMiddleware);
+        $group->post('/broadcasts/preview', [$broadcastController, 'preview']);
+        $group->post('/broadcasts/confirm', [$broadcastController, 'confirm']);
+        $group->get('/broadcasts', [$broadcastController, 'list']);
+        $group->get('/broadcasts/{id:[0-9]+}', [$broadcastController, 'get']);
 
         // Outbox pull/report protocol (bot worker; service key only)
         $group->post('/outbox/claim', [$outboxController, 'claim']);
         $group->post('/outbox/report', [$outboxController, 'report']);
-    })->add($botServiceMiddleware);
+    });
 
     // Exams (protected)
     $app->get('/api/v1/exams', [$examController, 'getAll'])->add($authMiddleware);

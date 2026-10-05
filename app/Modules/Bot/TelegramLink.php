@@ -6,7 +6,6 @@ use App\Core\Database;
 
 class TelegramLink
 {
-    /** همه اتصال‌های یک چت (چند نقش ممکنه باشه). */
     public static function findByChatId(int $chatId): array
     {
         $stmt = Database::getConnection()->prepare(
@@ -16,8 +15,7 @@ class TelegramLink
                     u.linked_id,
                     u.linked_id AS account_id,
                     u.chat_id,
-                    COALESCE(u.full_name, s.name) AS full_name,
-                    COALESCE(u.full_name, s.name) AS name
+                    COALESCE(u.full_name, s.name) AS full_name
              FROM users u
              LEFT JOIN students s ON u.role = 'student' AND s.id = u.linked_id
              WHERE u.chat_id = :chat
@@ -28,7 +26,6 @@ class TelegramLink
         return $stmt->fetchAll();
     }
 
-    /** یک اتصال مشخص با chat_id + role. */
     public static function findByChatIdAndRole(int $chatId, string $role): ?array
     {
         $stmt = Database::getConnection()->prepare(
@@ -51,7 +48,6 @@ class TelegramLink
         return $row ?: null;
     }
 
-    /** chat_id را روی کاربر موجود ست می‌کند. */
     public static function attachChatId(int $userId, int $chatId): int
     {
         $stmt = Database::getConnection()->prepare(
