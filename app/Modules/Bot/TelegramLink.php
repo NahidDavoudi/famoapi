@@ -26,28 +26,25 @@ class TelegramLink
         return $stmt->fetchAll();
     }
 
-    public static function findByChatIdAndRole(int $chatId, string $role): ?array
+    public static function findByChatIdAndRoles(int $chatId, array $roles): ?array
     {
-        $stmt = Database::getConnection()->prepare(
-            "SELECT u.id,
-                    u.username,
-                    u.role,
-                    u.linked_id,
-                    u.linked_id AS account_id,
-                    u.chat_id,
-                    COALESCE(u.full_name, s.name) AS full_name,
-                    COALESCE(u.full_name, s.name) AS name
-             FROM users u
-             LEFT JOIN students s ON u.role = 'student' AND s.id = u.linked_id
-             WHERE u.chat_id = :chat AND u.role = :role
-             LIMIT 1"
+        if ($roles === []) {
+            return null;
+        }
+        $ph = implode(',', array_fill(0, count($roles), '?'));
+        $stmt = \App\Core\Database::getConnection()->prepare(
+            "SELECT u.role, u.linked_id AS account_id,
+                COALESCE(u.full_name, s.name) AS name
+         FROM users u
+         LEFT JOIN students s ON u.role = 'student' AND s.id = u.linked_id
+         WHERE u.chat_id = ? AND u.role IN ({$ph})
+         LIMIT 1"
         );
-        $stmt->execute(['chat' => (string) $chatId, 'role' => $role]);
+        $stmt->execute(array_merge([(string) $chatId], $roles));
         $row = $stmt->fetch();
 
         return $row ?: null;
     }
-
     public static function attachChatId(int $userId, int $chatId): int
     {
         $stmt = Database::getConnection()->prepare(

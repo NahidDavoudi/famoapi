@@ -37,7 +37,9 @@ use App\Modules\ParentContacts\ParentContactController;
 use App\Modules\ParentContacts\ParentContactService;
 use App\Modules\Assignments\AssignmentController;
 use App\Modules\Assignments\AssignmentService;
+use App\Modules\Bot\BotAuth;
 use App\Modules\Bot\BotController;
+use App\Modules\Bot\BotServiceMiddleware;
 use App\Modules\Linking\LinkController;
 use App\Modules\Linking\LinkService;
 use App\Modules\Broadcasts\BroadcastController;
@@ -183,19 +185,22 @@ return function (App $app) {
     $app->get('/api/v1/assignments/history/{studentId:[0-9]+}', [$assignmentController, 'history'])->add($requireAdmin)->add($authMiddleware);
     $app->post('/api/v1/assignments/initial-fill', [$assignmentController, 'initialFill'])->add($requireAdmin)->add($authMiddleware);
 
-    // Bot gateway + identity/linking. Service-key protected, never JWT.
+    // ─────────────────────────────────────────────────────────────
+    // Bot gateway. Service-key protected, never JWT.
+    // Split into two groups because some endpoints act "on behalf of" a
+    // linked account (need actor headers), and some don't.
+    // ─────────────────────────────────────────────────────────────
+
+    // Group 1: service-key only (no actor). Used for ping, resolve, link,
+    // register, identity management, and the outbox pull protocol.
     $app->group('/api/v1/bot', function ($group) use (
         $botController,
         $linkController,
-        $threadController,
-        $supporterThreadController,
         $outboxController,
-        $broadcastController,
     ) {
         $group->get('/ping', [$botController, 'ping']);
-        $group->get('/me', [$botController, 'me']);
 
-        // ورود/ثبت‌نام از طریق ربات (کنترلر جدید)
+        // ورود/ثبت‌نام از طریق ربات
         $group->post('/resolve', [$botController, 'resolve']);
         $group->post('/link-phone', [$botController, 'linkPhone']);
         $group->post('/register', [$botController, 'register']);
@@ -207,7 +212,23 @@ return function (App $app) {
         $group->post('/identity/unlink', [$linkController, 'unlink']);
         $group->post('/identity/block', [$linkController, 'block']);
         $group->post('/identity/unblock', [$linkController, 'unblock']);
-        
+
+        // Outbox pull/report protocol (bot worker; service key only)
+        $group->post('/outbox/claim', [$outboxController, 'claim']);
+        $group->post('/outbox/report', [$outboxController, 'report']);
+    })->add(new BotServiceMiddleware());
+
+    // Group 2: service-key + actor. Threads, supporter tools, broadcasts.
+    // NOTE on `.add()` ordering in Slim: the LAST added middleware runs FIRST,
+    // so BotServiceMiddleware (service-key check) runs before BotAuth (actor).
+    $app->group('/api/v1/bot', function ($group) use (
+        $botController,
+        $threadController,
+        $supporterThreadController,
+        $broadcastController,
+    ) {
+        $group->get('/me', [$botController, 'me']);
+
         // Threads & messages (acting on behalf of a linked account)
         $group->post('/threads/messages', [$threadController, 'sendMessage']);
         $group->get('/threads/day', [$threadController, 'getDay']);
@@ -224,11 +245,9 @@ return function (App $app) {
         $group->post('/broadcasts/confirm', [$broadcastController, 'confirm']);
         $group->get('/broadcasts', [$broadcastController, 'list']);
         $group->get('/broadcasts/{id:[0-9]+}', [$broadcastController, 'get']);
-
-        // Outbox pull/report protocol (bot worker; service key only)
-        $group->post('/outbox/claim', [$outboxController, 'claim']);
-        $group->post('/outbox/report', [$outboxController, 'report']);
-    });
+    })
+        ->add(new BotAuth())
+        ->add(new BotServiceMiddleware());
 
     // Exams (protected)
     $app->get('/api/v1/exams', [$examController, 'getAll'])->add($authMiddleware);
