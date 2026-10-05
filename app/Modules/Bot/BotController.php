@@ -9,7 +9,7 @@ use App\Modules\Students\Student;
 use App\Modules\Students\StudentService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-
+use App\Core\Logger;
 
 class BotController
 {
@@ -26,31 +26,63 @@ class BotController
     }
 
     public function me(Request $request, Response $response): Response
-{
-    $actor = $request->getAttribute('bot_actor');
+    {
+        /** @var array $actor */
+        $actor = $request->getAttribute('bot_actor');
 
-    return ResponseHelper::json($response, [
-        'role'       => $actor['role'],
-        'account_id' => $actor['account_id'],
-        'name'       => $actor['name'],
-        'chat_id'    => $actor['chat_id'],
-    ]);
-}
-
-/** POST /bot/resolve */
-public function resolve(Request $request, Response $response): Response
-{
-    $chatId = $this->chatId($this->body($request));
-
-    $accounts = TelegramLink::findByChatId($chatId);
-    if (!$accounts) {
-        throw new ApiException('این چت به حسابی وصل نیست', 404, 'NOT_LINKED');
+        return ResponseHelper::json($response, [
+            'role'             => $actor['role'],
+            'account_id'       => $actor['account_id'],
+            'name'             => $actor['name'],
+            'telegram_user_id' => (int) $actor['link']['telegram_user_id'],
+            'chat_id'          => (int) $actor['link']['chat_id'],
+            'is_blocked'       => (int) $actor['link']['is_blocked'] === 1,
+            'linked_at'        => $actor['link']['linked_at'],
+        ]);
     }
 
-    return ResponseHelper::json($response, [
-        'user' => $this->userPayload($accounts[0], $chatId),
-    ]);
-}
+    /** POST /bot/resolve */
+    public function resolve(Request $request, Response $response): Response
+    {
+        $chatId = $this->chatId($this->body($request));
+
+        $accounts = TelegramLink::findByChatId($chatId);
+        if (!$accounts) {
+            throw new ApiException('این چت به حسابی وصل نیست', 404, 'NOT_LINKED');
+        }
+
+        return ResponseHelper::json($response, [
+            'user' => $this->userPayload($accounts[0], $chatId),
+        ]);
+    }
+
+    /** POST /bot/link-phone */
+    public function linkPhone(Request $request, Response $response): Response
+    {
+        $body   = $this->body($request);
+        $chatId = $this->chatId($body);
+        $phone  = $this->phone($body);
+
+        $user = User::findByUsername($phone);
+        if (!$user) {
+            return ResponseHelper::json($response, ['user' => null]);
+        }
+
+        $linkedHere = TelegramLink::findByChatId($chatId);
+        if ($linkedHere && !$this->containsUsername($linkedHere, $phone)) {
+            throw new ApiException('این چت قبلاً به حساب دیگری وصل شده است', 409, 'CHAT_ALREADY_LINKED');
+        }
+
+        if (!empty($user['chat_id']) && (int) $user['chat_id'] !== $chatId) {
+            throw new ApiException('این حساب قبلاً به تلگرام دیگری وصل شده است', 409, 'USER_ALREADY_LINKED');
+        }
+
+        TelegramLink::attachChatId((int) $user['id'], $chatId);
+
+        return ResponseHelper::json($response, [
+            'user' => $this->userPayload($user, $chatId),
+        ]);
+    }
 
     /** POST /bot/register */
     public function register(Request $request, Response $response): Response
@@ -88,6 +120,7 @@ public function resolve(Request $request, Response $response): Response
                 'chat_id'     => $chatId,
             ]);
         } catch (\Throwable $e) {
+            Logger::error('Student registration failed: ' . $e->getMessage(), $e);
             throw new ApiException($e->getMessage(), 500, 'REGISTER_FAILED'); // موقتاً پیام واقعی
         }
 

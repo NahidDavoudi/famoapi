@@ -3,7 +3,7 @@
 namespace App\Modules\Threads;
 
 use App\Core\Database;
-
+use App\Core\Logger;
 
 /**
  * Model for `report_threads`: exactly one thread per (student, Tehran day).
@@ -64,7 +64,13 @@ class Thread
                     return (int) $existing['id'];
                 }
             }
-            throw new ApiException($e->getMessage(), 500, 'REGISTER_FAILED'); // موقتاً پیام واقعی
+            Logger::error('Thread::ensure failed', [
+                'student_id' => $studentId,
+                'day'        => $day,
+                'error'      => $e->getMessage(),
+                'sql_state'  => $e->getCode(),
+            ]);
+            throw $e;
         }
     }
 
