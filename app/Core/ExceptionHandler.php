@@ -1,9 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Core;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Psr7\Response;
 use Throwable;
 
 class ExceptionHandler
@@ -48,19 +50,27 @@ class ExceptionHandler
 
         if ($logErrors) {
             $requestId = (string) ($request->getAttribute('request_id') ?? bin2hex(random_bytes(8)));
-            $logMessage = '[' . date('Y-m-d H:i:s') . '] request_id=' . $requestId . ' '
-                . get_class($exception) . ': ' . $exception->getMessage()
-                . ' in ' . $exception->getFile() . ':' . $exception->getLine();
-            $logPath = __DIR__ . '/../../storage/logs/app.log';
-            $logDirectory = dirname($logPath);
-            if (!is_dir($logDirectory) && !@mkdir($logDirectory, 0750, true) && !is_dir($logDirectory)) {
-                error_log($logMessage);
-            } elseif (@file_put_contents($logPath, $logMessage . PHP_EOL, FILE_APPEND | LOCK_EX) === false) {
-                error_log($logMessage);
+
+            $context = [
+                'request_id' => $requestId,
+                'class'      => get_class($exception),
+                'file'       => $exception->getFile(),
+                'line'       => $exception->getLine(),
+            ];
+
+            if ($logErrorDetails) {
+                $context['trace'] = $exception->getTraceAsString();
             }
+
+            // خطاهای PDO رو با جزئیات SQL STATE هم لاگ کن
+            if ($databaseException !== null) {
+                $context['sql_state'] = (string) $databaseException->getCode();
+            }
+
+            Logger::error($exception->getMessage(), $context);
         }
 
-        $response = new \Slim\Psr7\Response();
+        $response = new Response();
         $response->getBody()->write(json_encode([
             'success'    => false,
             'data'       => null,
@@ -82,7 +92,7 @@ class ExceptionHandler
         return $response;
     }
 
-    private function findDatabaseException(\Throwable $exception): ?\PDOException
+    private function findDatabaseException(Throwable $exception): ?\PDOException
     {
         $current = $exception;
         $seen = [];

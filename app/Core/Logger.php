@@ -3,67 +3,46 @@ declare(strict_types=1);
 
 namespace App\Core;
 
-use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\RotatingFileHandler;
-use Monolog\Level;
-use Monolog\Logger as MonologLogger;
+use JsonSerializable;
+use Throwable;
 
+/**
+ * Minimal file logger. No external dependencies.
+ * Writes to storage/logs/app.log; falls back to error_log() on failure.
+ *
+ * نکته: logging هرگز نباید درخواست رو کرش کنه. تمام متدها safe هستن.
+ */
 final class Logger
 {
-    private static ?MonologLogger $logger = null;
-
     private static string $path = '';
 
     public static function boot(?string $path = null): void
     {
         self::$path = $path ?? self::defaultPath();
-        self::$logger = null;
-    }
-
-    public static function channel(): MonologLogger
-    {
-        if (self::$logger instanceof MonologLogger) {
-            return self::$logger;
-        }
-
-        $path = self::$path !== '' ? self::$path : self::defaultPath();
-        $dir = dirname($path);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0770, true);
-        }
-
-        // debug توی production خیلی حرف می‌زنه؛ فقط local
-        $isLocal = (($_ENV['APP_ENV'] ?? 'prod') === 'local');
-        $level = $isLocal ? Level::Debug : Level::Warning;
-
-        $handler = new RotatingFileHandler($path, 14, $level);
-        $handler->setFormatter(new LineFormatter(null, null, true, true));
-
-        return self::$logger = new MonologLogger('bot', [$handler]);
     }
 
     /** @param array<string,mixed> $context */
     public static function debug(string $message, array $context = []): void
     {
-        self::channel()->debug(self::redact($message), self::scrub($context));
+        self::write('DEBUG', $message, $context);
     }
 
     /** @param array<string,mixed> $context */
     public static function info(string $message, array $context = []): void
     {
-        self::channel()->info(self::redact($message), self::scrub($context));
+        self::write('INFO', $message, $context);
     }
 
     /** @param array<string,mixed> $context */
     public static function warning(string $message, array $context = []): void
     {
-        self::channel()->warning(self::redact($message), self::scrub($context));
+        self::write('WARNING', $message, $context);
     }
 
     /** @param array<string,mixed> $context */
     public static function error(string $message, array $context = []): void
     {
-        self::channel()->error(self::redact($message), self::scrub($context));
+        self::write('ERROR', $message, $context);
     }
 
     public static function redact(string $text): string
@@ -85,6 +64,39 @@ final class Logger
         return $text;
     }
 
+    private static function write(string $level, string $message, array $context): void
+    {
+        try {
+            $message = self::redact($message);
+            $context = self::scrub($context);
+
+            $line = sprintf(
+                '[%s] %s: %s%s',
+                date('Y-m-d H:i:s'),
+                $level,
+                $message,
+                $context !== []
+                    ? ' ' . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                    : ''
+            );
+
+            $path = self::$path !== '' ? self::$path : self::defaultPath();
+            $dir = dirname($path);
+
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0750, true);
+            }
+
+            if (is_dir($dir) && is_writable($dir)) {
+                @file_put_contents($path, $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+            } else {
+                error_log($line);
+            }
+        } catch (Throwable) {
+            // logging must never break the request
+        }
+    }
+
     private static function scrub(mixed $value): mixed
     {
         if (is_string($value)) {
@@ -93,11 +105,27 @@ final class Logger
 
         if (is_array($value)) {
             $out = [];
-            foreach ($value as $key => $item) {
-                $out[$key] = self::scrub($item);
+            foreach ($value as $k => $v) {
+                $out[$k] = self::scrub($v);
             }
-
             return $out;
+        }
+
+        if ($value instanceof Throwable) {
+            return [
+                'class'   => get_class($value),
+                'message' => self::redact($value->getMessage()),
+                'file'    => $value->getFile(),
+                'line'    => $value->getLine(),
+            ];
+        }
+
+        if ($value instanceof JsonSerializable) {
+            return self::scrub($value->jsonSerialize());
+        }
+
+        if (is_object($value)) {
+            return ['_class' => get_class($value)];
         }
 
         return $value;
@@ -105,6 +133,6 @@ final class Logger
 
     private static function defaultPath(): string
     {
-        return dirname(__DIR__, 2) . '/storage/logs/bot.log';
+        return dirname(__DIR__, 2) . '/storage/logs/app.log';
     }
 }
