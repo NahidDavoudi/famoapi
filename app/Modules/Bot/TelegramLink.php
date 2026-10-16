@@ -45,6 +45,20 @@ class TelegramLink
 
         return $row ?: null;
     }
+
+    public static function findByRoleAndAccount(string $role, int $accountId): ?array
+    {
+        $stmt = Database::getConnection()->prepare(
+            "SELECT *
+             FROM telegram_links
+             WHERE role = ? AND account_id = ?
+             LIMIT 1"
+        );
+        $stmt->execute([$role, (string) $accountId]);
+
+        return $stmt->fetch() ?: null;
+    }
+
     public static function attachChatId(int $userId, int $chatId): int
     {
         $stmt = Database::getConnection()->prepare(
