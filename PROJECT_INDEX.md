@@ -11,19 +11,19 @@
 |---|---:|---:|---:|---:|---:|---:|---:|---|---|
 | **Admins** | 1 | 30 | 20 | 5 | 1 | 0 | 1 | [app](1) | Linking(1) |
 | **Appointments** | 3 | 323 | 265 | 17 | 3 | 0 | 2 | [app](5) | [routes](2) |
-| **Assignments** | 4 | 778 | 553 | 114 | 4 | 0 | 3 | [app](7), Supporters(2), Students(2) | [tests](6), [routes](2), Linking(1) |
+| **Assignments** | 4 | 778 | 553 | 114 | 4 | 0 | 3 | [app](7), Students(2), Supporters(2) | [tests](6), [routes](2), Linking(1) |
 | **Attendance** | 3 | 564 | 406 | 74 | 3 | 0 | 2 | [app](5), Bot(2) | [routes](2) |
 | **Auth** | 8 | 1,414 | 1,148 | 43 | 8 | 0 | 5 | [app](31), Bot(1), Linking(1) | [tests](6), [routes](5), Bot(1), Tutoring(1) |
 | **Blog** | 3 | 589 | 492 | 19 | 3 | 0 | 2 | [app](6) | [routes](1), [tests](1) |
 | **Bot** | 6 | 787 | 559 | 109 | 6 | 0 | 3 | [app](6), Students(2), Auth(1) | [tests](12), [routes](3), Attendance(2), Linking(2), Stats(2), Supporters(2), Tutoring(2), Auth(1), Broadcasts(1), Outbox(1), Threads(1) |
-| **Broadcasts** | 4 | 525 | 396 | 52 | 4 | 0 | 3 | [app](6), Threads(4), Bot(1), Outbox(1), Students(1) | [routes](2), Outbox(1) |
+| **Broadcasts** | 4 | 525 | 396 | 52 | 4 | 0 | 3 | [app](6), Threads(4), Outbox(1), Bot(1), Students(1) | [routes](2), Outbox(1) |
 | **Courses** | 3 | 375 | 322 | 1 | 3 | 0 | 1 | [app](7) | [routes](2), [tests](1) |
 | **Dashboard** | 1 | 51 | 34 | 7 | 1 | 0 | 3 | [app](1) | [routes](1) |
 | **Exams** | 3 | 398 | 329 | 23 | 3 | 0 | 3 | [app](5) | [routes](2), [tests](1) |
 | **Files** | 3 | 338 | 283 | 14 | 3 | 0 | 2 | [app](7) | [routes](2) |
 | **Instructors** | 3 | 366 | 312 | 1 | 3 | 0 | 1 | [app](7) | [routes](2), [tests](1) |
-| **Linking** | 2 | 365 | 292 | 16 | 2 | 0 | 0 | [app](2), Bot(2), Assignments(1), Admins(1), Supporters(1), Students(1) | [routes](2), Auth(1) |
-| **Outbox** | 3 | 548 | 408 | 80 | 3 | 0 | 1 | [app](4), Bot(1), Broadcasts(1), Students(1) | [routes](2), Broadcasts(1), Threads(1), [tests](1) |
+| **Linking** | 2 | 365 | 292 | 16 | 2 | 0 | 0 | [app](2), Bot(2), Admins(1), Students(1), Supporters(1), Assignments(1) | [routes](2), Auth(1) |
+| **Outbox** | 3 | 548 | 408 | 80 | 3 | 0 | 1 | [app](4), Bot(1), Students(1), Broadcasts(1) | [routes](2), Broadcasts(1), Threads(1), [tests](1) |
 | **ParentContacts** | 3 | 345 | 303 | 4 | 3 | 0 | 2 | [app](4) | [routes](2) |
 | **Public** | 5 | 190 | 165 | 0 | 5 | 0 | 5 | [app](4) | [routes](1) |
 | **Reports** | 3 | 127 | 92 | 13 | 3 | 0 | 3 | [app](2) | [routes](2) |
@@ -31,7 +31,7 @@
 | **Students** | 3 | 1,013 | 821 | 73 | 3 | 0 | 6 | [app](7), Supporters(1) | Assignments(2), Bot(2), [routes](2), Broadcasts(1), Linking(1), Outbox(1), Stats(1), Threads(1), WeeklyPlans(1) |
 | **Subscription** | 3 | 48 | 36 | 6 | 2 | 0 | 1 | [app](1) | - |
 | **Supporters** | 3 | 812 | 628 | 71 | 3 | 0 | 4 | [app](7), Bot(2) | [tests](3), Assignments(2), [routes](2), Linking(1), Students(1) |
-| **Threads** | 7 | 1,218 | 883 | 163 | 7 | 0 | 4 | [app](14), Bot(1), Outbox(1), Students(1) | Broadcasts(4), Stats(3), [routes](3), [tests](3) |
+| **Threads** | 7 | 1,218 | 883 | 163 | 7 | 0 | 4 | [app](14), Outbox(1), Bot(1), Students(1) | Broadcasts(4), Stats(3), [routes](3), [tests](3) |
 | **Topics** | 3 | 177 | 149 | 0 | 3 | 0 | 2 | [app](2) | [routes](2) |
 | **Tutoring** | 3 | 753 | 509 | 139 | 3 | 0 | 6 | [app](5), Bot(2), Auth(1) | [routes](2) |
 | **WeeklyPlans** | 4 | 831 | 670 | 66 | 4 | 0 | 5 | [app](7), Students(1) | [routes](2) |
@@ -41,8 +41,8 @@
 | **[database]** | 16 | 606 | 606 | 0 | 0 | 0 | 0 | - | - |
 | **[public]** | 1 | 7 | 4 | 0 | 0 | 0 | 0 | - | - |
 | **[root]** | 2 | 516 | 516 | 0 | 0 | 0 | 0 | - | - |
-| **[routes]** | 1 | 325 | 255 | 37 | 0 | 0 | 0 | Auth(5), Stats(3), Bot(3), Threads(3), WeeklyPlans(2), Broadcasts(2), Outbox(2), Reports(2), Courses(2), Topics(2), Linking(2), Supporters(2), Appointments(2), Attendance(2), Students(2), Instructors(2), Tutoring(2), ParentContacts(2), Exams(2), Assignments(2), [app](2), Files(2), Blog(1), Public(1), Dashboard(1) | - |
-| **[tests]** | 34 | 6,155 | 4,994 | 124 | 32 | 0 | 26 | [app](33), Bot(12), Auth(6), Assignments(6), Supporters(3), Threads(3), Blog(1), Exams(1), Courses(1), Instructors(1), Outbox(1) | - |
+| **[routes]** | 1 | 325 | 255 | 37 | 0 | 0 | 0 | Auth(5), Threads(3), Bot(3), Stats(3), Instructors(2), Attendance(2), Assignments(2), Appointments(2), Linking(2), Reports(2), Outbox(2), WeeklyPlans(2), [app](2), Supporters(2), Exams(2), Tutoring(2), Topics(2), Students(2), Files(2), Courses(2), ParentContacts(2), Broadcasts(2), Public(1), Dashboard(1), Blog(1) | - |
+| **[tests]** | 34 | 6,155 | 4,994 | 124 | 32 | 0 | 26 | [app](33), Bot(12), Auth(6), Assignments(6), Supporters(3), Threads(3), Blog(1), Exams(1), Instructors(1), Courses(1), Outbox(1) | - |
 
 > عدد داخل پرانتز = تعداد وابستگی‌های فایل‌به‌کلاس بین دو ماژول.
 
@@ -138,7 +138,7 @@ Appointments/  (3 files, 323 lines)
 - فایل: 4 | کل خط: 778 | کد: 553 | کامنت: 114 | خالی: 111
 - به تفکیک پسوند: `.php`=778
 - namespaceها: `App\Modules\Assignments`
-- وابسته به ماژول: **[app]**, **Supporters**, **Students**
+- وابسته به ماژول: **[app]**, **Students**, **Supporters**
 - مورد استفاده توسط: **Linking**, **[routes]**, **[tests]**
 - وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`
 
@@ -242,7 +242,7 @@ Bot/  (6 files, 787 lines)
 - فایل: 4 | کل خط: 525 | کد: 396 | کامنت: 52 | خالی: 77
 - به تفکیک پسوند: `.php`=525
 - namespaceها: `App\Modules\Broadcasts`
-- وابسته به ماژول: **[app]**, **Threads**, **Bot**, **Outbox**, **Students**
+- وابسته به ماژول: **[app]**, **Threads**, **Outbox**, **Bot**, **Students**
 - مورد استفاده توسط: **Outbox**, **[routes]**
 - وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`
 
@@ -355,7 +355,7 @@ Instructors/  (3 files, 366 lines)
 - فایل: 2 | کل خط: 365 | کد: 292 | کامنت: 16 | خالی: 57
 - به تفکیک پسوند: `.php`=365
 - namespaceها: `App\Modules\Linking`
-- وابسته به ماژول: **[app]**, **Bot**, **Assignments**, **Admins**, **Supporters**, **Students**
+- وابسته به ماژول: **[app]**, **Admins**, **Bot**, **Students**, **Supporters**, **Assignments**
 - مورد استفاده توسط: **Auth**, **[routes]**
 - وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`, `App\Modules`
 
@@ -373,7 +373,7 @@ Linking/  (2 files, 365 lines)
 - فایل: 3 | کل خط: 548 | کد: 408 | کامنت: 80 | خالی: 60
 - به تفکیک پسوند: `.php`=548
 - namespaceها: `App\Modules\Outbox`
-- وابسته به ماژول: **[app]**, **Bot**, **Broadcasts**, **Students**
+- وابسته به ماژول: **[app]**, **Bot**, **Students**, **Broadcasts**
 - مورد استفاده توسط: **Broadcasts**, **Threads**, **[routes]**, **[tests]**
 - وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`
 
@@ -526,7 +526,7 @@ Supporters/  (3 files, 812 lines)
 - فایل: 7 | کل خط: 1,218 | کد: 883 | کامنت: 163 | خالی: 172
 - به تفکیک پسوند: `.php`=1,218
 - namespaceها: `App\Modules\Threads`
-- وابسته به ماژول: **[app]**, **Bot**, **Outbox**, **Students**
+- وابسته به ماژول: **[app]**, **Outbox**, **Bot**, **Students**
 - مورد استفاده توسط: **Broadcasts**, **Stats**, **[routes]**, **[tests]**
 - وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`
 
@@ -608,7 +608,7 @@ WeeklyPlans/  (4 files, 831 lines)
 - به تفکیک پسوند: `.php`=1,876
 - namespaceها: `App\Core`, `App\Helpers`
 - مورد استفاده توسط: **Admins**, **Appointments**, **Assignments**, **Attendance**, **Auth**, **Blog**, **Bot**, **Broadcasts**, **Courses**, **Dashboard**, **Exams**, **Files**, **Instructors**, **Linking**, **Outbox**, **ParentContacts**, **Public**, **Reports**, **Stats**, **Students**, **Subscription**, **Supporters**, **Threads**, **Topics**, **Tutoring**, **WeeklyPlans**, **[bootstrap]**, **[routes]**, **[tests]**
-- وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`, `Slim\Psr7`, `Throwable`, `Firebase\JWT`, `RuntimeException`, `Monolog\Formatter`, `Monolog\Handler`, `Monolog\Logger`, `Monolog\Level`, `finfo`
+- وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`, `Slim\Psr7`, `Throwable`, `Firebase\JWT`, `RuntimeException`, `Monolog\Formatter`, `Monolog\Logger`, `Monolog\Level`, `Monolog\Handler`, `finfo`
 
 ```
 [app]/  (23 files, 1,876 lines)
@@ -647,7 +647,7 @@ WeeklyPlans/  (4 files, 831 lines)
 - فایل: 1 | کل خط: 122 | کد: 100 | کامنت: 2 | خالی: 20
 - به تفکیک پسوند: `.php`=122
 - وابسته به ماژول: **[app]**
-- وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Slim\Exception`, `Slim\Factory`, `Slim\Psr7`, `Psr\Http`
+- وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Slim\Exception`, `Psr\Http`, `Slim\Factory`, `Slim\Psr7`
 
 ```
 [bootstrap]/  (1 files, 122 lines)
@@ -731,7 +731,7 @@ WeeklyPlans/  (4 files, 831 lines)
 
 - فایل: 1 | کل خط: 325 | کد: 255 | کامنت: 37 | خالی: 33
 - به تفکیک پسوند: `.php`=325
-- وابسته به ماژول: **Blog**, **WeeklyPlans**, **Broadcasts**, **Public**, **Stats**, **Outbox**, **Reports**, **Courses**, **Topics**, **Linking**, **Supporters**, **Appointments**, **Attendance**, **Bot**, **Auth**, **Threads**, **Students**, **Instructors**, **Tutoring**, **ParentContacts**, **Exams**, **Assignments**, **Dashboard**, **[app]**, **Files**
+- وابسته به ماژول: **Instructors**, **Attendance**, **Assignments**, **Threads**, **Appointments**, **Bot**, **Linking**, **Auth**, **Reports**, **Outbox**, **Stats**, **WeeklyPlans**, **Public**, **[app]**, **Supporters**, **Exams**, **Dashboard**, **Tutoring**, **Topics**, **Students**, **Files**, **Courses**, **ParentContacts**, **Broadcasts**, **Blog**
 - وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`, `Slim\App`, `Slim\Exception`
 
 ```
@@ -747,7 +747,7 @@ WeeklyPlans/  (4 files, 831 lines)
 - فایل: 34 | کل خط: 6,155 | کد: 4,994 | کامنت: 124 | خالی: 1,037
 - به تفکیک پسوند: `.php`=6,155
 - namespaceها: `Tests`, `Tests\Core`, `Tests\Modules\Assignments`, `Tests\Modules\Attendance`, `Tests\Modules\Auth`, `Tests\Modules\Bot`, `Tests\Modules\Broadcasts`, `Tests\Modules\Outbox`, `Tests\Modules\Stats`, `Tests\Modules\Students`, `Tests\Modules\Supporters`, `Tests\Modules\Threads`, `Tests\Modules\Tutoring`
-- وابسته به ماژول: **[app]**, **Auth**, **Blog**, **Exams**, **Courses**, **Supporters**, **Instructors**, **Assignments**, **Bot**, **Outbox**, **Threads**
+- وابسته به ماژول: **[app]**, **Auth**, **Blog**, **Exams**, **Instructors**, **Supporters**, **Courses**, **Assignments**, **Bot**, **Outbox**, **Threads**
 - وابستگی‌های بیرونی/ناشناخته (vendor, PHP): `Psr\Http`, `Slim\Psr7`, `PHPUnit\Framework`, `PDO`, `App\Modules`, `DateTimeImmutable`
 
 ```

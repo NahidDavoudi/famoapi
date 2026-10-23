@@ -1,0 +1,3725 @@
+{
+  "root": "/opt/apps/famo/api",
+  "modules_dir": "app/Modules",
+  "modules": {
+    "[root]": {
+      "files": 2,
+      "lines": 516,
+      "code": 516,
+      "namespaces": [],
+      "depends_on": {},
+      "used_by": {}
+    },
+    "[app]": {
+      "files": 23,
+      "lines": 1876,
+      "code": 1515,
+      "namespaces": [
+        "App\\Core",
+        "App\\Helpers"
+      ],
+      "depends_on": {},
+      "used_by": {
+        "Admins": 1,
+        "Appointments": 5,
+        "Assignments": 7,
+        "Attendance": 5,
+        "Auth": 31,
+        "Blog": 6,
+        "Bot": 6,
+        "Broadcasts": 6,
+        "Courses": 7,
+        "Dashboard": 1,
+        "Exams": 5,
+        "Files": 7,
+        "Instructors": 7,
+        "Linking": 2,
+        "Outbox": 4,
+        "ParentContacts": 4,
+        "Public": 4,
+        "Reports": 2,
+        "Stats": 5,
+        "Students": 7,
+        "Subscription": 1,
+        "Supporters": 7,
+        "Threads": 14,
+        "Topics": 2,
+        "Tutoring": 5,
+        "WeeklyPlans": 7,
+        "[bootstrap]": 4,
+        "[routes]": 2,
+        "[tests]": 33
+      }
+    },
+    "Admins": {
+      "files": 1,
+      "lines": 30,
+      "code": 20,
+      "namespaces": [
+        "App\\Modules\\Admins"
+      ],
+      "depends_on": {
+        "[app]": 1
+      },
+      "used_by": {
+        "Linking": 1
+      }
+    },
+    "Appointments": {
+      "files": 3,
+      "lines": 323,
+      "code": 265,
+      "namespaces": [
+        "App\\Modules\\Appointments"
+      ],
+      "depends_on": {
+        "[app]": 5
+      },
+      "used_by": {
+        "[routes]": 2
+      }
+    },
+    "Assignments": {
+      "files": 4,
+      "lines": 778,
+      "code": 553,
+      "namespaces": [
+        "App\\Modules\\Assignments"
+      ],
+      "depends_on": {
+        "[app]": 7,
+        "Students": 2,
+        "Supporters": 2
+      },
+      "used_by": {
+        "Linking": 1,
+        "[routes]": 2,
+        "[tests]": 6
+      }
+    },
+    "Attendance": {
+      "files": 3,
+      "lines": 564,
+      "code": 406,
+      "namespaces": [
+        "App\\Modules\\Attendance"
+      ],
+      "depends_on": {
+        "[app]": 5,
+        "Bot": 2
+      },
+      "used_by": {
+        "[routes]": 2
+      }
+    },
+    "Auth": {
+      "files": 8,
+      "lines": 1414,
+      "code": 1148,
+      "namespaces": [
+        "App\\Modules\\Auth"
+      ],
+      "depends_on": {
+        "[app]": 31,
+        "Bot": 1,
+        "Linking": 1
+      },
+      "used_by": {
+        "Bot": 1,
+        "Tutoring": 1,
+        "[routes]": 5,
+        "[tests]": 6
+      }
+    },
+    "Blog": {
+      "files": 3,
+      "lines": 589,
+      "code": 492,
+      "namespaces": [
+        "App\\Modules\\Blog"
+      ],
+      "depends_on": {
+        "[app]": 6
+      },
+      "used_by": {
+        "[routes]": 1,
+        "[tests]": 1
+      }
+    },
+    "Bot": {
+      "files": 6,
+      "lines": 787,
+      "code": 559,
+      "namespaces": [
+        "App\\Modules\\Bot"
+      ],
+      "depends_on": {
+        "[app]": 6,
+        "Students": 2,
+        "Auth": 1
+      },
+      "used_by": {
+        "Attendance": 2,
+        "Auth": 1,
+        "Broadcasts": 1,
+        "Linking": 2,
+        "Outbox": 1,
+        "Stats": 2,
+        "Supporters": 2,
+        "Threads": 1,
+        "Tutoring": 2,
+        "[routes]": 3,
+        "[tests]": 12
+      }
+    },
+    "Broadcasts": {
+      "files": 4,
+      "lines": 525,
+      "code": 396,
+      "namespaces": [
+        "App\\Modules\\Broadcasts"
+      ],
+      "depends_on": {
+        "[app]": 6,
+        "Threads": 4,
+        "Outbox": 1,
+        "Bot": 1,
+        "Students": 1
+      },
+      "used_by": {
+        "Outbox": 1,
+        "[routes]": 2
+      }
+    },
+    "Courses": {
+      "files": 3,
+      "lines": 375,
+      "code": 322,
+      "namespaces": [
+        "App\\Modules\\Courses"
+      ],
+      "depends_on": {
+        "[app]": 7
+      },
+      "used_by": {
+        "[routes]": 2,
+        "[tests]": 1
+      }
+    },
+    "Dashboard": {
+      "files": 1,
+      "lines": 51,
+      "code": 34,
+      "namespaces": [
+        "App\\Modules\\Dashboard"
+      ],
+      "depends_on": {
+        "[app]": 1
+      },
+      "used_by": {
+        "[routes]": 1
+      }
+    },
+    "Exams": {
+      "files": 3,
+      "lines": 398,
+      "code": 329,
+      "namespaces": [
+        "App\\Modules\\Exams"
+      ],
+      "depends_on": {
+        "[app]": 5
+      },
+      "used_by": {
+        "[routes]": 2,
+        "[tests]": 1
+      }
+    },
+    "Files": {
+      "files": 3,
+      "lines": 338,
+      "code": 283,
+      "namespaces": [
+        "App\\Modules\\Files"
+      ],
+      "depends_on": {
+        "[app]": 7
+      },
+      "used_by": {
+        "[routes]": 2
+      }
+    },
+    "Instructors": {
+      "files": 3,
+      "lines": 366,
+      "code": 312,
+      "namespaces": [
+        "App\\Modules\\Instructors"
+      ],
+      "depends_on": {
+        "[app]": 7
+      },
+      "used_by": {
+        "[routes]": 2,
+        "[tests]": 1
+      }
+    },
+    "Linking": {
+      "files": 2,
+      "lines": 365,
+      "code": 292,
+      "namespaces": [
+        "App\\Modules\\Linking"
+      ],
+      "depends_on": {
+        "[app]": 2,
+        "Admins": 1,
+        "Bot": 2,
+        "Students": 1,
+        "Supporters": 1,
+        "Assignments": 1
+      },
+      "used_by": {
+        "Auth": 1,
+        "[routes]": 2
+      }
+    },
+    "Outbox": {
+      "files": 3,
+      "lines": 548,
+      "code": 408,
+      "namespaces": [
+        "App\\Modules\\Outbox"
+      ],
+      "depends_on": {
+        "[app]": 4,
+        "Bot": 1,
+        "Students": 1,
+        "Broadcasts": 1
+      },
+      "used_by": {
+        "Broadcasts": 1,
+        "Threads": 1,
+        "[routes]": 2,
+        "[tests]": 1
+      }
+    },
+    "ParentContacts": {
+      "files": 3,
+      "lines": 345,
+      "code": 303,
+      "namespaces": [
+        "App\\Modules\\ParentContacts"
+      ],
+      "depends_on": {
+        "[app]": 4
+      },
+      "used_by": {
+        "[routes]": 2
+      }
+    },
+    "Public": {
+      "files": 5,
+      "lines": 190,
+      "code": 165,
+      "namespaces": [
+        "App\\Modules\\Public"
+      ],
+      "depends_on": {
+        "[app]": 4
+      },
+      "used_by": {
+        "[routes]": 1
+      }
+    },
+    "Reports": {
+      "files": 3,
+      "lines": 127,
+      "code": 92,
+      "namespaces": [
+        "App\\Modules\\Reports"
+      ],
+      "depends_on": {
+        "[app]": 2
+      },
+      "used_by": {
+        "[routes]": 2
+      }
+    },
+    "Stats": {
+      "files": 4,
+      "lines": 799,
+      "code": 549,
+      "namespaces": [
+        "App\\Modules\\Stats"
+      ],
+      "depends_on": {
+        "[app]": 5,
+        "Bot": 2,
+        "Threads": 3,
+        "Students": 1
+      },
+      "used_by": {
+        "[routes]": 3
+      }
+    },
+    "Students": {
+      "files": 3,
+      "lines": 1013,
+      "code": 821,
+      "namespaces": [
+        "App\\Modules\\Students"
+      ],
+      "depends_on": {
+        "[app]": 7,
+        "Supporters": 1
+      },
+      "used_by": {
+        "Assignments": 2,
+        "Bot": 2,
+        "Broadcasts": 1,
+        "Linking": 1,
+        "Outbox": 1,
+        "Stats": 1,
+        "Threads": 1,
+        "WeeklyPlans": 1,
+        "[routes]": 2
+      }
+    },
+    "Subscription": {
+      "files": 3,
+      "lines": 48,
+      "code": 36,
+      "namespaces": [
+        "App\\Modules\\Subscription"
+      ],
+      "depends_on": {
+        "[app]": 1
+      },
+      "used_by": {}
+    },
+    "Supporters": {
+      "files": 3,
+      "lines": 812,
+      "code": 628,
+      "namespaces": [
+        "App\\Modules\\Supporters"
+      ],
+      "depends_on": {
+        "[app]": 7,
+        "Bot": 2
+      },
+      "used_by": {
+        "Assignments": 2,
+        "Linking": 1,
+        "Students": 1,
+        "[routes]": 2,
+        "[tests]": 3
+      }
+    },
+    "Threads": {
+      "files": 7,
+      "lines": 1218,
+      "code": 883,
+      "namespaces": [
+        "App\\Modules\\Threads"
+      ],
+      "depends_on": {
+        "[app]": 14,
+        "Outbox": 1,
+        "Bot": 1,
+        "Students": 1
+      },
+      "used_by": {
+        "Broadcasts": 4,
+        "Stats": 3,
+        "[routes]": 3,
+        "[tests]": 3
+      }
+    },
+    "Topics": {
+      "files": 3,
+      "lines": 177,
+      "code": 149,
+      "namespaces": [
+        "App\\Modules\\Topics"
+      ],
+      "depends_on": {
+        "[app]": 2
+      },
+      "used_by": {
+        "[routes]": 2
+      }
+    },
+    "Tutoring": {
+      "files": 3,
+      "lines": 753,
+      "code": 509,
+      "namespaces": [
+        "App\\Modules\\Tutoring"
+      ],
+      "depends_on": {
+        "[app]": 5,
+        "Bot": 2,
+        "Auth": 1
+      },
+      "used_by": {
+        "[routes]": 2
+      }
+    },
+    "WeeklyPlans": {
+      "files": 4,
+      "lines": 831,
+      "code": 670,
+      "namespaces": [
+        "App\\Modules\\WeeklyPlans"
+      ],
+      "depends_on": {
+        "[app]": 7,
+        "Students": 1
+      },
+      "used_by": {
+        "[routes]": 2
+      }
+    },
+    "[bootstrap]": {
+      "files": 1,
+      "lines": 122,
+      "code": 100,
+      "namespaces": [],
+      "depends_on": {
+        "[app]": 4
+      },
+      "used_by": {}
+    },
+    "[config]": {
+      "files": 2,
+      "lines": 32,
+      "code": 30,
+      "namespaces": [],
+      "depends_on": {},
+      "used_by": {}
+    },
+    "[database]": {
+      "files": 16,
+      "lines": 606,
+      "code": 606,
+      "namespaces": [],
+      "depends_on": {},
+      "used_by": {}
+    },
+    "[public]": {
+      "files": 1,
+      "lines": 7,
+      "code": 4,
+      "namespaces": [],
+      "depends_on": {},
+      "used_by": {}
+    },
+    "[routes]": {
+      "files": 1,
+      "lines": 325,
+      "code": 255,
+      "namespaces": [],
+      "depends_on": {
+        "Instructors": 2,
+        "Attendance": 2,
+        "Assignments": 2,
+        "Threads": 3,
+        "Appointments": 2,
+        "Bot": 3,
+        "Linking": 2,
+        "Auth": 5,
+        "Reports": 2,
+        "Outbox": 2,
+        "Stats": 3,
+        "WeeklyPlans": 2,
+        "Public": 1,
+        "[app]": 2,
+        "Supporters": 2,
+        "Exams": 2,
+        "Dashboard": 1,
+        "Tutoring": 2,
+        "Topics": 2,
+        "Students": 2,
+        "Files": 2,
+        "Courses": 2,
+        "ParentContacts": 2,
+        "Broadcasts": 2,
+        "Blog": 1
+      },
+      "used_by": {}
+    },
+    "[tests]": {
+      "files": 34,
+      "lines": 6155,
+      "code": 4994,
+      "namespaces": [
+        "Tests",
+        "Tests\\Core",
+        "Tests\\Modules\\Assignments",
+        "Tests\\Modules\\Attendance",
+        "Tests\\Modules\\Auth",
+        "Tests\\Modules\\Bot",
+        "Tests\\Modules\\Broadcasts",
+        "Tests\\Modules\\Outbox",
+        "Tests\\Modules\\Stats",
+        "Tests\\Modules\\Students",
+        "Tests\\Modules\\Supporters",
+        "Tests\\Modules\\Threads",
+        "Tests\\Modules\\Tutoring"
+      ],
+      "depends_on": {
+        "[app]": 33,
+        "Auth": 6,
+        "Blog": 1,
+        "Exams": 1,
+        "Instructors": 1,
+        "Supporters": 3,
+        "Courses": 1,
+        "Assignments": 6,
+        "Bot": 12,
+        "Outbox": 1,
+        "Threads": 3
+      },
+      "used_by": {}
+    }
+  },
+  "models": [],
+  "tables": {
+    "migrations": [
+      "app/Core/Migrator.php"
+    ],
+    "auth_throttle": [
+      "app/Core/RateLimiter.php",
+      "tests/Core/RateLimiterTest.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Auth/AuthThrottleTest.php",
+      "tests/Modules/Auth/TelegramAdminLinkTest.php",
+      "tests/Modules/Auth/TelegramAuthTest.php"
+    ],
+    "users": [
+      "app/Modules/Admins/Admin.php",
+      "app/Modules/Auth/AuthService.php",
+      "app/Modules/Auth/User.php",
+      "app/Modules/Bot/TelegramLink.php",
+      "app/Modules/Students/Student.php",
+      "app/Modules/Students/StudentService.php",
+      "app/Modules/Supporters/Supporter.php",
+      "app/Modules/Supporters/SupporterService.php",
+      "tests/Modules/Assignments/AssignmentTest.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Assignments/SupporterScopeTest.php",
+      "tests/Modules/Attendance/AttendanceTest.php",
+      "tests/Modules/Auth/AuthTest.php",
+      "tests/Modules/Auth/AuthThrottleTest.php",
+      "tests/Modules/Auth/TeacherAuthTest.php",
+      "tests/Modules/Auth/TelegramAdminLinkTest.php",
+      "tests/Modules/Auth/TelegramAuthTest.php",
+      "tests/Modules/Bot/BotGatewayTest.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php",
+      "tests/Modules/Outbox/OutboxTest.php",
+      "tests/Modules/Stats/StatsTest.php",
+      "tests/Modules/Students/StudentTest.php",
+      "tests/Modules/Threads/ThreadTest.php",
+      "tests/Modules/Tutoring/TutoringTest.php",
+      "tests/TestCase.php"
+    ],
+    "appointments": [
+      "app/Modules/Appointments/Appointment.php"
+    ],
+    "students": [
+      "app/Modules/Appointments/Appointment.php",
+      "app/Modules/Assignments/Assignment.php",
+      "app/Modules/Attendance/Attendance.php",
+      "app/Modules/Auth/AuthService.php",
+      "app/Modules/Bot/TelegramLink.php",
+      "app/Modules/Broadcasts/BroadcastRecipient.php",
+      "app/Modules/Dashboard/DashboardController.php",
+      "app/Modules/Exams/ExamResult.php",
+      "app/Modules/Files/File.php",
+      "app/Modules/ParentContacts/ParentContactService.php",
+      "app/Modules/Reports/Report.php",
+      "app/Modules/Stats/Stats.php",
+      "app/Modules/Students/Student.php",
+      "app/Modules/Students/StudentService.php",
+      "app/Modules/Threads/Message.php",
+      "app/Modules/Tutoring/Tutoring.php",
+      "app/Modules/WeeklyPlans/PlanService.php",
+      "app/Modules/WeeklyPlans/WeeklyPlan.php",
+      "tests/Modules/Assignments/AssignmentTest.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Assignments/SupporterScopeTest.php",
+      "tests/Modules/Attendance/AttendanceTest.php",
+      "tests/Modules/Auth/AuthTest.php",
+      "tests/Modules/Auth/TelegramAuthTest.php",
+      "tests/Modules/Bot/BotGatewayTest.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php",
+      "tests/Modules/Outbox/OutboxTest.php",
+      "tests/Modules/Stats/StatsTest.php",
+      "tests/Modules/Students/StudentTest.php",
+      "tests/Modules/Threads/ThreadTest.php",
+      "tests/Modules/Tutoring/TutoringTest.php",
+      "tests/TestCase.php"
+    ],
+    "student_supporter_assignments": [
+      "app/Modules/Assignments/Assignment.php",
+      "tests/Modules/Assignments/AssignmentTest.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Assignments/SupporterScopeTest.php",
+      "tests/Modules/Bot/BotGatewayTest.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php",
+      "tests/Modules/Outbox/OutboxTest.php",
+      "tests/Modules/Stats/StatsTest.php",
+      "tests/Modules/Supporters/SupporterContactTest.php",
+      "tests/Modules/Threads/ThreadTest.php"
+    ],
+    "supporters": [
+      "app/Modules/Assignments/Assignment.php",
+      "app/Modules/Public/Supporter.php",
+      "app/Modules/Reports/Report.php",
+      "app/Modules/Stats/Stats.php",
+      "app/Modules/Students/Student.php",
+      "app/Modules/Supporters/Supporter.php",
+      "tests/Core/PaginationTest.php",
+      "tests/Modules/Assignments/AssignmentTest.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Assignments/SupporterScopeTest.php",
+      "tests/Modules/Auth/TelegramAuthTest.php",
+      "tests/Modules/Bot/BotGatewayTest.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php",
+      "tests/Modules/Outbox/OutboxTest.php",
+      "tests/Modules/Stats/StatsTest.php",
+      "tests/Modules/Supporters/SupporterContactTest.php",
+      "tests/Modules/Threads/ThreadTest.php"
+    ],
+    "daily_attendance": [
+      "app/Modules/Attendance/Attendance.php",
+      "app/Modules/Tutoring/Tutoring.php",
+      "tests/Modules/Attendance/AttendanceTest.php",
+      "tests/Modules/Tutoring/TutoringTest.php"
+    ],
+    "login_codes": [
+      "app/Modules/Auth/AuthService.php",
+      "app/Modules/Auth/TelegramAuthService.php",
+      "tests/Modules/Auth/AuthTest.php",
+      "tests/Modules/Auth/AuthThrottleTest.php",
+      "tests/Modules/Auth/TeacherAuthTest.php",
+      "tests/Modules/Auth/TelegramAdminLinkTest.php",
+      "tests/Modules/Auth/TelegramAuthTest.php"
+    ],
+    "telegram_2fa_challenges": [
+      "app/Modules/Auth/TelegramAuthService.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Auth/TelegramAdminLinkTest.php",
+      "tests/Modules/Auth/TelegramAuthTest.php"
+    ],
+    "telegram_auth_nonces": [
+      "app/Modules/Auth/TelegramLoginVerifier.php",
+      "app/Modules/Auth/TelegramTicket.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Auth/TelegramAdminLinkTest.php",
+      "tests/Modules/Auth/TelegramAuthTest.php"
+    ],
+    "blog_category": [
+      "app/Modules/Blog/BlogPost.php"
+    ],
+    "blog_posts": [
+      "app/Modules/Blog/BlogPost.php",
+      "tests/Core/BlogPostTest.php"
+    ],
+    "telegram_links": [
+      "app/Modules/Bot/TelegramLink.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Auth/TelegramAdminLinkTest.php",
+      "tests/Modules/Auth/TelegramAuthTest.php",
+      "tests/Modules/Bot/BotGatewayTest.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php",
+      "tests/Modules/Outbox/OutboxTest.php",
+      "tests/Modules/Threads/ThreadTest.php"
+    ],
+    "report_broadcasts": [
+      "app/Modules/Broadcasts/Broadcast.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php"
+    ],
+    "report_broadcast_recipients": [
+      "app/Modules/Broadcasts/Broadcast.php",
+      "app/Modules/Broadcasts/BroadcastRecipient.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php"
+    ],
+    "courses": [
+      "app/Modules/Courses/Course.php",
+      "app/Modules/Public/Course.php",
+      "tests/Core/PaginationTest.php"
+    ],
+    "exam_results": [
+      "app/Modules/Dashboard/DashboardController.php",
+      "app/Modules/Exams/ExamResult.php",
+      "app/Modules/Students/StudentService.php",
+      "tests/Core/ExamServiceTest.php"
+    ],
+    "reports_status": [
+      "app/Modules/Dashboard/DashboardController.php",
+      "app/Modules/Reports/Report.php",
+      "app/Modules/Supporters/Supporter.php"
+    ],
+    "files": [
+      "app/Modules/Exams/ExamResult.php",
+      "app/Modules/Files/File.php"
+    ],
+    "instructors": [
+      "app/Modules/Instructors/Instructor.php",
+      "app/Modules/Public/Instructor.php",
+      "app/Modules/Tutoring/Tutoring.php",
+      "tests/Core/PaginationTest.php",
+      "tests/Modules/Auth/TeacherAuthTest.php",
+      "tests/Modules/Tutoring/TutoringTest.php"
+    ],
+    "bot_outbox": [
+      "app/Modules/Outbox/OutboxItem.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php",
+      "tests/Modules/Outbox/OutboxTest.php"
+    ],
+    "parent_contacts": [
+      "app/Modules/ParentContacts/ParentContact.php"
+    ],
+    "course_features": [
+      "app/Modules/Public/Course.php"
+    ],
+    "instructor_social_links": [
+      "app/Modules/Public/Instructor.php"
+    ],
+    "report_messages": [
+      "app/Modules/Stats/Stats.php",
+      "app/Modules/Threads/Message.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php",
+      "tests/Modules/Stats/StatsTest.php"
+    ],
+    "report_threads": [
+      "app/Modules/Stats/Stats.php",
+      "app/Modules/Threads/Message.php",
+      "app/Modules/Threads/Thread.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php"
+    ],
+    "events": [
+      "app/Modules/Students/Student.php",
+      "app/Modules/Students/StudentService.php",
+      "app/Modules/Topics/Topic.php",
+      "app/Modules/WeeklyPlans/WeeklyPlan.php"
+    ],
+    "weekly_plans": [
+      "app/Modules/Students/Student.php",
+      "app/Modules/WeeklyPlans/WeeklyPlan.php"
+    ],
+    "subscriptions": [
+      "app/Modules/Subscription/Subscription.php"
+    ],
+    "supporter_scopes": [
+      "app/Modules/Supporters/Supporter.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Assignments/SupporterScopeTest.php"
+    ],
+    "report_message_attachments": [
+      "app/Modules/Threads/MessageAttachment.php"
+    ],
+    "topic_tree": [
+      "app/Modules/Topics/Topic.php"
+    ],
+    "tutoring_teacher_status_log": [
+      "app/Modules/Tutoring/Tutoring.php",
+      "tests/Modules/Tutoring/TutoringTest.php"
+    ],
+    "tutoring_sessions": [
+      "app/Modules/Tutoring/Tutoring.php",
+      "tests/Modules/Tutoring/TutoringTest.php"
+    ],
+    "tutoring_classrooms": [
+      "app/Modules/Tutoring/Tutoring.php",
+      "tests/Modules/Tutoring/TutoringTest.php"
+    ],
+    "plan_templates": [
+      "app/Modules/WeeklyPlans/PlanTemplate.php"
+    ],
+    "event_topics": [
+      "app/Modules/WeeklyPlans/WeeklyPlan.php"
+    ],
+    "blog_categories": [
+      "tests/Core/BlogPostTest.php"
+    ],
+    "notes": [
+      "tests/Core/MigratorTest.php"
+    ],
+    "admins": [
+      "tests/Modules/Auth/TelegramAdminLinkTest.php"
+    ]
+  },
+  "files": {
+    "composer.json": {
+      "module": "[root]",
+      "lines": 30,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "project_index.py": {
+      "module": "[root]",
+      "lines": 486,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Core/ApiException.php": {
+      "module": "[app]",
+      "lines": 28,
+      "namespace": "App\\Core",
+      "classes": [
+        "ApiException"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "RuntimeException",
+        "Throwable"
+      ],
+      "tables": []
+    },
+    "app/Core/Auth.php": {
+      "module": "[app]",
+      "lines": 51,
+      "namespace": "App\\Core",
+      "classes": [
+        "Auth"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Firebase\\JWT\\JWT",
+        "Firebase\\JWT\\Key"
+      ],
+      "tables": []
+    },
+    "app/Core/AuthCookie.php": {
+      "module": "[app]",
+      "lines": 144,
+      "namespace": "App\\Core",
+      "classes": [
+        "AuthCookie"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Core/Authorization.php": {
+      "module": "[app]",
+      "lines": 75,
+      "namespace": "App\\Core",
+      "classes": [
+        "Authorization"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\MiddlewareInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "app/Core/Cache.php": {
+      "module": "[app]",
+      "lines": 117,
+      "namespace": "App\\Core",
+      "classes": [
+        "Cache"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Core/ClientIp.php": {
+      "module": "[app]",
+      "lines": 71,
+      "namespace": "App\\Core",
+      "classes": [
+        "ClientIp"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Core/CorsMiddleware.php": {
+      "module": "[app]",
+      "lines": 61,
+      "namespace": "App\\Core",
+      "classes": [
+        "CorsMiddleware"
+      ],
+      "internal_deps": [
+        "App\\Core\\AuthCookie"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\MiddlewareInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "app/Core/Database.php": {
+      "module": "[app]",
+      "lines": 41,
+      "namespace": "App\\Core",
+      "classes": [
+        "Database"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Core/EmailService.php": {
+      "module": "[app]",
+      "lines": 131,
+      "namespace": "App\\Core",
+      "classes": [
+        "EmailService"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Core/ExceptionHandler.php": {
+      "module": "[app]",
+      "lines": 99,
+      "namespace": "App\\Core",
+      "classes": [
+        "ExceptionHandler"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\RateLimitedException"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Throwable"
+      ],
+      "tables": []
+    },
+    "app/Core/Logger.php": {
+      "module": "[app]",
+      "lines": 92,
+      "namespace": "App\\Core",
+      "classes": [
+        "Logger"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Monolog\\Formatter\\LineFormatter",
+        "Monolog\\Handler\\RotatingFileHandler",
+        "Monolog\\Level",
+        "Monolog\\Logger"
+      ],
+      "tables": []
+    },
+    "app/Core/Migrator.php": {
+      "module": "[app]",
+      "lines": 160,
+      "namespace": "App\\Core",
+      "classes": [
+        "Migrator"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "migrations"
+      ]
+    },
+    "app/Core/MultipartFormDataParser.php": {
+      "module": "[app]",
+      "lines": 136,
+      "namespace": "App\\Core",
+      "classes": [
+        "MultipartFormDataParser"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Slim\\Psr7\\UploadedFile"
+      ],
+      "tables": []
+    },
+    "app/Core/Pagination.php": {
+      "module": "[app]",
+      "lines": 32,
+      "namespace": "App\\Core",
+      "classes": [
+        "Pagination"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Core/PublicCacheMiddleware.php": {
+      "module": "[app]",
+      "lines": 35,
+      "namespace": "App\\Core",
+      "classes": [
+        "PublicCacheMiddleware"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\MiddlewareInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface"
+      ],
+      "tables": []
+    },
+    "app/Core/RateLimitedException.php": {
+      "module": "[app]",
+      "lines": 17,
+      "namespace": "App\\Core",
+      "classes": [
+        "RateLimitedException"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Core/RateLimiter.php": {
+      "module": "[app]",
+      "lines": 68,
+      "namespace": "App\\Core",
+      "classes": [
+        "RateLimiter"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "auth_throttle"
+      ]
+    },
+    "app/Core/ResponseHelper.php": {
+      "module": "[app]",
+      "lines": 40,
+      "namespace": "App\\Core",
+      "classes": [
+        "ResponseHelper"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "app/Core/SmsService.php": {
+      "module": "[app]",
+      "lines": 133,
+      "namespace": "App\\Core",
+      "classes": [
+        "SmsService"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Core/Storage.php": {
+      "module": "[app]",
+      "lines": 114,
+      "namespace": "App\\Core",
+      "classes": [
+        "Storage"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\UploadedFileInterface",
+        "finfo"
+      ],
+      "tables": []
+    },
+    "app/Core/StudentScope.php": {
+      "module": "[app]",
+      "lines": 68,
+      "namespace": "App\\Core",
+      "classes": [
+        "StudentScope"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Core/Validator.php": {
+      "module": "[app]",
+      "lines": 79,
+      "namespace": "App\\Core",
+      "classes": [
+        "Validator"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Helpers/JalaliHelper.php": {
+      "module": "[app]",
+      "lines": 84,
+      "namespace": "App\\Helpers",
+      "classes": [
+        "JalaliHelper"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Admins/Admin.php": {
+      "module": "Admins",
+      "lines": 30,
+      "namespace": "App\\Modules\\Admins",
+      "classes": [
+        "Admin"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "users"
+      ]
+    },
+    "app/Modules/Appointments/Appointment.php": {
+      "module": "Appointments",
+      "lines": 134,
+      "namespace": "App\\Modules\\Appointments",
+      "classes": [
+        "Appointment"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "appointments",
+        "students"
+      ]
+    },
+    "app/Modules/Appointments/AppointmentController.php": {
+      "module": "Appointments",
+      "lines": 119,
+      "namespace": "App\\Modules\\Appointments",
+      "classes": [
+        "AppointmentController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Appointments/AppointmentService.php": {
+      "module": "Appointments",
+      "lines": 70,
+      "namespace": "App\\Modules\\Appointments",
+      "classes": [
+        "AppointmentService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Pagination",
+        "App\\Core\\SmsService",
+        "App\\Modules\\Appointments\\Appointment"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Assignments/Assignment.php": {
+      "module": "Assignments",
+      "lines": 261,
+      "namespace": "App\\Modules\\Assignments",
+      "classes": [
+        "Assignment"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "student_supporter_assignments",
+        "students",
+        "supporters"
+      ]
+    },
+    "app/Modules/Assignments/AssignmentController.php": {
+      "module": "Assignments",
+      "lines": 100,
+      "namespace": "App\\Modules\\Assignments",
+      "classes": [
+        "AssignmentController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\ResponseHelper"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Assignments/AssignmentService.php": {
+      "module": "Assignments",
+      "lines": 247,
+      "namespace": "App\\Modules\\Assignments",
+      "classes": [
+        "AssignmentService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Assignments\\Assignment",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\Supporters\\Supporter"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Assignments/AutoAssignmentService.php": {
+      "module": "Assignments",
+      "lines": 170,
+      "namespace": "App\\Modules\\Assignments",
+      "classes": [
+        "AutoAssignmentService"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database",
+        "App\\Modules\\Assignments\\Assignment",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\Supporters\\Supporter"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Attendance/Attendance.php": {
+      "module": "Attendance",
+      "lines": 279,
+      "namespace": "App\\Modules\\Attendance",
+      "classes": [
+        "Attendance"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Modules\\Bot\\IranDay"
+      ],
+      "external_deps": [
+        "PDO"
+      ],
+      "tables": [
+        "daily_attendance",
+        "students"
+      ]
+    },
+    "app/Modules/Attendance/AttendanceController.php": {
+      "module": "Attendance",
+      "lines": 128,
+      "namespace": "App\\Modules\\Attendance",
+      "classes": [
+        "AttendanceController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Validator"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Attendance/AttendanceService.php": {
+      "module": "Attendance",
+      "lines": 157,
+      "namespace": "App\\Modules\\Attendance",
+      "classes": [
+        "AttendanceService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Modules\\Attendance\\Attendance",
+        "App\\Modules\\Bot\\IranDay"
+      ],
+      "external_deps": [
+        "DateTimeImmutable",
+        "DateTimeZone"
+      ],
+      "tables": []
+    },
+    "app/Modules/Auth/AuthController.php": {
+      "module": "Auth",
+      "lines": 312,
+      "namespace": "App\\Modules\\Auth",
+      "classes": [
+        "AuthController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Auth",
+        "App\\Core\\AuthCookie",
+        "App\\Core\\ClientIp",
+        "App\\Core\\RateLimitedException",
+        "App\\Core\\RateLimiter",
+        "App\\Core\\Validator"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Auth/AuthMiddleware.php": {
+      "module": "Auth",
+      "lines": 54,
+      "namespace": "App\\Modules\\Auth",
+      "classes": [
+        "AuthMiddleware"
+      ],
+      "internal_deps": [
+        "App\\Core\\Auth",
+        "App\\Core\\AuthCookie"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\MiddlewareInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "app/Modules/Auth/AuthService.php": {
+      "module": "Auth",
+      "lines": 278,
+      "namespace": "App\\Modules\\Auth",
+      "classes": [
+        "AuthService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Auth",
+        "App\\Core\\Database",
+        "App\\Core\\RateLimitedException",
+        "App\\Core\\RateLimiter",
+        "App\\Core\\SmsService",
+        "App\\Modules\\Auth\\User"
+      ],
+      "external_deps": [],
+      "tables": [
+        "login_codes",
+        "students",
+        "users"
+      ]
+    },
+    "app/Modules/Auth/TelegramAuthController.php": {
+      "module": "Auth",
+      "lines": 139,
+      "namespace": "App\\Modules\\Auth",
+      "classes": [
+        "TelegramAuthController"
+      ],
+      "internal_deps": [
+        "App\\Core\\AuthCookie",
+        "App\\Core\\ClientIp",
+        "App\\Core\\RateLimitedException",
+        "App\\Core\\ResponseHelper",
+        "App\\Core\\Validator"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Auth/TelegramAuthService.php": {
+      "module": "Auth",
+      "lines": 333,
+      "namespace": "App\\Modules\\Auth",
+      "classes": [
+        "TelegramAuthService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Core\\RateLimitedException",
+        "App\\Core\\RateLimiter",
+        "App\\Core\\SmsService",
+        "App\\Modules\\Auth\\AuthService",
+        "App\\Modules\\Auth\\TelegramLoginVerifier",
+        "App\\Modules\\Auth\\TelegramTicket",
+        "App\\Modules\\Auth\\User",
+        "App\\Modules\\Bot\\TelegramLink",
+        "App\\Modules\\Linking\\LinkService"
+      ],
+      "external_deps": [
+        "App\\Modules\\Bot\\BotActor"
+      ],
+      "tables": [
+        "login_codes",
+        "telegram_2fa_challenges"
+      ]
+    },
+    "app/Modules/Auth/TelegramLoginVerifier.php": {
+      "module": "Auth",
+      "lines": 113,
+      "namespace": "App\\Modules\\Auth",
+      "classes": [
+        "TelegramLoginVerifier"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "telegram_auth_nonces"
+      ]
+    },
+    "app/Modules/Auth/TelegramTicket.php": {
+      "module": "Auth",
+      "lines": 96,
+      "namespace": "App\\Modules\\Auth",
+      "classes": [
+        "TelegramTicket"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Auth",
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "telegram_auth_nonces"
+      ]
+    },
+    "app/Modules/Auth/User.php": {
+      "module": "Auth",
+      "lines": 89,
+      "namespace": "App\\Modules\\Auth",
+      "classes": [
+        "User"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "users"
+      ]
+    },
+    "app/Modules/Blog/BlogController.php": {
+      "module": "Blog",
+      "lines": 202,
+      "namespace": "App\\Modules\\Blog",
+      "classes": [
+        "BlogController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Modules\\Blog\\BlogService"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Blog/BlogPost.php": {
+      "module": "Blog",
+      "lines": 248,
+      "namespace": "App\\Modules\\Blog",
+      "classes": [
+        "BlogPost"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database",
+        "App\\Core\\Pagination"
+      ],
+      "external_deps": [],
+      "tables": [
+        "blog_category",
+        "blog_posts"
+      ]
+    },
+    "app/Modules/Blog/BlogService.php": {
+      "module": "Blog",
+      "lines": 139,
+      "namespace": "App\\Modules\\Blog",
+      "classes": [
+        "BlogService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Cache",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Blog\\BlogPost"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Bot/BotAuth.php": {
+      "module": "Bot",
+      "lines": 66,
+      "namespace": "App\\Modules\\Bot",
+      "classes": [
+        "BotAuth"
+      ],
+      "internal_deps": [
+        "App\\Core\\ResponseHelper",
+        "App\\Modules\\Bot\\TelegramLink"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\MiddlewareInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "app/Modules/Bot/BotController.php": {
+      "module": "Bot",
+      "lines": 271,
+      "namespace": "App\\Modules\\Bot",
+      "classes": [
+        "BotController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Logger",
+        "App\\Core\\ResponseHelper",
+        "App\\Modules\\Auth\\User",
+        "App\\Modules\\Bot\\IranDay",
+        "App\\Modules\\Bot\\TelegramLink",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\Students\\StudentService"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Bot/BotServiceMiddleware.php": {
+      "module": "Bot",
+      "lines": 65,
+      "namespace": "App\\Modules\\Bot",
+      "classes": [
+        "BotServiceMiddleware"
+      ],
+      "internal_deps": [
+        "App\\Core\\ResponseHelper"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\MiddlewareInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "app/Modules/Bot/IranDay.php": {
+      "module": "Bot",
+      "lines": 235,
+      "namespace": "App\\Modules\\Bot",
+      "classes": [
+        "IranDay"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "DateTimeImmutable",
+        "DateTimeZone"
+      ],
+      "tables": []
+    },
+    "app/Modules/Bot/PhoneNormalizer.php": {
+      "module": "Bot",
+      "lines": 79,
+      "namespace": "App\\Modules\\Bot",
+      "classes": [
+        "PhoneNormalizer"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Bot/TelegramLink.php": {
+      "module": "Bot",
+      "lines": 71,
+      "namespace": "App\\Modules\\Bot",
+      "classes": [
+        "TelegramLink"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "students",
+        "telegram_links",
+        "users"
+      ]
+    },
+    "app/Modules/Broadcasts/Broadcast.php": {
+      "module": "Broadcasts",
+      "lines": 94,
+      "namespace": "App\\Modules\\Broadcasts",
+      "classes": [
+        "Broadcast"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "report_broadcast_recipients",
+        "report_broadcasts"
+      ]
+    },
+    "app/Modules/Broadcasts/BroadcastController.php": {
+      "module": "Broadcasts",
+      "lines": 53,
+      "namespace": "App\\Modules\\Broadcasts",
+      "classes": [
+        "BroadcastController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ResponseHelper"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Broadcasts/BroadcastRecipient.php": {
+      "module": "Broadcasts",
+      "lines": 101,
+      "namespace": "App\\Modules\\Broadcasts",
+      "classes": [
+        "BroadcastRecipient"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "report_broadcast_recipients",
+        "students"
+      ]
+    },
+    "app/Modules/Broadcasts/BroadcastService.php": {
+      "module": "Broadcasts",
+      "lines": 277,
+      "namespace": "App\\Modules\\Broadcasts",
+      "classes": [
+        "BroadcastService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Bot\\IranDay",
+        "App\\Modules\\Broadcasts\\Broadcast",
+        "App\\Modules\\Broadcasts\\BroadcastRecipient",
+        "App\\Modules\\Outbox\\OutboxService",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\Threads\\Message",
+        "App\\Modules\\Threads\\MessageAttachment",
+        "App\\Modules\\Threads\\MessageContent",
+        "App\\Modules\\Threads\\Thread"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Courses/Course.php": {
+      "module": "Courses",
+      "lines": 87,
+      "namespace": "App\\Modules\\Courses",
+      "classes": [
+        "Course"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "courses"
+      ]
+    },
+    "app/Modules/Courses/CourseController.php": {
+      "module": "Courses",
+      "lines": 183,
+      "namespace": "App\\Modules\\Courses",
+      "classes": [
+        "CourseController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Validator"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Courses/CourseService.php": {
+      "module": "Courses",
+      "lines": 105,
+      "namespace": "App\\Modules\\Courses",
+      "classes": [
+        "CourseService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Cache",
+        "App\\Core\\Pagination",
+        "App\\Core\\Storage",
+        "App\\Modules\\Courses\\Course"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Dashboard/DashboardController.php": {
+      "module": "Dashboard",
+      "lines": 51,
+      "namespace": "App\\Modules\\Dashboard",
+      "classes": [
+        "DashboardController"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": [
+        "exam_results",
+        "reports_status",
+        "students"
+      ]
+    },
+    "app/Modules/Exams/ExamController.php": {
+      "module": "Exams",
+      "lines": 129,
+      "namespace": "App\\Modules\\Exams",
+      "classes": [
+        "ExamController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\StudentScope"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Exams/ExamResult.php": {
+      "module": "Exams",
+      "lines": 190,
+      "namespace": "App\\Modules\\Exams",
+      "classes": [
+        "ExamResult"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "exam_results",
+        "files",
+        "students"
+      ]
+    },
+    "app/Modules/Exams/ExamService.php": {
+      "module": "Exams",
+      "lines": 79,
+      "namespace": "App\\Modules\\Exams",
+      "classes": [
+        "ExamService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Exams\\ExamResult"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Files/File.php": {
+      "module": "Files",
+      "lines": 83,
+      "namespace": "App\\Modules\\Files",
+      "classes": [
+        "File"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "files",
+        "students"
+      ]
+    },
+    "app/Modules/Files/FileController.php": {
+      "module": "Files",
+      "lines": 158,
+      "namespace": "App\\Modules\\Files",
+      "classes": [
+        "FileController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\ResponseHelper",
+        "App\\Core\\StudentScope"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Files/FileService.php": {
+      "module": "Files",
+      "lines": 97,
+      "namespace": "App\\Modules\\Files",
+      "classes": [
+        "FileService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Pagination",
+        "App\\Core\\Storage",
+        "App\\Modules\\Files\\File"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\UploadedFileInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Instructors/Instructor.php": {
+      "module": "Instructors",
+      "lines": 78,
+      "namespace": "App\\Modules\\Instructors",
+      "classes": [
+        "Instructor"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "instructors"
+      ]
+    },
+    "app/Modules/Instructors/InstructorController.php": {
+      "module": "Instructors",
+      "lines": 177,
+      "namespace": "App\\Modules\\Instructors",
+      "classes": [
+        "InstructorController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Validator"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Instructors/InstructorService.php": {
+      "module": "Instructors",
+      "lines": 111,
+      "namespace": "App\\Modules\\Instructors",
+      "classes": [
+        "InstructorService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Cache",
+        "App\\Core\\Pagination",
+        "App\\Core\\Storage",
+        "App\\Modules\\Instructors\\Instructor"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Linking/LinkController.php": {
+      "module": "Linking",
+      "lines": 75,
+      "namespace": "App\\Modules\\Linking",
+      "classes": [
+        "LinkController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ResponseHelper"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Linking/LinkService.php": {
+      "module": "Linking",
+      "lines": 290,
+      "namespace": "App\\Modules\\Linking",
+      "classes": [
+        "LinkService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Modules\\Admins\\Admin",
+        "App\\Modules\\Assignments\\AutoAssignmentService",
+        "App\\Modules\\Bot\\PhoneNormalizer",
+        "App\\Modules\\Bot\\TelegramLink",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\Supporters\\Supporter"
+      ],
+      "external_deps": [
+        "App\\Modules\\Bot\\BotActor"
+      ],
+      "tables": []
+    },
+    "app/Modules/Outbox/OutboxController.php": {
+      "module": "Outbox",
+      "lines": 44,
+      "namespace": "App\\Modules\\Outbox",
+      "classes": [
+        "OutboxController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\ResponseHelper"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Outbox/OutboxItem.php": {
+      "module": "Outbox",
+      "lines": 199,
+      "namespace": "App\\Modules\\Outbox",
+      "classes": [
+        "OutboxItem"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "bot_outbox"
+      ]
+    },
+    "app/Modules/Outbox/OutboxService.php": {
+      "module": "Outbox",
+      "lines": 305,
+      "namespace": "App\\Modules\\Outbox",
+      "classes": [
+        "OutboxService"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database",
+        "App\\Modules\\Bot\\TelegramLink",
+        "App\\Modules\\Broadcasts\\BroadcastRecipient",
+        "App\\Modules\\Outbox\\OutboxItem",
+        "App\\Modules\\Students\\Student"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/ParentContacts/ParentContact.php": {
+      "module": "ParentContacts",
+      "lines": 99,
+      "namespace": "App\\Modules\\ParentContacts",
+      "classes": [
+        "ParentContact"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "parent_contacts"
+      ]
+    },
+    "app/Modules/ParentContacts/ParentContactController.php": {
+      "module": "ParentContacts",
+      "lines": 159,
+      "namespace": "App\\Modules\\ParentContacts",
+      "classes": [
+        "ParentContactController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/ParentContacts/ParentContactService.php": {
+      "module": "ParentContacts",
+      "lines": 87,
+      "namespace": "App\\Modules\\ParentContacts",
+      "classes": [
+        "ParentContactService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Modules\\ParentContacts\\ParentContact"
+      ],
+      "external_deps": [],
+      "tables": [
+        "students"
+      ]
+    },
+    "app/Modules/Public/Course.php": {
+      "module": "Public",
+      "lines": 41,
+      "namespace": "App\\Modules\\Public",
+      "classes": [
+        "Course"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "course_features",
+        "courses"
+      ]
+    },
+    "app/Modules/Public/Instructor.php": {
+      "module": "Public",
+      "lines": 32,
+      "namespace": "App\\Modules\\Public",
+      "classes": [
+        "Instructor"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "instructor_social_links",
+        "instructors"
+      ]
+    },
+    "app/Modules/Public/PublicController.php": {
+      "module": "Public",
+      "lines": 52,
+      "namespace": "App\\Modules\\Public",
+      "classes": [
+        "PublicController"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Public\\PublicService"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Public/PublicService.php": {
+      "module": "Public",
+      "lines": 47,
+      "namespace": "App\\Modules\\Public",
+      "classes": [
+        "PublicService"
+      ],
+      "internal_deps": [
+        "App\\Core\\Cache",
+        "App\\Modules\\Public\\Course",
+        "App\\Modules\\Public\\Instructor",
+        "App\\Modules\\Public\\Supporter"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Public/Supporter.php": {
+      "module": "Public",
+      "lines": 18,
+      "namespace": "App\\Modules\\Public",
+      "classes": [
+        "Supporter"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "supporters"
+      ]
+    },
+    "app/Modules/Reports/Report.php": {
+      "module": "Reports",
+      "lines": 68,
+      "namespace": "App\\Modules\\Reports",
+      "classes": [
+        "Report"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "reports_status",
+        "students",
+        "supporters"
+      ]
+    },
+    "app/Modules/Reports/ReportController.php": {
+      "module": "Reports",
+      "lines": 38,
+      "namespace": "App\\Modules\\Reports",
+      "classes": [
+        "ReportController"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Reports/ReportService.php": {
+      "module": "Reports",
+      "lines": 21,
+      "namespace": "App\\Modules\\Reports",
+      "classes": [
+        "ReportService"
+      ],
+      "internal_deps": [
+        "App\\Core\\Pagination",
+        "App\\Modules\\Reports\\Report"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Stats/ContentAccessMiddleware.php": {
+      "module": "Stats",
+      "lines": 40,
+      "namespace": "App\\Modules\\Stats",
+      "classes": [
+        "ContentAccessMiddleware"
+      ],
+      "internal_deps": [
+        "App\\Core\\ResponseHelper"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\MiddlewareInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "app/Modules/Stats/Stats.php": {
+      "module": "Stats",
+      "lines": 320,
+      "namespace": "App\\Modules\\Stats",
+      "classes": [
+        "Stats"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "report_messages",
+        "report_threads",
+        "students",
+        "supporters"
+      ]
+    },
+    "app/Modules/Stats/StatsController.php": {
+      "module": "Stats",
+      "lines": 99,
+      "namespace": "App\\Modules\\Stats",
+      "classes": [
+        "StatsController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ResponseHelper",
+        "App\\Modules\\Bot\\IranDay"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Stats/StatsService.php": {
+      "module": "Stats",
+      "lines": 340,
+      "namespace": "App\\Modules\\Stats",
+      "classes": [
+        "StatsService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Bot\\IranDay",
+        "App\\Modules\\Stats\\Stats",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\Threads\\Message",
+        "App\\Modules\\Threads\\MessageAttachment",
+        "App\\Modules\\Threads\\Thread"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Students/Student.php": {
+      "module": "Students",
+      "lines": 277,
+      "namespace": "App\\Modules\\Students",
+      "classes": [
+        "Student"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "events",
+        "students",
+        "supporters",
+        "users",
+        "weekly_plans"
+      ]
+    },
+    "app/Modules/Students/StudentController.php": {
+      "module": "Students",
+      "lines": 404,
+      "namespace": "App\\Modules\\Students",
+      "classes": [
+        "StudentController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\StudentScope",
+        "App\\Core\\Validator"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Students/StudentService.php": {
+      "module": "Students",
+      "lines": 332,
+      "namespace": "App\\Modules\\Students",
+      "classes": [
+        "StudentService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\Supporters\\Supporter"
+      ],
+      "external_deps": [],
+      "tables": [
+        "events",
+        "exam_results",
+        "students",
+        "users"
+      ]
+    },
+    "app/Modules/Subscription/Subscription.php": {
+      "module": "Subscription",
+      "lines": 36,
+      "namespace": "App\\Modules\\Subscription",
+      "classes": [
+        "Subscription"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "subscriptions"
+      ]
+    },
+    "app/Modules/Subscription/SubscriptionModel.php": {
+      "module": "Subscription",
+      "lines": 2,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Subscription/SubscriptionService.php": {
+      "module": "Subscription",
+      "lines": 10,
+      "namespace": "App\\Modules\\Subscription",
+      "classes": [
+        "SubscriptionService"
+      ],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Supporters/Supporter.php": {
+      "module": "Supporters",
+      "lines": 349,
+      "namespace": "App\\Modules\\Supporters",
+      "classes": [
+        "Supporter"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "reports_status",
+        "supporter_scopes",
+        "supporters",
+        "users"
+      ]
+    },
+    "app/Modules/Supporters/SupporterController.php": {
+      "module": "Supporters",
+      "lines": 259,
+      "namespace": "App\\Modules\\Supporters",
+      "classes": [
+        "SupporterController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Validator",
+        "App\\Modules\\Bot\\PhoneNormalizer"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Supporters/SupporterService.php": {
+      "module": "Supporters",
+      "lines": 204,
+      "namespace": "App\\Modules\\Supporters",
+      "classes": [
+        "SupporterService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Cache",
+        "App\\Core\\Database",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Bot\\PhoneNormalizer",
+        "App\\Modules\\Supporters\\Supporter"
+      ],
+      "external_deps": [],
+      "tables": [
+        "users"
+      ]
+    },
+    "app/Modules/Threads/Message.php": {
+      "module": "Threads",
+      "lines": 317,
+      "namespace": "App\\Modules\\Threads",
+      "classes": [
+        "Message"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "report_messages",
+        "report_threads",
+        "students"
+      ]
+    },
+    "app/Modules/Threads/MessageAttachment.php": {
+      "module": "Threads",
+      "lines": 69,
+      "namespace": "App\\Modules\\Threads",
+      "classes": [
+        "MessageAttachment"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "report_message_attachments"
+      ]
+    },
+    "app/Modules/Threads/MessageContent.php": {
+      "module": "Threads",
+      "lines": 75,
+      "namespace": "App\\Modules\\Threads",
+      "classes": [
+        "MessageContent"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Logger",
+        "App\\Modules\\Threads\\MessageAttachment"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Threads/SupporterThreadController.php": {
+      "module": "Threads",
+      "lines": 63,
+      "namespace": "App\\Modules\\Threads",
+      "classes": [
+        "SupporterThreadController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Logger",
+        "App\\Core\\ResponseHelper"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Threads/Thread.php": {
+      "module": "Threads",
+      "lines": 119,
+      "namespace": "App\\Modules\\Threads",
+      "classes": [
+        "Thread"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database",
+        "App\\Core\\Logger"
+      ],
+      "external_deps": [],
+      "tables": [
+        "report_threads"
+      ]
+    },
+    "app/Modules/Threads/ThreadController.php": {
+      "module": "Threads",
+      "lines": 82,
+      "namespace": "App\\Modules\\Threads",
+      "classes": [
+        "ThreadController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\ResponseHelper"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Threads/ThreadService.php": {
+      "module": "Threads",
+      "lines": 493,
+      "namespace": "App\\Modules\\Threads",
+      "classes": [
+        "ThreadService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Logger",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Bot\\IranDay",
+        "App\\Modules\\Outbox\\OutboxService",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\Threads\\Message",
+        "App\\Modules\\Threads\\MessageAttachment",
+        "App\\Modules\\Threads\\MessageContent",
+        "App\\Modules\\Threads\\Thread"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Topics/Topic.php": {
+      "module": "Topics",
+      "lines": 70,
+      "namespace": "App\\Modules\\Topics",
+      "classes": [
+        "Topic"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "events",
+        "topic_tree"
+      ]
+    },
+    "app/Modules/Topics/TopicController.php": {
+      "module": "Topics",
+      "lines": 72,
+      "namespace": "App\\Modules\\Topics",
+      "classes": [
+        "TopicController"
+      ],
+      "internal_deps": [],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Topics/TopicService.php": {
+      "module": "Topics",
+      "lines": 35,
+      "namespace": "App\\Modules\\Topics",
+      "classes": [
+        "TopicService"
+      ],
+      "internal_deps": [
+        "App\\Core\\Cache",
+        "App\\Modules\\Topics\\Topic"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "app/Modules/Tutoring/Tutoring.php": {
+      "module": "Tutoring",
+      "lines": 451,
+      "namespace": "App\\Modules\\Tutoring",
+      "classes": [
+        "Tutoring"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Modules\\Bot\\IranDay"
+      ],
+      "external_deps": [
+        "PDO"
+      ],
+      "tables": [
+        "daily_attendance",
+        "instructors",
+        "students",
+        "tutoring_classrooms",
+        "tutoring_sessions",
+        "tutoring_teacher_status_log"
+      ]
+    },
+    "app/Modules/Tutoring/TutoringController.php": {
+      "module": "Tutoring",
+      "lines": 140,
+      "namespace": "App\\Modules\\Tutoring",
+      "classes": [
+        "TutoringController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Validator",
+        "App\\Modules\\Tutoring\\TutoringService"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/Tutoring/TutoringService.php": {
+      "module": "Tutoring",
+      "lines": 162,
+      "namespace": "App\\Modules\\Tutoring",
+      "classes": [
+        "TutoringService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Modules\\Auth\\User",
+        "App\\Modules\\Bot\\IranDay",
+        "App\\Modules\\Tutoring\\Tutoring"
+      ],
+      "external_deps": [
+        "DateTimeImmutable",
+        "DateTimeZone"
+      ],
+      "tables": []
+    },
+    "app/Modules/WeeklyPlans/PlanController.php": {
+      "module": "WeeklyPlans",
+      "lines": 141,
+      "namespace": "App\\Modules\\WeeklyPlans",
+      "classes": [
+        "PlanController"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "app/Modules/WeeklyPlans/PlanService.php": {
+      "module": "WeeklyPlans",
+      "lines": 217,
+      "namespace": "App\\Modules\\WeeklyPlans",
+      "classes": [
+        "PlanService"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Modules\\Students\\Student",
+        "App\\Modules\\WeeklyPlans\\PlanTemplate",
+        "App\\Modules\\WeeklyPlans\\WeeklyPlan"
+      ],
+      "external_deps": [],
+      "tables": [
+        "students"
+      ]
+    },
+    "app/Modules/WeeklyPlans/PlanTemplate.php": {
+      "module": "WeeklyPlans",
+      "lines": 154,
+      "namespace": "App\\Modules\\WeeklyPlans",
+      "classes": [
+        "PlanTemplate"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Modules\\WeeklyPlans\\WeeklyPlan"
+      ],
+      "external_deps": [],
+      "tables": [
+        "plan_templates"
+      ]
+    },
+    "app/Modules/WeeklyPlans/WeeklyPlan.php": {
+      "module": "WeeklyPlans",
+      "lines": 319,
+      "namespace": "App\\Modules\\WeeklyPlans",
+      "classes": [
+        "WeeklyPlan"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": [
+        "event_topics",
+        "events",
+        "students",
+        "weekly_plans"
+      ]
+    },
+    "bootstrap/app.php": {
+      "module": "[bootstrap]",
+      "lines": 122,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [
+        "App\\Core\\Cache",
+        "App\\Core\\CorsMiddleware",
+        "App\\Core\\ExceptionHandler",
+        "App\\Core\\MultipartFormDataParser"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Slim\\Exception\\HttpMethodNotAllowedException",
+        "Slim\\Exception\\HttpNotFoundException",
+        "Slim\\Factory\\AppFactory",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "config/app.php": {
+      "module": "[config]",
+      "lines": 21,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "config/database.php": {
+      "module": "[config]",
+      "lines": 11,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/000_AUTO_INCREMENT.sql": {
+      "module": "[database]",
+      "lines": 5,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/001_fix_schema.sql": {
+      "module": "[database]",
+      "lines": 42,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/002_fix_weekly_plans.sql": {
+      "module": "[database]",
+      "lines": 22,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/003_add_2fa.sql": {
+      "module": "[database]",
+      "lines": 14,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/004_fix_exam_percentage.sql": {
+      "module": "[database]",
+      "lines": 11,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/005_planner_backend.sql": {
+      "module": "[database]",
+      "lines": 61,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/006_preserve_national_id.sql": {
+      "module": "[database]",
+      "lines": 2,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/007_parent_contacts_indexes.sql": {
+      "module": "[database]",
+      "lines": 49,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/008_bot_identity_and_assignments.sql": {
+      "module": "[database]",
+      "lines": 91,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/009_threads_and_messages.sql": {
+      "module": "[database]",
+      "lines": 58,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/010_bot_outbox.sql": {
+      "module": "[database]",
+      "lines": 34,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/011_broadcasts.sql": {
+      "module": "[database]",
+      "lines": 45,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/012_daily_attendance_tutoring.sql": {
+      "module": "[database]",
+      "lines": 92,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/013_telegram_login_auth.sql": {
+      "module": "[database]",
+      "lines": 39,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/014_admin_bot_and_supporter_scopes.sql": {
+      "module": "[database]",
+      "lines": 23,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "database/migrations/015_subscription.sql": {
+      "module": "[database]",
+      "lines": 18,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "public/index.php": {
+      "module": "[public]",
+      "lines": 7,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [],
+      "external_deps": [],
+      "tables": []
+    },
+    "routes/api.php": {
+      "module": "[routes]",
+      "lines": 325,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [
+        "App\\Core\\Authorization",
+        "App\\Core\\PublicCacheMiddleware",
+        "App\\Modules\\Appointments\\AppointmentController",
+        "App\\Modules\\Appointments\\AppointmentService",
+        "App\\Modules\\Assignments\\AssignmentController",
+        "App\\Modules\\Assignments\\AssignmentService",
+        "App\\Modules\\Attendance\\AttendanceController",
+        "App\\Modules\\Attendance\\AttendanceService",
+        "App\\Modules\\Auth\\AuthController",
+        "App\\Modules\\Auth\\AuthMiddleware",
+        "App\\Modules\\Auth\\AuthService",
+        "App\\Modules\\Auth\\TelegramAuthController",
+        "App\\Modules\\Auth\\TelegramAuthService",
+        "App\\Modules\\Blog\\BlogController",
+        "App\\Modules\\Bot\\BotAuth",
+        "App\\Modules\\Bot\\BotController",
+        "App\\Modules\\Bot\\BotServiceMiddleware",
+        "App\\Modules\\Broadcasts\\BroadcastController",
+        "App\\Modules\\Broadcasts\\BroadcastService",
+        "App\\Modules\\Courses\\CourseController",
+        "App\\Modules\\Courses\\CourseService",
+        "App\\Modules\\Dashboard\\DashboardController",
+        "App\\Modules\\Exams\\ExamController",
+        "App\\Modules\\Exams\\ExamService",
+        "App\\Modules\\Files\\FileController",
+        "App\\Modules\\Files\\FileService",
+        "App\\Modules\\Instructors\\InstructorController",
+        "App\\Modules\\Instructors\\InstructorService",
+        "App\\Modules\\Linking\\LinkController",
+        "App\\Modules\\Linking\\LinkService",
+        "App\\Modules\\Outbox\\OutboxController",
+        "App\\Modules\\Outbox\\OutboxService",
+        "App\\Modules\\ParentContacts\\ParentContactController",
+        "App\\Modules\\ParentContacts\\ParentContactService",
+        "App\\Modules\\Public\\PublicController",
+        "App\\Modules\\Reports\\ReportController",
+        "App\\Modules\\Reports\\ReportService",
+        "App\\Modules\\Stats\\ContentAccessMiddleware",
+        "App\\Modules\\Stats\\StatsController",
+        "App\\Modules\\Stats\\StatsService",
+        "App\\Modules\\Students\\StudentController",
+        "App\\Modules\\Students\\StudentService",
+        "App\\Modules\\Supporters\\SupporterController",
+        "App\\Modules\\Supporters\\SupporterService",
+        "App\\Modules\\Threads\\SupporterThreadController",
+        "App\\Modules\\Threads\\ThreadController",
+        "App\\Modules\\Threads\\ThreadService",
+        "App\\Modules\\Topics\\TopicController",
+        "App\\Modules\\Topics\\TopicService",
+        "App\\Modules\\Tutoring\\TutoringController",
+        "App\\Modules\\Tutoring\\TutoringService",
+        "App\\Modules\\WeeklyPlans\\PlanController",
+        "App\\Modules\\WeeklyPlans\\PlanService"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Slim\\App",
+        "Slim\\Exception\\HttpNotFoundException"
+      ],
+      "tables": []
+    },
+    "tests/TestCase.php": {
+      "module": "[tests]",
+      "lines": 269,
+      "namespace": "Tests",
+      "classes": [
+        "TestCase"
+      ],
+      "internal_deps": [
+        "App\\Core\\Auth",
+        "App\\Core\\Database"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Slim\\Psr7\\Factory\\ServerRequestFactory",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": [
+        "students",
+        "users"
+      ]
+    },
+    "tests/auth_cookie_test.php": {
+      "module": "[tests]",
+      "lines": 139,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [
+        "App\\Core\\Auth",
+        "App\\Core\\AuthCookie",
+        "App\\Modules\\Auth\\AuthController",
+        "App\\Modules\\Auth\\AuthMiddleware",
+        "App\\Modules\\Auth\\AuthService"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Factory\\ServerRequestFactory",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "tests/bootstrap.php": {
+      "module": "[tests]",
+      "lines": 26,
+      "namespace": "",
+      "classes": [],
+      "internal_deps": [
+        "App\\Core\\Database"
+      ],
+      "external_deps": [],
+      "tables": []
+    },
+    "tests/Core/ApiExceptionTest.php": {
+      "module": "[tests]",
+      "lines": 49,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "ApiExceptionTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\ExceptionHandler"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase",
+        "Slim\\Psr7\\Factory\\ServerRequestFactory",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "tests/Core/BlogPostTest.php": {
+      "module": "[tests]",
+      "lines": 71,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "BlogPostTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database",
+        "App\\Modules\\Blog\\BlogPost"
+      ],
+      "external_deps": [
+        "PDO",
+        "PHPUnit\\Framework\\TestCase"
+      ],
+      "tables": [
+        "blog_categories",
+        "blog_posts"
+      ]
+    },
+    "tests/Core/CacheTest.php": {
+      "module": "[tests]",
+      "lines": 137,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "CacheTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\Cache"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase"
+      ],
+      "tables": []
+    },
+    "tests/Core/ClientIpTest.php": {
+      "module": "[tests]",
+      "lines": 90,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "ClientIpTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\ClientIp",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": []
+    },
+    "tests/Core/CorsMiddlewareTest.php": {
+      "module": "[tests]",
+      "lines": 108,
+      "namespace": "",
+      "classes": [
+        "CorsMiddlewareTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\AuthCookie",
+        "App\\Core\\CorsMiddleware"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase",
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Factory\\ServerRequestFactory",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "tests/Core/ExamServiceTest.php": {
+      "module": "[tests]",
+      "lines": 79,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "ExamServiceTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Database",
+        "App\\Modules\\Exams\\ExamService"
+      ],
+      "external_deps": [
+        "PDO",
+        "PHPUnit\\Framework\\TestCase"
+      ],
+      "tables": [
+        "exam_results"
+      ]
+    },
+    "tests/Core/MigratorTest.php": {
+      "module": "[tests]",
+      "lines": 33,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "MigratorTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\Migrator"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase"
+      ],
+      "tables": [
+        "notes"
+      ]
+    },
+    "tests/Core/MultipartFormDataParserTest.php": {
+      "module": "[tests]",
+      "lines": 75,
+      "namespace": "",
+      "classes": [
+        "MultipartFormDataParserTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\MultipartFormDataParser"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase",
+        "Psr\\Http\\Message\\UploadedFileInterface",
+        "Slim\\Psr7\\Factory\\ServerRequestFactory",
+        "Slim\\Psr7\\Factory\\StreamFactory"
+      ],
+      "tables": []
+    },
+    "tests/Core/OpenCorsOriginsTest.php": {
+      "module": "[tests]",
+      "lines": 34,
+      "namespace": "",
+      "classes": [
+        "OpenCorsOriginsTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\AuthCookie",
+        "App\\Core\\CorsMiddleware"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase",
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Factory\\ServerRequestFactory",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": []
+    },
+    "tests/Core/PaginationTest.php": {
+      "module": "[tests]",
+      "lines": 71,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "PaginationTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\Database",
+        "App\\Core\\Pagination",
+        "App\\Modules\\Courses\\CourseService",
+        "App\\Modules\\Instructors\\InstructorService",
+        "App\\Modules\\Supporters\\SupporterService"
+      ],
+      "external_deps": [
+        "PDO",
+        "PHPUnit\\Framework\\TestCase"
+      ],
+      "tables": [
+        "courses",
+        "instructors",
+        "supporters"
+      ]
+    },
+    "tests/Core/RateLimiterTest.php": {
+      "module": "[tests]",
+      "lines": 39,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "RateLimiterTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\RateLimiter",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [],
+      "tables": [
+        "auth_throttle"
+      ]
+    },
+    "tests/Core/StorageTest.php": {
+      "module": "[tests]",
+      "lines": 80,
+      "namespace": "Tests\\Core",
+      "classes": [
+        "StorageTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Storage"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase",
+        "Slim\\Psr7\\UploadedFile"
+      ],
+      "tables": []
+    },
+    "tests/Modules/Assignments/AssignmentTest.php": {
+      "module": "[tests]",
+      "lines": 153,
+      "namespace": "Tests\\Modules\\Assignments",
+      "classes": [
+        "AssignmentTest"
+      ],
+      "internal_deps": [
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface"
+      ],
+      "tables": [
+        "student_supporter_assignments",
+        "students",
+        "supporters",
+        "users"
+      ]
+    },
+    "tests/Modules/Assignments/AutoAssignmentLinkTest.php": {
+      "module": "[tests]",
+      "lines": 220,
+      "namespace": "Tests\\Modules\\Assignments",
+      "classes": [
+        "AutoAssignmentLinkTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Supporters\\Supporter",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [],
+      "tables": [
+        "auth_throttle",
+        "student_supporter_assignments",
+        "students",
+        "supporter_scopes",
+        "supporters",
+        "telegram_2fa_challenges",
+        "telegram_auth_nonces",
+        "telegram_links",
+        "users"
+      ]
+    },
+    "tests/Modules/Assignments/SupporterScopeTest.php": {
+      "module": "[tests]",
+      "lines": 196,
+      "namespace": "Tests\\Modules\\Assignments",
+      "classes": [
+        "SupporterScopeTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Assignments\\Assignment",
+        "App\\Modules\\Assignments\\AutoAssignmentService",
+        "App\\Modules\\Supporters\\Supporter",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface"
+      ],
+      "tables": [
+        "student_supporter_assignments",
+        "students",
+        "supporter_scopes",
+        "supporters",
+        "users"
+      ]
+    },
+    "tests/Modules/Attendance/AttendanceTest.php": {
+      "module": "[tests]",
+      "lines": 339,
+      "namespace": "Tests\\Modules\\Attendance",
+      "classes": [
+        "AttendanceTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Bot\\IranDay",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [],
+      "tables": [
+        "daily_attendance",
+        "students",
+        "users"
+      ]
+    },
+    "tests/Modules/Auth/AuthTest.php": {
+      "module": "[tests]",
+      "lines": 345,
+      "namespace": "Tests\\Modules\\Auth",
+      "classes": [
+        "AuthTest"
+      ],
+      "internal_deps": [
+        "Tests\\TestCase"
+      ],
+      "external_deps": [],
+      "tables": [
+        "login_codes",
+        "students",
+        "users"
+      ]
+    },
+    "tests/Modules/Auth/AuthThrottleTest.php": {
+      "module": "[tests]",
+      "lines": 220,
+      "namespace": "Tests\\Modules\\Auth",
+      "classes": [
+        "AuthThrottleTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\RateLimiter",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": [
+        "auth_throttle",
+        "login_codes",
+        "users"
+      ]
+    },
+    "tests/Modules/Auth/TeacherAuthTest.php": {
+      "module": "[tests]",
+      "lines": 152,
+      "namespace": "Tests\\Modules\\Auth",
+      "classes": [
+        "TeacherAuthTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\Auth",
+        "App\\Core\\Authorization",
+        "App\\Core\\SmsService",
+        "App\\Modules\\Auth\\AuthService",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface",
+        "Psr\\Http\\Message\\ServerRequestInterface",
+        "Psr\\Http\\Server\\RequestHandlerInterface",
+        "Slim\\Psr7\\Response"
+      ],
+      "tables": [
+        "instructors",
+        "login_codes",
+        "users"
+      ]
+    },
+    "tests/Modules/Auth/TelegramAdminLinkTest.php": {
+      "module": "[tests]",
+      "lines": 180,
+      "namespace": "Tests\\Modules\\Auth",
+      "classes": [
+        "TelegramAdminLinkTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Modules\\Bot\\TelegramLink",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "App\\Modules\\Bot\\BotActor"
+      ],
+      "tables": [
+        "admins",
+        "auth_throttle",
+        "login_codes",
+        "telegram_2fa_challenges",
+        "telegram_auth_nonces",
+        "telegram_links",
+        "users"
+      ]
+    },
+    "tests/Modules/Auth/TelegramAuthTest.php": {
+      "module": "[tests]",
+      "lines": 648,
+      "namespace": "Tests\\Modules\\Auth",
+      "classes": [
+        "TelegramAuthTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\ApiException",
+        "App\\Core\\Auth",
+        "App\\Modules\\Auth\\TelegramLoginVerifier",
+        "App\\Modules\\Auth\\TelegramTicket",
+        "App\\Modules\\Bot\\TelegramLink",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [],
+      "tables": [
+        "auth_throttle",
+        "login_codes",
+        "students",
+        "supporters",
+        "telegram_2fa_challenges",
+        "telegram_auth_nonces",
+        "telegram_links",
+        "users"
+      ]
+    },
+    "tests/Modules/Bot/BotGatewayTest.php": {
+      "module": "[tests]",
+      "lines": 170,
+      "namespace": "Tests\\Modules\\Bot",
+      "classes": [
+        "BotGatewayTest"
+      ],
+      "internal_deps": [
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": [
+        "student_supporter_assignments",
+        "students",
+        "supporters",
+        "telegram_links",
+        "users"
+      ]
+    },
+    "tests/Modules/Bot/IranDayTest.php": {
+      "module": "[tests]",
+      "lines": 53,
+      "namespace": "Tests\\Modules\\Bot",
+      "classes": [
+        "IranDayTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Bot\\IranDay"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase"
+      ],
+      "tables": []
+    },
+    "tests/Modules/Bot/PhoneNormalizerTest.php": {
+      "module": "[tests]",
+      "lines": 59,
+      "namespace": "Tests\\Modules\\Bot",
+      "classes": [
+        "PhoneNormalizerTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Bot\\PhoneNormalizer"
+      ],
+      "external_deps": [
+        "PHPUnit\\Framework\\TestCase"
+      ],
+      "tables": []
+    },
+    "tests/Modules/Broadcasts/BroadcastTest.php": {
+      "module": "[tests]",
+      "lines": 268,
+      "namespace": "Tests\\Modules\\Broadcasts",
+      "classes": [
+        "BroadcastTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Assignments\\Assignment",
+        "App\\Modules\\Bot\\IranDay",
+        "App\\Modules\\Bot\\TelegramLink",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface"
+      ],
+      "tables": [
+        "bot_outbox",
+        "report_broadcast_recipients",
+        "report_broadcasts",
+        "report_messages",
+        "report_threads",
+        "student_supporter_assignments",
+        "students",
+        "supporters",
+        "telegram_links",
+        "users"
+      ]
+    },
+    "tests/Modules/Outbox/OutboxTest.php": {
+      "module": "[tests]",
+      "lines": 285,
+      "namespace": "Tests\\Modules\\Outbox",
+      "classes": [
+        "OutboxTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Assignments\\Assignment",
+        "App\\Modules\\Bot\\TelegramLink",
+        "App\\Modules\\Outbox\\OutboxService",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface"
+      ],
+      "tables": [
+        "bot_outbox",
+        "student_supporter_assignments",
+        "students",
+        "supporters",
+        "telegram_links",
+        "users"
+      ]
+    },
+    "tests/Modules/Stats/StatsTest.php": {
+      "module": "[tests]",
+      "lines": 222,
+      "namespace": "Tests\\Modules\\Stats",
+      "classes": [
+        "StatsTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Assignments\\Assignment",
+        "App\\Modules\\Bot\\IranDay",
+        "App\\Modules\\Threads\\Thread",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface"
+      ],
+      "tables": [
+        "report_messages",
+        "student_supporter_assignments",
+        "students",
+        "supporters",
+        "users"
+      ]
+    },
+    "tests/Modules/Students/StudentTest.php": {
+      "module": "[tests]",
+      "lines": 482,
+      "namespace": "Tests\\Modules\\Students",
+      "classes": [
+        "StudentTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\Auth",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface"
+      ],
+      "tables": [
+        "students",
+        "users"
+      ]
+    },
+    "tests/Modules/Supporters/SupporterContactTest.php": {
+      "module": "[tests]",
+      "lines": 65,
+      "namespace": "Tests\\Modules\\Supporters",
+      "classes": [
+        "SupporterContactTest"
+      ],
+      "internal_deps": [
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ResponseInterface"
+      ],
+      "tables": [
+        "student_supporter_assignments",
+        "supporters"
+      ]
+    },
+    "tests/Modules/Threads/ThreadTest.php": {
+      "module": "[tests]",
+      "lines": 256,
+      "namespace": "Tests\\Modules\\Threads",
+      "classes": [
+        "ThreadTest"
+      ],
+      "internal_deps": [
+        "App\\Modules\\Assignments\\Assignment",
+        "App\\Modules\\Bot\\IranDay",
+        "App\\Modules\\Bot\\TelegramLink",
+        "App\\Modules\\Threads\\Message",
+        "App\\Modules\\Threads\\Thread",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "DateTimeImmutable",
+        "Psr\\Http\\Message\\ResponseInterface"
+      ],
+      "tables": [
+        "student_supporter_assignments",
+        "students",
+        "supporters",
+        "telegram_links",
+        "users"
+      ]
+    },
+    "tests/Modules/Tutoring/TutoringTest.php": {
+      "module": "[tests]",
+      "lines": 542,
+      "namespace": "Tests\\Modules\\Tutoring",
+      "classes": [
+        "TutoringTest"
+      ],
+      "internal_deps": [
+        "App\\Core\\Auth",
+        "App\\Modules\\Bot\\IranDay",
+        "Tests\\TestCase"
+      ],
+      "external_deps": [
+        "Psr\\Http\\Message\\ServerRequestInterface"
+      ],
+      "tables": [
+        "daily_attendance",
+        "instructors",
+        "students",
+        "tutoring_classrooms",
+        "tutoring_sessions",
+        "tutoring_teacher_status_log",
+        "users"
+      ]
+    }
+  }
+}
