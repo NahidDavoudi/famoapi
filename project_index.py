@@ -92,8 +92,11 @@ RE_SQL = [
     re.compile(r"\bUPDATE\s+[`\"]?(\w+)[`\"]?\s+SET\b", re.I),
     re.compile(r"\bDELETE\s+FROM\s+[`\"]?(\w+)", re.I),
     re.compile(r"\bREPLACE\s+INTO\s+[`\"]?(\w+)", re.I),
-    re.compile(r"\bJOIN\s+[`\"]?(\w+)", re.I),
 ]
+RE_JOIN = re.compile(r"\bJOIN\s+[`\"]?(\w+)", re.I)
+NON_MODEL_SUFFIX = re.compile(
+    r"(Controller|Service|Middleware|Exception|Helper|Verifier|Test|TestCase|"
+    r"Handler|Normalizer|Validator|Migrator|Limiter|Scope|Gateway)$")
 RE_SQL_FROM = re.compile(r"\bFROM\s+[`\"]?(\w+)", re.I)
 RE_BUILDER = re.compile(
     r"(?:->|::)(?:table|from|into|join|leftJoin|rightJoin|innerJoin|insertInto)"
@@ -136,16 +139,20 @@ def module_of(rel, modules_dir):
             return parts[len(md)], True
     if len(parts) == 1:
         return "[root]", False
+    if parts[0] == "app" and len(parts) > 2:
+        return "[app/" + parts[1] + "]", False
     return "[" + parts[0] + "]", False
 
 
-def collect_files(root, ignore):
+def collect_files(root, ignore, skip=()):
     out = []
     for dp, dns, fns in os.walk(root):
         dns[:] = sorted(d for d in dns if d not in ignore and not d.startswith(".git"))
         for fn in sorted(fns):
             if os.path.splitext(fn)[1].lower() in COUNT_EXT:
                 full = os.path.join(dp, fn)
+                if os.path.abspath(full) in skip:
+                    continue
                 out.append((full, os.path.relpath(full, root).replace("\\", "/")))
     return out
 
@@ -226,12 +233,14 @@ def analyze_php(path, rel):
     # tables
     declared = (RE_TABLE_PROP.findall(with_str) + RE_TABLE_CONST.findall(with_str)
                 + RE_TABLE_FUNC.findall(with_str))
-    used = set(RE_BUILDER.findall(with_str))
+    cnt = Counter(RE_BUILDER.findall(with_str))
     for rx in RE_SQL:
-        used.update(RE_SQL_FROM.findall("") + rx.findall(with_str))
+        cnt.update(rx.findall(with_str))
     if re.search(r"\bSELECT\b", with_str, re.I):
-        used.update(RE_SQL_FROM.findall(with_str))
-    used = {t for t in used if t.lower() not in SQL_STOP}
+        cnt.update(RE_SQL_FROM.findall(with_str))
+    cnt = Counter({t: c for t, c in cnt.items() if t.lower() not in SQL_STOP})
+    joins = {t for t in RE_JOIN.findall(with_str) if t.lower() not in SQL_STOP}
+    used = set(cnt) | joins
     declared_set = list(dict.fromkeys(declared))
 
     # lines
@@ -247,7 +256,7 @@ def analyze_php(path, rel):
     return {
         "ns": ns, "decls": decls, "imports": imports, "imported": imported,
         "refs": refs, "includes": includes, "declared_tables": declared_set,
-        "used_tables": used, "lines": lines, "code": code,
+        "used_tables": used, "table_counts": cnt, "lines": lines, "code": code,
         "comments": max(nonblank_raw - code, 0),
         "blank": max(lines - nonblank_raw, 0), "is_model": is_model,
     }
@@ -268,7 +277,9 @@ def main():
     root = os.path.abspath(a.root)
     ignore = DEFAULT_IGNORE | {x.strip() for x in a.ignore.split(",") if x.strip()}
     modules_dir = find_modules_dir(root, a.modules_dir)
-    files = collect_files(root, ignore)
+    skip = {os.path.abspath(__file__), os.path.abspath(a.out),
+            os.path.abspath(os.path.splitext(a.out)[0] + ".json")}
+    files = collect_files(root, ignore, skip)
 
     schema_tables = None
     if a.schema:
@@ -298,7 +309,8 @@ def main():
             n = text.count("\n") + (1 if text and not text.endswith("\n") else 0)
             info = {"lines": n, "code": n, "comments": 0, "blank": 0, "decls": [],
                     "ns": "", "refs": set(), "imported": set(), "includes": [],
-                    "declared_tables": [], "used_tables": set(), "is_model": False}
+                    "declared_tables": [], "used_tables": set(),
+                    "table_counts": Counter(), "is_model": False}
         info["module"] = mod
         info["rel"] = rel
         fdata[rel] = info
@@ -335,17 +347,33 @@ def main():
     for rel, info in fdata.items():
         for t in info["used_tables"]:
             table_files[t].add(rel)
-        if info["is_model"] and info["decls"]:
+        if info["decls"]:
             for d in info["decls"]:
                 if d["kind"] != "class" or d["name"] in ("Model", "BaseModel", "AbstractModel"):
                     continue
+                # مدل = ساختار کلاسیک، یا (اگه ساختار خاصی نداری) کلاسی داخل ماژول
+                # که SQL/جدول داره، به Database وابسته‌ست و اسمش Service/Controller/... نیست
+                inferred = (
+                    mods[info["module"]]["is_module"]
+                    and bool(info["used_tables"])
+                    and not NON_MODEL_SUFFIX.search(d["name"])
+                    and any(n.split("\\")[-1] in ("Database", "DB", "PDO")
+                            for n in info["refs"] | info["imported"])
+                )
+                if not (info["is_model"] or inferred):
+                    continue
+                g = guess_table(d["name"])
+                tc = info["table_counts"]
                 if info["declared_tables"]:
                     tbl, src = info["declared_tables"][0], "declared"
+                elif tc:
+                    tbl, src = (g if g in tc else tc.most_common(1)[0][0]), "sql"
                 else:
-                    tbl, src = guess_table(d["name"]), "guess"
+                    tbl, src = g, "guess"
                 fq = (info["ns"] + "\\" if info["ns"] else "") + d["name"]
                 models.append({"class": fq, "file": rel, "module": info["module"],
                                "table": tbl, "source": src,
+                               "also": sorted(info["used_tables"] - {tbl}),
                                "in_schema": (tbl.lower() in schema_tables) if schema_tables is not None else None})
                 table_files[tbl].add(rel)
 
@@ -382,14 +410,15 @@ def main():
 
     w("## ۲. نگاشت مدل ← جدول\n")
     if models:
-        w("| ماژول | مدل (کلاس) | فایل | جدول | منبع |" + (" در اسکیما |" if schema_tables is not None else ""))
-        w("|---|---|---|---|---|" + ("---|" if schema_tables is not None else ""))
+        w("| ماژول | مدل (کلاس) | فایل | جدول اصلی | منبع | جدول‌های دیگر در همین فایل |" + (" در اسکیما |" if schema_tables is not None else ""))
+        w("|---|---|---|---|---|---|" + ("---|" if schema_tables is not None else ""))
+        labels = {"declared": "تعریف‌شده ($table)", "sql": "از کوئری‌ها", "guess": "حدس از اسم کلاس ⚠️"}
         for x in sorted(models, key=lambda z: (z["module"], z["class"])):
-            src = "تعریف‌شده" if x["source"] == "declared" else "حدس از اسم کلاس ⚠️"
             extra = ""
             if schema_tables is not None:
                 extra = " ✅ |" if x["in_schema"] else " ❌ |"
-            w(f"| {x['module']} | `{x['class']}` | `{x['file']}` | `{x['table']}` | {src} |{extra}")
+            also = ", ".join(f"`{t}`" for t in x["also"]) or "-"
+            w(f"| {x['module']} | `{x['class']}` | `{x['file']}` | `{x['table']}` | {labels[x['source']]} | {also} |{extra}")
     else:
         w("هیچ مدلی پیدا نشد (مدل = فایل داخل پوشه‌ای با اسم Model(s)، یا فایل *Model.php، یا کلاسی که از *Model ارث می‌بره).")
     w("")
