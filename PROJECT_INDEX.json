@@ -3,20 +3,19 @@
   "modules_dir": "app/Modules",
   "modules": {
     "[root]": {
-      "files": 2,
-      "lines": 516,
-      "code": 516,
+      "files": 1,
+      "lines": 30,
+      "code": 30,
       "namespaces": [],
       "depends_on": {},
       "used_by": {}
     },
-    "[app]": {
-      "files": 23,
-      "lines": 1876,
-      "code": 1515,
+    "[app/Core]": {
+      "files": 22,
+      "lines": 1792,
+      "code": 1450,
       "namespaces": [
-        "App\\Core",
-        "App\\Helpers"
+        "App\\Core"
       ],
       "depends_on": {},
       "used_by": {
@@ -51,6 +50,16 @@
         "[tests]": 33
       }
     },
+    "[app/Helpers]": {
+      "files": 1,
+      "lines": 84,
+      "code": 65,
+      "namespaces": [
+        "App\\Helpers"
+      ],
+      "depends_on": {},
+      "used_by": {}
+    },
     "Admins": {
       "files": 1,
       "lines": 30,
@@ -59,7 +68,7 @@
         "App\\Modules\\Admins"
       ],
       "depends_on": {
-        "[app]": 1
+        "[app/Core]": 1
       },
       "used_by": {
         "Linking": 1
@@ -73,7 +82,7 @@
         "App\\Modules\\Appointments"
       ],
       "depends_on": {
-        "[app]": 5
+        "[app/Core]": 5
       },
       "used_by": {
         "[routes]": 2
@@ -87,9 +96,9 @@
         "App\\Modules\\Assignments"
       ],
       "depends_on": {
-        "[app]": 7,
-        "Students": 2,
-        "Supporters": 2
+        "[app/Core]": 7,
+        "Supporters": 2,
+        "Students": 2
       },
       "used_by": {
         "Linking": 1,
@@ -105,8 +114,8 @@
         "App\\Modules\\Attendance"
       ],
       "depends_on": {
-        "[app]": 5,
-        "Bot": 2
+        "Bot": 2,
+        "[app/Core]": 5
       },
       "used_by": {
         "[routes]": 2
@@ -120,7 +129,7 @@
         "App\\Modules\\Auth"
       ],
       "depends_on": {
-        "[app]": 31,
+        "[app/Core]": 31,
         "Bot": 1,
         "Linking": 1
       },
@@ -139,7 +148,7 @@
         "App\\Modules\\Blog"
       ],
       "depends_on": {
-        "[app]": 6
+        "[app/Core]": 6
       },
       "used_by": {
         "[routes]": 1,
@@ -154,7 +163,7 @@
         "App\\Modules\\Bot"
       ],
       "depends_on": {
-        "[app]": 6,
+        "[app/Core]": 6,
         "Students": 2,
         "Auth": 1
       },
@@ -180,7 +189,7 @@
         "App\\Modules\\Broadcasts"
       ],
       "depends_on": {
-        "[app]": 6,
+        "[app/Core]": 6,
         "Threads": 4,
         "Outbox": 1,
         "Bot": 1,
@@ -199,7 +208,7 @@
         "App\\Modules\\Courses"
       ],
       "depends_on": {
-        "[app]": 7
+        "[app/Core]": 7
       },
       "used_by": {
         "[routes]": 2,
@@ -214,7 +223,7 @@
         "App\\Modules\\Dashboard"
       ],
       "depends_on": {
-        "[app]": 1
+        "[app/Core]": 1
       },
       "used_by": {
         "[routes]": 1
@@ -228,7 +237,7 @@
         "App\\Modules\\Exams"
       ],
       "depends_on": {
-        "[app]": 5
+        "[app/Core]": 5
       },
       "used_by": {
         "[routes]": 2,
@@ -243,7 +252,7 @@
         "App\\Modules\\Files"
       ],
       "depends_on": {
-        "[app]": 7
+        "[app/Core]": 7
       },
       "used_by": {
         "[routes]": 2
@@ -257,7 +266,7 @@
         "App\\Modules\\Instructors"
       ],
       "depends_on": {
-        "[app]": 7
+        "[app/Core]": 7
       },
       "used_by": {
         "[routes]": 2,
@@ -272,12 +281,12 @@
         "App\\Modules\\Linking"
       ],
       "depends_on": {
-        "[app]": 2,
+        "[app/Core]": 2,
+        "Assignments": 1,
         "Admins": 1,
         "Bot": 2,
-        "Students": 1,
         "Supporters": 1,
-        "Assignments": 1
+        "Students": 1
       },
       "used_by": {
         "Auth": 1,
@@ -292,10 +301,10 @@
         "App\\Modules\\Outbox"
       ],
       "depends_on": {
-        "[app]": 4,
+        "[app/Core]": 4,
+        "Broadcasts": 1,
         "Bot": 1,
-        "Students": 1,
-        "Broadcasts": 1
+        "Students": 1
       },
       "used_by": {
         "Broadcasts": 1,
@@ -312,7 +321,7 @@
         "App\\Modules\\ParentContacts"
       ],
       "depends_on": {
-        "[app]": 4
+        "[app/Core]": 4
       },
       "used_by": {
         "[routes]": 2
@@ -326,7 +335,7 @@
         "App\\Modules\\Public"
       ],
       "depends_on": {
-        "[app]": 4
+        "[app/Core]": 4
       },
       "used_by": {
         "[routes]": 1
@@ -340,7 +349,7 @@
         "App\\Modules\\Reports"
       ],
       "depends_on": {
-        "[app]": 2
+        "[app/Core]": 2
       },
       "used_by": {
         "[routes]": 2
@@ -354,7 +363,7 @@
         "App\\Modules\\Stats"
       ],
       "depends_on": {
-        "[app]": 5,
+        "[app/Core]": 5,
         "Bot": 2,
         "Threads": 3,
         "Students": 1
@@ -371,7 +380,7 @@
         "App\\Modules\\Students"
       ],
       "depends_on": {
-        "[app]": 7,
+        "[app/Core]": 7,
         "Supporters": 1
       },
       "used_by": {
@@ -394,7 +403,7 @@
         "App\\Modules\\Subscription"
       ],
       "depends_on": {
-        "[app]": 1
+        "[app/Core]": 1
       },
       "used_by": {}
     },
@@ -406,7 +415,7 @@
         "App\\Modules\\Supporters"
       ],
       "depends_on": {
-        "[app]": 7,
+        "[app/Core]": 7,
         "Bot": 2
       },
       "used_by": {
@@ -425,7 +434,7 @@
         "App\\Modules\\Threads"
       ],
       "depends_on": {
-        "[app]": 14,
+        "[app/Core]": 14,
         "Outbox": 1,
         "Bot": 1,
         "Students": 1
@@ -445,7 +454,7 @@
         "App\\Modules\\Topics"
       ],
       "depends_on": {
-        "[app]": 2
+        "[app/Core]": 2
       },
       "used_by": {
         "[routes]": 2
@@ -459,8 +468,8 @@
         "App\\Modules\\Tutoring"
       ],
       "depends_on": {
-        "[app]": 5,
         "Bot": 2,
+        "[app/Core]": 5,
         "Auth": 1
       },
       "used_by": {
@@ -475,7 +484,7 @@
         "App\\Modules\\WeeklyPlans"
       ],
       "depends_on": {
-        "[app]": 7,
+        "[app/Core]": 7,
         "Students": 1
       },
       "used_by": {
@@ -488,7 +497,7 @@
       "code": 100,
       "namespaces": [],
       "depends_on": {
-        "[app]": 4
+        "[app/Core]": 4
       },
       "used_by": {}
     },
@@ -522,31 +531,31 @@
       "code": 255,
       "namespaces": [],
       "depends_on": {
-        "Instructors": 2,
-        "Attendance": 2,
-        "Assignments": 2,
-        "Threads": 3,
-        "Appointments": 2,
         "Bot": 3,
-        "Linking": 2,
-        "Auth": 5,
-        "Reports": 2,
-        "Outbox": 2,
-        "Stats": 3,
-        "WeeklyPlans": 2,
-        "Public": 1,
-        "[app]": 2,
-        "Supporters": 2,
-        "Exams": 2,
-        "Dashboard": 1,
+        "Assignments": 2,
         "Tutoring": 2,
-        "Topics": 2,
-        "Students": 2,
-        "Files": 2,
-        "Courses": 2,
-        "ParentContacts": 2,
+        "Public": 1,
+        "Supporters": 2,
         "Broadcasts": 2,
-        "Blog": 1
+        "Topics": 2,
+        "Threads": 3,
+        "Exams": 2,
+        "Files": 2,
+        "Attendance": 2,
+        "Outbox": 2,
+        "Instructors": 2,
+        "WeeklyPlans": 2,
+        "Appointments": 2,
+        "ParentContacts": 2,
+        "[app/Core]": 2,
+        "Stats": 3,
+        "Auth": 5,
+        "Students": 2,
+        "Dashboard": 1,
+        "Courses": 2,
+        "Linking": 2,
+        "Blog": 1,
+        "Reports": 2
       },
       "used_by": {}
     },
@@ -570,13 +579,13 @@
         "Tests\\Modules\\Tutoring"
       ],
       "depends_on": {
-        "[app]": 33,
+        "[app/Core]": 33,
         "Auth": 6,
         "Blog": 1,
         "Exams": 1,
-        "Instructors": 1,
-        "Supporters": 3,
         "Courses": 1,
+        "Supporters": 3,
+        "Instructors": 1,
         "Assignments": 6,
         "Bot": 12,
         "Outbox": 1,
@@ -585,7 +594,343 @@
       "used_by": {}
     }
   },
-  "models": [],
+  "models": [
+    {
+      "class": "App\\Modules\\Admins\\Admin",
+      "file": "app/Modules/Admins/Admin.php",
+      "module": "Admins",
+      "table": "users",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Appointments\\Appointment",
+      "file": "app/Modules/Appointments/Appointment.php",
+      "module": "Appointments",
+      "table": "appointments",
+      "source": "sql",
+      "also": [
+        "students"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Assignments\\Assignment",
+      "file": "app/Modules/Assignments/Assignment.php",
+      "module": "Assignments",
+      "table": "student_supporter_assignments",
+      "source": "sql",
+      "also": [
+        "students",
+        "supporters"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Attendance\\Attendance",
+      "file": "app/Modules/Attendance/Attendance.php",
+      "module": "Attendance",
+      "table": "daily_attendance",
+      "source": "sql",
+      "also": [
+        "students"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Auth\\TelegramTicket",
+      "file": "app/Modules/Auth/TelegramTicket.php",
+      "module": "Auth",
+      "table": "telegram_auth_nonces",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Auth\\User",
+      "file": "app/Modules/Auth/User.php",
+      "module": "Auth",
+      "table": "users",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Blog\\BlogPost",
+      "file": "app/Modules/Blog/BlogPost.php",
+      "module": "Blog",
+      "table": "blog_posts",
+      "source": "sql",
+      "also": [
+        "blog_category"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Bot\\TelegramLink",
+      "file": "app/Modules/Bot/TelegramLink.php",
+      "module": "Bot",
+      "table": "telegram_links",
+      "source": "sql",
+      "also": [
+        "students",
+        "users"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Broadcasts\\Broadcast",
+      "file": "app/Modules/Broadcasts/Broadcast.php",
+      "module": "Broadcasts",
+      "table": "report_broadcasts",
+      "source": "sql",
+      "also": [
+        "report_broadcast_recipients"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Broadcasts\\BroadcastRecipient",
+      "file": "app/Modules/Broadcasts/BroadcastRecipient.php",
+      "module": "Broadcasts",
+      "table": "report_broadcast_recipients",
+      "source": "sql",
+      "also": [
+        "students"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Courses\\Course",
+      "file": "app/Modules/Courses/Course.php",
+      "module": "Courses",
+      "table": "courses",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Exams\\ExamResult",
+      "file": "app/Modules/Exams/ExamResult.php",
+      "module": "Exams",
+      "table": "exam_results",
+      "source": "sql",
+      "also": [
+        "files",
+        "students"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Files\\File",
+      "file": "app/Modules/Files/File.php",
+      "module": "Files",
+      "table": "files",
+      "source": "sql",
+      "also": [
+        "students"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Instructors\\Instructor",
+      "file": "app/Modules/Instructors/Instructor.php",
+      "module": "Instructors",
+      "table": "instructors",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Outbox\\OutboxItem",
+      "file": "app/Modules/Outbox/OutboxItem.php",
+      "module": "Outbox",
+      "table": "bot_outbox",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\ParentContacts\\ParentContact",
+      "file": "app/Modules/ParentContacts/ParentContact.php",
+      "module": "ParentContacts",
+      "table": "parent_contacts",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Public\\Course",
+      "file": "app/Modules/Public/Course.php",
+      "module": "Public",
+      "table": "courses",
+      "source": "sql",
+      "also": [
+        "course_features"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Public\\Instructor",
+      "file": "app/Modules/Public/Instructor.php",
+      "module": "Public",
+      "table": "instructors",
+      "source": "sql",
+      "also": [
+        "instructor_social_links"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Public\\Supporter",
+      "file": "app/Modules/Public/Supporter.php",
+      "module": "Public",
+      "table": "supporters",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Reports\\Report",
+      "file": "app/Modules/Reports/Report.php",
+      "module": "Reports",
+      "table": "reports_status",
+      "source": "sql",
+      "also": [
+        "students",
+        "supporters"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Stats\\Stats",
+      "file": "app/Modules/Stats/Stats.php",
+      "module": "Stats",
+      "table": "report_threads",
+      "source": "sql",
+      "also": [
+        "report_messages",
+        "students",
+        "supporters"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Students\\Student",
+      "file": "app/Modules/Students/Student.php",
+      "module": "Students",
+      "table": "students",
+      "source": "sql",
+      "also": [
+        "events",
+        "supporters",
+        "users",
+        "weekly_plans"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Subscription\\Subscription",
+      "file": "app/Modules/Subscription/Subscription.php",
+      "module": "Subscription",
+      "table": "subscriptions",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Supporters\\Supporter",
+      "file": "app/Modules/Supporters/Supporter.php",
+      "module": "Supporters",
+      "table": "supporters",
+      "source": "sql",
+      "also": [
+        "reports_status",
+        "supporter_scopes",
+        "users"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Threads\\Message",
+      "file": "app/Modules/Threads/Message.php",
+      "module": "Threads",
+      "table": "report_messages",
+      "source": "sql",
+      "also": [
+        "report_threads",
+        "students"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Threads\\MessageAttachment",
+      "file": "app/Modules/Threads/MessageAttachment.php",
+      "module": "Threads",
+      "table": "report_message_attachments",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Threads\\Thread",
+      "file": "app/Modules/Threads/Thread.php",
+      "module": "Threads",
+      "table": "report_threads",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Topics\\Topic",
+      "file": "app/Modules/Topics/Topic.php",
+      "module": "Topics",
+      "table": "topic_tree",
+      "source": "sql",
+      "also": [
+        "events"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\Tutoring\\Tutoring",
+      "file": "app/Modules/Tutoring/Tutoring.php",
+      "module": "Tutoring",
+      "table": "tutoring_teacher_status_log",
+      "source": "sql",
+      "also": [
+        "daily_attendance",
+        "instructors",
+        "students",
+        "tutoring_classrooms",
+        "tutoring_sessions"
+      ],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\WeeklyPlans\\PlanTemplate",
+      "file": "app/Modules/WeeklyPlans/PlanTemplate.php",
+      "module": "WeeklyPlans",
+      "table": "plan_templates",
+      "source": "sql",
+      "also": [],
+      "in_schema": null
+    },
+    {
+      "class": "App\\Modules\\WeeklyPlans\\WeeklyPlan",
+      "file": "app/Modules/WeeklyPlans/WeeklyPlan.php",
+      "module": "WeeklyPlans",
+      "table": "weekly_plans",
+      "source": "sql",
+      "also": [
+        "event_topics",
+        "events",
+        "students"
+      ],
+      "in_schema": null
+    }
+  ],
   "tables": {
     "migrations": [
       "app/Core/Migrator.php"
@@ -662,18 +1007,6 @@
       "tests/Modules/Tutoring/TutoringTest.php",
       "tests/TestCase.php"
     ],
-    "student_supporter_assignments": [
-      "app/Modules/Assignments/Assignment.php",
-      "tests/Modules/Assignments/AssignmentTest.php",
-      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
-      "tests/Modules/Assignments/SupporterScopeTest.php",
-      "tests/Modules/Bot/BotGatewayTest.php",
-      "tests/Modules/Broadcasts/BroadcastTest.php",
-      "tests/Modules/Outbox/OutboxTest.php",
-      "tests/Modules/Stats/StatsTest.php",
-      "tests/Modules/Supporters/SupporterContactTest.php",
-      "tests/Modules/Threads/ThreadTest.php"
-    ],
     "supporters": [
       "app/Modules/Assignments/Assignment.php",
       "app/Modules/Public/Supporter.php",
@@ -686,6 +1019,18 @@
       "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
       "tests/Modules/Assignments/SupporterScopeTest.php",
       "tests/Modules/Auth/TelegramAuthTest.php",
+      "tests/Modules/Bot/BotGatewayTest.php",
+      "tests/Modules/Broadcasts/BroadcastTest.php",
+      "tests/Modules/Outbox/OutboxTest.php",
+      "tests/Modules/Stats/StatsTest.php",
+      "tests/Modules/Supporters/SupporterContactTest.php",
+      "tests/Modules/Threads/ThreadTest.php"
+    ],
+    "student_supporter_assignments": [
+      "app/Modules/Assignments/Assignment.php",
+      "tests/Modules/Assignments/AssignmentTest.php",
+      "tests/Modules/Assignments/AutoAssignmentLinkTest.php",
+      "tests/Modules/Assignments/SupporterScopeTest.php",
       "tests/Modules/Bot/BotGatewayTest.php",
       "tests/Modules/Broadcasts/BroadcastTest.php",
       "tests/Modules/Outbox/OutboxTest.php",
@@ -721,12 +1066,12 @@
       "tests/Modules/Auth/TelegramAdminLinkTest.php",
       "tests/Modules/Auth/TelegramAuthTest.php"
     ],
-    "blog_category": [
-      "app/Modules/Blog/BlogPost.php"
-    ],
     "blog_posts": [
       "app/Modules/Blog/BlogPost.php",
       "tests/Core/BlogPostTest.php"
+    ],
+    "blog_category": [
+      "app/Modules/Blog/BlogPost.php"
     ],
     "telegram_links": [
       "app/Modules/Bot/TelegramLink.php",
@@ -801,14 +1146,14 @@
       "app/Modules/Threads/Thread.php",
       "tests/Modules/Broadcasts/BroadcastTest.php"
     ],
+    "weekly_plans": [
+      "app/Modules/Students/Student.php",
+      "app/Modules/WeeklyPlans/WeeklyPlan.php"
+    ],
     "events": [
       "app/Modules/Students/Student.php",
       "app/Modules/Students/StudentService.php",
       "app/Modules/Topics/Topic.php",
-      "app/Modules/WeeklyPlans/WeeklyPlan.php"
-    ],
-    "weekly_plans": [
-      "app/Modules/Students/Student.php",
       "app/Modules/WeeklyPlans/WeeklyPlan.php"
     ],
     "subscriptions": [
@@ -829,11 +1174,11 @@
       "app/Modules/Tutoring/Tutoring.php",
       "tests/Modules/Tutoring/TutoringTest.php"
     ],
-    "tutoring_sessions": [
+    "tutoring_classrooms": [
       "app/Modules/Tutoring/Tutoring.php",
       "tests/Modules/Tutoring/TutoringTest.php"
     ],
-    "tutoring_classrooms": [
+    "tutoring_sessions": [
       "app/Modules/Tutoring/Tutoring.php",
       "tests/Modules/Tutoring/TutoringTest.php"
     ],
@@ -863,17 +1208,8 @@
       "external_deps": [],
       "tables": []
     },
-    "project_index.py": {
-      "module": "[root]",
-      "lines": 486,
-      "namespace": "",
-      "classes": [],
-      "internal_deps": [],
-      "external_deps": [],
-      "tables": []
-    },
     "app/Core/ApiException.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 28,
       "namespace": "App\\Core",
       "classes": [
@@ -887,7 +1223,7 @@
       "tables": []
     },
     "app/Core/Auth.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 51,
       "namespace": "App\\Core",
       "classes": [
@@ -901,7 +1237,7 @@
       "tables": []
     },
     "app/Core/AuthCookie.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 144,
       "namespace": "App\\Core",
       "classes": [
@@ -915,7 +1251,7 @@
       "tables": []
     },
     "app/Core/Authorization.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 75,
       "namespace": "App\\Core",
       "classes": [
@@ -932,7 +1268,7 @@
       "tables": []
     },
     "app/Core/Cache.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 117,
       "namespace": "App\\Core",
       "classes": [
@@ -943,7 +1279,7 @@
       "tables": []
     },
     "app/Core/ClientIp.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 71,
       "namespace": "App\\Core",
       "classes": [
@@ -956,7 +1292,7 @@
       "tables": []
     },
     "app/Core/CorsMiddleware.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 61,
       "namespace": "App\\Core",
       "classes": [
@@ -975,7 +1311,7 @@
       "tables": []
     },
     "app/Core/Database.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 41,
       "namespace": "App\\Core",
       "classes": [
@@ -986,7 +1322,7 @@
       "tables": []
     },
     "app/Core/EmailService.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 131,
       "namespace": "App\\Core",
       "classes": [
@@ -997,7 +1333,7 @@
       "tables": []
     },
     "app/Core/ExceptionHandler.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 99,
       "namespace": "App\\Core",
       "classes": [
@@ -1015,7 +1351,7 @@
       "tables": []
     },
     "app/Core/Logger.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 92,
       "namespace": "App\\Core",
       "classes": [
@@ -1031,7 +1367,7 @@
       "tables": []
     },
     "app/Core/Migrator.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 160,
       "namespace": "App\\Core",
       "classes": [
@@ -1046,7 +1382,7 @@
       ]
     },
     "app/Core/MultipartFormDataParser.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 136,
       "namespace": "App\\Core",
       "classes": [
@@ -1062,7 +1398,7 @@
       "tables": []
     },
     "app/Core/Pagination.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 32,
       "namespace": "App\\Core",
       "classes": [
@@ -1073,7 +1409,7 @@
       "tables": []
     },
     "app/Core/PublicCacheMiddleware.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 35,
       "namespace": "App\\Core",
       "classes": [
@@ -1089,7 +1425,7 @@
       "tables": []
     },
     "app/Core/RateLimitedException.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 17,
       "namespace": "App\\Core",
       "classes": [
@@ -1102,7 +1438,7 @@
       "tables": []
     },
     "app/Core/RateLimiter.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 68,
       "namespace": "App\\Core",
       "classes": [
@@ -1117,7 +1453,7 @@
       ]
     },
     "app/Core/ResponseHelper.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 40,
       "namespace": "App\\Core",
       "classes": [
@@ -1131,7 +1467,7 @@
       "tables": []
     },
     "app/Core/SmsService.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 133,
       "namespace": "App\\Core",
       "classes": [
@@ -1142,7 +1478,7 @@
       "tables": []
     },
     "app/Core/Storage.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 114,
       "namespace": "App\\Core",
       "classes": [
@@ -1158,7 +1494,7 @@
       "tables": []
     },
     "app/Core/StudentScope.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 68,
       "namespace": "App\\Core",
       "classes": [
@@ -1173,7 +1509,7 @@
       "tables": []
     },
     "app/Core/Validator.php": {
-      "module": "[app]",
+      "module": "[app/Core]",
       "lines": 79,
       "namespace": "App\\Core",
       "classes": [
@@ -1184,7 +1520,7 @@
       "tables": []
     },
     "app/Helpers/JalaliHelper.php": {
-      "module": "[app]",
+      "module": "[app/Helpers]",
       "lines": 84,
       "namespace": "App\\Helpers",
       "classes": [
