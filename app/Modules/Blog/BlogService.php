@@ -68,7 +68,7 @@ class BlogService
 
     public function getCategories(): array
     {
-        return Cache::remember(self::GROUP, 'blog_categories', self::TTL, function () {
+        return Cache::remember(self::GROUP, 'blog_category', self::TTL, function () {
             return ['categories' => BlogPost::getCategories()];
         });
     }

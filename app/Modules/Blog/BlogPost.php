@@ -7,6 +7,11 @@ use App\Core\Pagination;
 
 class BlogPost
 {
+    private const SELECT_WITH_CATEGORY =
+        'SELECT bp.*, bc.name AS category_name, bc.slug AS category_slug
+         FROM blog_posts bp
+         LEFT JOIN blog_category bc ON bc.id = bp.category_id';
+
     public static function findAllPublished(int $page, int $perPage): array
     {
         $db = Database::getConnection();
@@ -14,7 +19,9 @@ class BlogPost
         $page = max(1, $page);
         $offset = Pagination::offset($page, $perPage);
         $stmt = $db->prepare(
-            'SELECT * FROM blog_posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT ? OFFSET ?'
+            self::SELECT_WITH_CATEGORY . '
+             WHERE bp.is_published = 1
+             ORDER BY bp.published_at DESC, bp.id DESC LIMIT ? OFFSET ?'
         );
         $stmt->execute([$perPage, $offset]);
         return $stmt->fetchAll();
@@ -31,39 +38,41 @@ class BlogPost
     public static function findBySlug(string $slug): ?array
     {
         $db = Database::getConnection();
-        $stmt = $db->prepare('SELECT * FROM blog_posts WHERE slug = ? AND is_published = 1');
+        $stmt = $db->prepare(
+            self::SELECT_WITH_CATEGORY . ' WHERE bp.slug = ? AND bp.is_published = 1'
+        );
         $stmt->execute([$slug]);
         $result = $stmt->fetch();
         return $result ?: null;
     }
 
-    public static function findByCategory(string $category, int $page, int $perPage): array
+    public static function findByCategory(string $categorySlug, int $page, int $perPage): array
     {
         $db = Database::getConnection();
         $perPage = max(1, min(100, $perPage));
         $page = max(1, $page);
         $offset = Pagination::offset($page, $perPage);
         $stmt = $db->prepare(
-            'SELECT bp.* FROM blog_posts bp
-             LEFT JOIN blog_categories bc ON bc.id = bp.category_id
-             WHERE (bc.slug = ? OR (bp.category_id IS NULL AND bp.category = ?))
-               AND bp.is_published = 1
+            'SELECT bp.*, bc.name AS category_name, bc.slug AS category_slug
+             FROM blog_posts bp
+             INNER JOIN blog_category bc ON bc.id = bp.category_id
+             WHERE bc.slug = ? AND bp.is_published = 1
              ORDER BY bp.published_at DESC, bp.id DESC LIMIT ? OFFSET ?'
         );
-        $stmt->execute([$category, $category, $perPage, $offset]);
+        $stmt->execute([$categorySlug, $perPage, $offset]);
         return $stmt->fetchAll();
     }
 
-    public static function countByCategory(string $category): int
+    public static function countByCategory(string $categorySlug): int
     {
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'SELECT COUNT(*) FROM blog_posts bp
-             LEFT JOIN blog_categories bc ON bc.id = bp.category_id
-             WHERE (bc.slug = ? OR (bp.category_id IS NULL AND bp.category = ?))
-               AND bp.is_published = 1'
+            'SELECT COUNT(*)
+             FROM blog_posts bp
+             INNER JOIN blog_category bc ON bc.id = bp.category_id
+             WHERE bc.slug = ? AND bp.is_published = 1'
         );
-        $stmt->execute([$category, $category]);
+        $stmt->execute([$categorySlug]);
         return (int) $stmt->fetchColumn();
     }
 
@@ -74,7 +83,8 @@ class BlogPost
         $page = max(1, $page);
         $offset = Pagination::offset($page, $perPage);
         $stmt = $db->prepare(
-            'SELECT * FROM blog_posts ORDER BY published_at DESC LIMIT ? OFFSET ?'
+            self::SELECT_WITH_CATEGORY . '
+             ORDER BY bp.published_at DESC, bp.id DESC LIMIT ? OFFSET ?'
         );
         $stmt->execute([$perPage, $offset]);
         return $stmt->fetchAll();
@@ -91,7 +101,7 @@ class BlogPost
     public static function findById(int $id): ?array
     {
         $db = Database::getConnection();
-        $stmt = $db->prepare('SELECT * FROM blog_posts WHERE id = ?');
+        $stmt = $db->prepare(self::SELECT_WITH_CATEGORY . ' WHERE bp.id = ?');
         $stmt->execute([$id]);
         $result = $stmt->fetch();
         return $result ?: null;
@@ -102,8 +112,8 @@ class BlogPost
         $db = Database::getConnection();
         $slug = self::makeUniqueSlug($data['slug'] ?? null, $data['title'] ?? '');
         $stmt = $db->prepare(
-            'INSERT INTO blog_posts (title, slug, excerpt, content, cover_image, category, category_id, meta_description, is_published, published_at, views)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)'
+            'INSERT INTO blog_posts (title, slug, excerpt, content, cover_image, category_id, meta_description, is_published, published_at, views)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)'
         );
         $isPublished = filter_var($data['is_published'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
         $stmt->execute([
@@ -112,8 +122,7 @@ class BlogPost
             $data['excerpt'] ?? null,
             $data['content'] ?? null,
             $data['cover_image'] ?? null,
-            $data['category'] ?? '',
-            $data['category_id'] ?? null,
+            self::normalizeCategoryId($data['category_id'] ?? null),
             $data['meta_description'] ?? null,
             $isPublished,
             $isPublished ? ($data['published_at'] ?? date('Y-m-d H:i:s')) : null,
@@ -130,6 +139,9 @@ class BlogPost
         if (array_key_exists('is_published', $data)) {
             $data['is_published'] = filter_var($data['is_published'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
         }
+        if (array_key_exists('category_id', $data)) {
+            $data['category_id'] = self::normalizeCategoryId($data['category_id']);
+        }
         if (!empty($data['is_published']) && empty($data['published_at'])) {
             $current = $db->prepare('SELECT is_published, published_at FROM blog_posts WHERE id = ?');
             $current->execute([$id]);
@@ -139,7 +151,7 @@ class BlogPost
             }
         }
 
-        foreach (['title', 'slug', 'excerpt', 'content', 'cover_image', 'category', 'category_id', 'is_published', 'published_at', 'meta_description'] as $field) {
+        foreach (['title', 'slug', 'excerpt', 'content', 'cover_image', 'category_id', 'is_published', 'published_at', 'meta_description'] as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "{$field} = ?";
                 $values[] = $data[$field];
@@ -173,7 +185,7 @@ class BlogPost
             $stmt = $db->prepare(
                 'SELECT bc.id, bc.name, bc.slug, bc.icon, bc.color, bc.description, bc.sort_order,
                         COALESCE(COUNT(bp.id), 0) AS post_count
-                 FROM blog_categories bc
+                 FROM blog_category bc
                  LEFT JOIN blog_posts bp ON bp.category_id = bc.id AND bp.is_published = 1
                  WHERE bc.is_active = 1
                  GROUP BY bc.id, bc.name, bc.slug, bc.icon, bc.color, bc.description, bc.sort_order
@@ -191,6 +203,14 @@ class BlogPost
         $db = Database::getConnection();
         $stmt = $db->prepare('UPDATE blog_posts SET views = views + 1 WHERE id = ?');
         $stmt->execute([$id]);
+    }
+
+    private static function normalizeCategoryId($value): ?int
+    {
+        if ($value === null || $value === '' || (int) $value <= 0) {
+            return null;
+        }
+        return (int) $value;
     }
 
     private static function makeUniqueSlug(?string $slug, string $title): string
