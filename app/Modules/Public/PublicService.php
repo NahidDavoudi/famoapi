@@ -51,8 +51,16 @@ class PublicService
 
     public function getSupporters(): array
     {
-        return Cache::remember(self::GROUP, 'supporters', self::TTL, function () {
+        // داده‌ی خام (نسبی) کش می‌شود تا تغییر ASSET_URL کش را نشکند
+        $data = Cache::remember(self::GROUP, 'supporters', self::TTL, function () {
             return ['supporters' => Supporter::findAllPublished()];
         });
+
+        foreach ($data['supporters'] as &$supporter) {
+            $supporter['avatar_url'] = AssetUrl::fromStorage($supporter['avatar'] ?? null);
+        }
+        unset($supporter);
+
+        return $data;
     }
 }
