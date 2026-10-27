@@ -2,12 +2,13 @@
 
 namespace App\Modules\Public;
 
+use App\Core\AssetUrl;
 use App\Core\Cache;
 
 class PublicService
 {
     private const GROUP = 'public';
-    private const TTL = 600;
+    private const TTL   = 600;
 
     public function getCourses(): array
     {
@@ -28,7 +29,8 @@ class PublicService
 
     public function getInstructors(): array
     {
-        return Cache::remember(self::GROUP, 'instructors', self::TTL, function () {
+        // داده‌ی خام (نسبی) کش می‌شود تا تغییر ASSET_URL کش را نشکند
+        $data = Cache::remember(self::GROUP, 'instructors', self::TTL, function () {
             $instructors = Instructor::findAllPublished();
             foreach ($instructors as &$instructor) {
                 $instructor['social_links'] = Instructor::getSocialLinks((int) $instructor['id']);
@@ -36,6 +38,15 @@ class PublicService
             unset($instructor);
             return ['instructors' => $instructors];
         });
+
+        foreach ($data['instructors'] as &$instructor) {
+            if (array_key_exists('image_url', $instructor)) {
+                $instructor['image_url'] = AssetUrl::fromStorage($instructor['image_url']);
+            }
+        }
+        unset($instructor);
+
+        return $data;
     }
 
     public function getSupporters(): array

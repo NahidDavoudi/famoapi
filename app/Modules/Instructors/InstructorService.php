@@ -2,6 +2,7 @@
 
 namespace App\Modules\Instructors;
 
+use App\Core\AssetUrl;
 use App\Core\Cache;
 use App\Core\Pagination;
 use App\Core\Storage;
@@ -14,6 +15,7 @@ class InstructorService
         $pagination = Pagination::build($page, $perPage, $total);
 
         $items = Instructor::findAll($pagination['page'], $pagination['per_page']);
+        $items = array_map([$this, 'hydrate'], $items);
 
         return [
             'items'      => $items,
@@ -52,7 +54,7 @@ class InstructorService
         if (!$instructor) {
             throw new \App\Core\ApiException('استاد یافت نشد', 404, 'NOT_FOUND');
         }
-        return $instructor;
+        return $this->hydrate($instructor);
     }
 
     public function update(int $id, array $data): array
@@ -107,5 +109,20 @@ class InstructorService
         Instructor::delete($id);
 
         Cache::flushGroup('public');
+    }
+
+    /**
+     * مسیر نسبی ذخیره‌شده در DB را به URL کامل تبدیل می‌کند
+     * تا فرانت آن را نسبت به دامنه‌ی خودش resolve نکند.
+     *
+     * @param array<string,mixed> $instructor
+     * @return array<string,mixed>
+     */
+    private function hydrate(array $instructor): array
+    {
+        if (array_key_exists('image_url', $instructor)) {
+            $instructor['image_url'] = AssetUrl::fromStorage($instructor['image_url']);
+        }
+        return $instructor;
     }
 }
