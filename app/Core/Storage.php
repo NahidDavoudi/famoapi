@@ -7,7 +7,7 @@ use Psr\Http\Message\UploadedFileInterface;
 
 class Storage
 {
-    private static array $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
+    private static array $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'webp'];
     private static int $maxSize = 10 * 1024 * 1024; // 10MB
 
     public static function upload(array|UploadedFileInterface $file, string $module, ?int $ownerId = null): string
@@ -46,6 +46,7 @@ class Storage
             'jpg' => ['image/jpeg'],
             'jpeg' => ['image/jpeg'],
             'png' => ['image/png'],
+            'webp' => ['image/webp'],
             'pdf' => ['application/pdf'],
             'doc' => ['application/msword', 'application/CDFV2'],
             'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
