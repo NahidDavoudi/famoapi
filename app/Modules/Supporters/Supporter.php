@@ -288,8 +288,8 @@ class Supporter
     {
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'INSERT INTO supporters (name, grade, field, phone, chat_id, is_active)
-             VALUES (:name, :grade, :field, :phone, :chat_id, :is_active)'
+            'INSERT INTO supporters (name, grade, field, phone, chat_id, avatar, is_active)
+             VALUES (:name, :grade, :field, :phone, :chat_id, :avatar, :is_active)'
         );
         $stmt->execute([
             'name'      => $data['name'],
@@ -297,6 +297,7 @@ class Supporter
             'field'     => $data['field'] ?? null,
             'phone'     => $data['phone'] ?? null,
             'chat_id'   => $data['chat_id'] ?? null,
+            'avatar'    => $data['avatar'] ?? null,
             'is_active' => array_key_exists('is_active', $data) ? (int) $data['is_active'] : 1,
         ]);
         return (int) $db->lastInsertId();
@@ -306,7 +307,7 @@ class Supporter
     {
         $sets = [];
         $params = ['id' => $id];
-        $allowed = ['name', 'grade', 'field', 'phone', 'chat_id', 'is_active'];
+        $allowed = ['name', 'grade', 'field', 'phone', 'chat_id', 'avatar', 'is_active'];
 
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {

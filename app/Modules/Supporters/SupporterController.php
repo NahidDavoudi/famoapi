@@ -6,6 +6,7 @@ use App\Core\Validator;
 use App\Modules\Bot\PhoneNormalizer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\UploadedFileInterface;
 
 class SupporterController
 {
@@ -39,6 +40,27 @@ class SupporterController
         }
 
         return '';
+    }
+
+    /**
+     * استخراج فایل آواتار از درخواست multipart.
+     * Extracts the avatar file from a multipart request (if present).
+     *
+     * @param Request $request
+     * @return UploadedFileInterface|null
+     */
+    private function avatarFileFromRequest(Request $request): ?UploadedFileInterface
+    {
+        $files = $request->getUploadedFiles();
+        if (!isset($files['avatar'])) {
+            return null;
+        }
+        $avatar = $files['avatar'];
+        // پشتیبانی از آرایه‌ای از فایل‌ها: اولین مورد استفاده می‌شود
+        if (is_array($avatar)) {
+            return $avatar[0] ?? null;
+        }
+        return $avatar;
     }
 
     public function list(Request $request, Response $response): Response
@@ -129,7 +151,8 @@ class SupporterController
                 $data['scopes'] = $body['scopes'];
             }
 
-            $result = $this->service->create($data);
+            $avatarFile = $this->avatarFileFromRequest($request);
+            $result = $this->service->create($data, $avatarFile);
         } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
@@ -140,7 +163,7 @@ class SupporterController
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -166,7 +189,7 @@ class SupporterController
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus() ?: 404)->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -208,7 +231,8 @@ class SupporterController
         }
 
         try {
-            $result = $this->service->update((int) $args['id'], $data);
+            $avatarFile = $this->avatarFileFromRequest($request);
+            $result = $this->service->update((int) $args['id'], $data, $avatarFile);
         } catch (\App\Core\ApiException $e) {
             $response->getBody()->write(json_encode([
                 'success'    => false,
@@ -219,7 +243,7 @@ class SupporterController
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([
@@ -245,7 +269,7 @@ class SupporterController
                     'message' => $e->getMessage(),
                 ],
             ], JSON_UNESCAPED_UNICODE));
-            return $response->withStatus($e->getCode() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
+            return $response->withStatus($e->getHttpStatus() ?: 500)->withHeader('Content-Type', 'application/json; charset=utf-8');
         }
 
         $response->getBody()->write(json_encode([

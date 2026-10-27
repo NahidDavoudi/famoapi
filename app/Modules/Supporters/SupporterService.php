@@ -3,10 +3,13 @@
 namespace App\Modules\Supporters;
 
 use App\Core\ApiException;
+use App\Core\AssetUrl;
 use App\Core\Cache;
 use App\Core\Database;
 use App\Core\Pagination;
+use App\Core\Storage;
 use App\Modules\Bot\PhoneNormalizer;
+use Psr\Http\Message\UploadedFileInterface;
 
 class SupporterService
 {
@@ -48,12 +51,29 @@ class SupporterService
         return $normalized;
     }
 
+    /**
+     * افزودن avatar_url به هر ردیف پشتیبان (در صورت وجود avatar).
+     * Appends a public avatar_url to each supporter row when an avatar is stored.
+     *
+     * @param array<int,array> $supporters
+     * @return array<int,array>
+     */
+    private function withAvatarUrl(array $supporters): array
+    {
+        foreach ($supporters as &$row) {
+            $row['avatar_url'] = AssetUrl::fromStorage($row['avatar'] ?? null);
+        }
+        unset($row);
+        return $supporters;
+    }
+
     public function list(int $page, int $perPage): array
     {
         $total = Supporter::countAll();
         $pagination = Pagination::build($page, $perPage, $total);
 
         $items = Supporter::findAll($pagination['page'], $pagination['per_page']);
+        $items = $this->withAvatarUrl($items);
 
         return [
             'items'      => $items,
@@ -61,7 +81,12 @@ class SupporterService
         ];
     }
 
-    public function create(array $data): array
+    /**
+     * @param array $data
+     * @param UploadedFileInterface|null $avatarFile
+     * @return array
+     */
+    public function create(array $data, ?UploadedFileInterface $avatarFile = null): array
     {
         if (array_key_exists('phone', $data)) {
             $data['phone'] = $this->normalizePhoneOrFail($data['phone']);
@@ -84,11 +109,20 @@ class SupporterService
             }
         }
 
+        // avatar در ابتدا NULL است؛ بعد از ساخت رکورد آپلود می‌شود تا مسیر با id owner ذخیره شود
+        $data['avatar'] = null;
+
         $db = Database::getConnection();
         $db->beginTransaction();
 
         try {
             $supporterId = Supporter::create($data);
+
+            // آپلود آواتار اگر فایلی ارسال شده باشد
+            if ($avatarFile !== null && $avatarFile->getError() === UPLOAD_ERR_OK) {
+                $avatarPath = Storage::upload($avatarFile, 'supporters', $supporterId);
+                Supporter::update($supporterId, ['avatar' => $avatarPath]);
+            }
 
             $stmt = $db->prepare(
                 'INSERT INTO users (username, password_hash, role, linked_id)
@@ -122,6 +156,7 @@ class SupporterService
         if (!$supporter) {
             throw new \App\Core\ApiException('پشتیبان یافت نشد', 404, 'NOT_FOUND');
         }
+        $supporter['avatar_url'] = AssetUrl::fromStorage($supporter['avatar'] ?? null);
         return $supporter;
     }
 
@@ -130,13 +165,22 @@ class SupporterService
         $total = Supporter::countMissingPhone();
         $pagination = Pagination::build($page, $perPage, $total);
 
+        $items = Supporter::findMissingPhone($pagination['page'], $pagination['per_page']);
+        $items = $this->withAvatarUrl($items);
+
         return [
-            'items'      => Supporter::findMissingPhone($pagination['page'], $pagination['per_page']),
+            'items'      => $items,
             'pagination' => $pagination,
         ];
     }
 
-    public function update(int $id, array $data): array
+    /**
+     * @param int $id
+     * @param array $data
+     * @param UploadedFileInterface|null $avatarFile
+     * @return array
+     */
+    public function update(int $id, array $data, ?UploadedFileInterface $avatarFile = null): array
     {
         $supporter = Supporter::findById($id);
         if (!$supporter) {
@@ -161,6 +205,16 @@ class SupporterService
 
         try {
             Supporter::update($id, $data);
+
+            // آپلود آواتار جدید و جایگزینی با قبلی
+            if ($avatarFile !== null && $avatarFile->getError() === UPLOAD_ERR_OK) {
+                // حذف آواتار قبلی در صورت وجود
+                if (!empty($supporter['avatar'])) {
+                    Storage::delete($supporter['avatar']);
+                }
+                $avatarPath = Storage::upload($avatarFile, 'supporters', $id);
+                Supporter::update($id, ['avatar' => $avatarPath]);
+            }
 
             if (isset($data['password'])) {
                 $stmt = $db->prepare(
@@ -195,6 +249,11 @@ class SupporterService
         $supporter = Supporter::findById($id);
         if (!$supporter) {
             throw new \App\Core\ApiException('پشتیبان یافت نشد', 404, 'NOT_FOUND');
+        }
+
+        // حذف فایل آواتار در صورت وجود
+        if (!empty($supporter['avatar'])) {
+            Storage::delete($supporter['avatar']);
         }
 
         Supporter::delete($id);
