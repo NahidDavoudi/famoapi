@@ -7,7 +7,7 @@ use Psr\Http\Message\UploadedFileInterface;
 
 class Storage
 {
-    private static array $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'webp'];
+    private static array $allowedExtensions = ['jpg', 'jpeg', 'jfif', 'png', 'pdf', 'doc', 'docx', 'webp'];
     private static int $maxSize = 10 * 1024 * 1024; // 10MB
 
     public static function upload(array|UploadedFileInterface $file, string $module, ?int $ownerId = null): string
@@ -44,12 +44,13 @@ class Storage
 
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($temporaryPath);
         $allowedMimeTypes = [
-            'jpg' => ['image/jpeg'],
+            'jpg'  => ['image/jpeg'],
             'jpeg' => ['image/jpeg'],
-            'png' => ['image/png'],
+            'jfif' => ['image/jpeg'],
+            'png'  => ['image/png'],
             'webp' => ['image/webp'],
-            'pdf' => ['application/pdf'],
-            'doc' => ['application/msword', 'application/CDFV2'],
+            'pdf'  => ['application/pdf'],
+            'doc'  => ['application/msword', 'application/CDFV2'],
             'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
         ];
         if (!in_array($mime, $allowedMimeTypes[$extension] ?? [], true)) {
@@ -68,8 +69,8 @@ class Storage
             }
         }
 
-        // ── تبدیل JPG/PNG به WebP (در صورت وجود GD/Imagick) ──
-        $convertible = in_array($extension, ['jpg', 'jpeg', 'png'], true);
+        // ── تبدیل JPG/JPEG/JFIF/PNG به WebP (در صورت وجود GD/Imagick) ──
+        $convertible = in_array($extension, ['jpg', 'jpeg', 'jfif', 'png'], true);
         if ($convertible && ImageOptimizer::isAvailable()) {
             $webpFilename    = uniqid('', true) . '.webp';
             $webpDestination = $dir . '/' . $webpFilename;

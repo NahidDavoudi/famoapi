@@ -34,6 +34,7 @@ final class ImageOptimizer
         }
         $mime = $info['mime'] ?? '';
 
+        // JFIF files report as image/jpeg, so this already covers .jfif uploads.
         if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
             return false;
         }
