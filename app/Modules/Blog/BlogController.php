@@ -129,7 +129,12 @@ class BlogController
 
     public function createPost(Request $request, Response $response): Response
     {
-        $data = $request->getParsedBody();
+        $data  = $request->getParsedBody() ?? [];
+        $files = $request->getUploadedFiles();
+
+        if (($files['cover_image_file'] ?? null) instanceof \Psr\Http\Message\UploadedFileInterface) {
+            $data['cover_image_file'] = $files['cover_image_file'];
+        }
 
         try {
             $result = $this->service->createPost($data);
@@ -153,8 +158,13 @@ class BlogController
 
     public function updatePost(Request $request, Response $response, array $args): Response
     {
-        $id = (int) ($args['id'] ?? 0);
-        $data = $request->getParsedBody();
+        $id    = (int) ($args['id'] ?? 0);
+        $data  = $request->getParsedBody() ?? [];
+        $files = $request->getUploadedFiles();
+
+        if (($files['cover_image_file'] ?? null) instanceof \Psr\Http\Message\UploadedFileInterface) {
+            $data['cover_image_file'] = $files['cover_image_file'];
+        }
 
         try {
             $result = $this->service->updatePost($id, $data);

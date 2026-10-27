@@ -41,6 +41,7 @@ class Storage
         if (!is_string($temporaryPath) || !is_file($temporaryPath)) {
             throw new ApiException('محتوای فایل در دسترس نیست', 422, 'UPLOAD_ERROR');
         }
+
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($temporaryPath);
         $allowedMimeTypes = [
             'jpg' => ['image/jpeg'],
@@ -67,6 +68,21 @@ class Storage
             }
         }
 
+        // ── تبدیل JPG/PNG به WebP (در صورت وجود GD/Imagick) ──
+        $convertible = in_array($extension, ['jpg', 'jpeg', 'png'], true);
+        if ($convertible && ImageOptimizer::isAvailable()) {
+            $webpFilename    = uniqid('', true) . '.webp';
+            $webpDestination = $dir . '/' . $webpFilename;
+
+            if (ImageOptimizer::toWebp($temporaryPath, $webpDestination, self::imageOptionsFor($module))) {
+                if (is_file($temporaryPath)) {
+                    @unlink($temporaryPath); // پاک‌سازی فایل temp (MultipartFormDataParser)
+                }
+                return $subDir . '/' . $webpFilename;
+            }
+            // در صورت شکست تبدیل، به مسیر اصلی می‌افتیم (بدون از دست دادن فایل)
+        }
+
         $filename = uniqid() . '.' . $extension;
         $destination = $dir . '/' . $filename;
 
@@ -77,6 +93,17 @@ class Storage
         }
 
         return $subDir . '/' . $filename;
+    }
+
+    /** تنظیمات بهینه‌سازی هر ماژول */
+    private static function imageOptionsFor(string $module): array
+    {
+        return match ($module) {
+            'instructors' => ['max_width' => 800,  'max_height' => 800,  'quality' => 85],
+            'blog'        => ['max_width' => 1600, 'max_height' => 1600, 'quality' => 82],
+            'courses'     => ['max_width' => 1920, 'max_height' => 1920, 'quality' => 82],
+            default       => ['max_width' => 1920, 'max_height' => 1920, 'quality' => 82],
+        };
     }
 
     public static function resolve(string $path): string
