@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, curl, openssl, pdo, pdo_mysql, pdo_pgsql
+          tools: composer
+
+      - name: PHP lint
+        run: |
+          fail=0
+          while IFS= read -r -d '' f; do
+            out=$(php -l "$f" 2>&1) || { echo "$out"; fail=1; }
+          done < <(find . -name '*.php' -not -path './vendor/*' -print0)
+          exit $fail
+
+      - name: Composer validate
+        run: composer validate --no-check-publish
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist --no-progress
