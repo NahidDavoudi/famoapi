@@ -3,7 +3,7 @@ services:
     image: ghcr.io/nahiddavoudi/famoapi_ai:latest
     container_name: famo-api
     restart: unless-stopped
-    env_file: ./api/.env
+    env_file: /opt/apps/famo/api/.env
     environment:
       TZ: Asia/Tehran
     volumes:
