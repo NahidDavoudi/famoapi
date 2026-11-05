@@ -1,0 +1,15 @@
+services:
+  famo-api:
+    image: ghcr.io/nahiddavoudi/famoapi_ai:latest
+    container_name: famo-api
+    restart: unless-stopped
+    env_file: /opt/apps/famo/api/.env
+    environment:
+      TZ: Asia/Tehran
+    volumes:
+      - ./uploads:/var/www/html/uploads
+      - ./api/.env:/var/www/html/.env:ro
+      - ./storage/logs:/var/www/html/storage/logs
+      - ./uploads:/var/www/html/public/uploads
+    mem_limit: 512m
+    networks: [proxy, db_net]
