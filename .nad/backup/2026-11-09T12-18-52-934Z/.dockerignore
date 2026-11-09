@@ -1,0 +1,12 @@
+**/.git
+**/.gitignore
+**/.github
+**/.idea
+**/.opencode
+**/node_modules
+**/vendor
+**/.env
+**/.env.*
+**/storage/logs/*.log
+**/storage/cache
+uploads
