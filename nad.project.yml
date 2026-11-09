@@ -1,0 +1,10 @@
+schemaVersion: 1
+name: api
+type: php
+baseBranch: main
+docker:
+  container: api
+  port: 80
+  networks:
+    - proxy
+    - db_net

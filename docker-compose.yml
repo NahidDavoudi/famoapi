@@ -1,0 +1,24 @@
+services:
+  api:
+    build: .
+    image: ghcr.io/nahiddavoudi/famoapi:latest
+    container_name: api
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: Asia/Tehran
+    volumes:
+      - ./uploads:/var/www/html/uploads
+      - ./uploads:/var/www/html/public/uploads
+      - ./.env:/var/www/html/.env:ro
+      - ./storage/logs:/var/www/html/storage/logs
+    mem_limit: 512m
+    networks: [proxy, db_net]
+
+networks:
+  proxy:
+    external: true
+  db_net:
+    external: true
